@@ -2,9 +2,9 @@
 #  Release + assinatura via SignPath (GitHub Actions)
 #  ---------------------------------------------------------------------------
 #  Fluxo (ver SIGNPATH.md):
-#    build (sem assinatura) -> empacota o ZIP dos executaveis finais ->
-#    carrega como artefacto do workflow -> submete ao SignPath ->
-#    aplica os ficheiros assinados -> regenera hashes -> publica a release.
+#    preparar runtime -> build (sem assinatura) -> empacota o ZIP dos
+#    executaveis finais -> (se token SignPath configurado) submete ao SignPath
+#    -> aplica os ficheiros assinados -> regenera hashes -> publica a release.
 #
 #  PREREQUISITOS (configurar UMA vez no repositorio):
 #    - Secret  SIGNPATH_API_TOKEN            (token de submissor da SignPath)
@@ -15,9 +15,13 @@
 #      MediaDesk-Portable\YT-DLP-Media-Desk.exe) com restricoes de metadados
 #      (ProductName = "YT-DLP Media Desk", ProductVersion = a versao do build).
 #
-#  NOTA sobre o runtime: bin\ (Python, yt-dlp, FFmpeg, Deno) NAO esta no
-#  repositorio (e pesado ~520 MB). Use um runner self-hosted com o runtime,
-#  ou descarregue-o de um release anterior/artefacto de cache antes do build.
+#  RUNTIME: bin\ (Python, yt-dlp, FFmpeg, Deno) NAO esta no repositorio (e
+#  grande). O passo "Preparar runtime" repoe-o a partir de fontes publicas com
+#  versoes fixadas (tools/prepare_runtime.ps1). O Inno Setup (instalador) e
+#  instalado via choco.
+#
+#  Os passos da SignPath so correm quando o secret SIGNPATH_API_TOKEN existe;
+#  sem ele, o workflow publica a release nao assinada (com SHA256SUMS.txt).
 # =============================================================================
 name: Release + SignPath
 
@@ -28,13 +32,9 @@ on:
         description: 'Publicar os artefactos como GitHub Release'
         type: boolean
         default: false
-  # ATENCAO: o trigger por tag esta DESATIVADO de proposito.
-  # O build precisa do runtime em bin\ (nao versionado). Reativar so depois de
-  # o CI conseguir obter esse runtime (self-hosted runner ou passo de download),
-  # para nao gerar execucoes falhadas a cada tag de release.
-  # push:
-  #   tags:
-  #     - 'v*'
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -58,9 +58,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       # ---------------------------------------------------------------------
-      # O runtime tem de estar presente (bin\python, bin\yt-dlp.exe,
-      # bin\ffmpeg.exe, bin\deno.exe). Nao esta versionado (e grande).
+      # Runtime (bin\python, bin\yt-dlp.exe, bin\ffmpeg.exe, bin\deno.exe)
+      # descarregado de fontes publicas com versoes fixadas.
       # ---------------------------------------------------------------------
+      - name: Preparar runtime (bin\)
+        shell: pwsh
+        run: ./tools/prepare_runtime.ps1
+
       - name: Verificar runtime (bin\)
         shell: pwsh
         run: |
@@ -68,19 +72,29 @@ jobs:
           foreach ($p in 'bin\python\python.exe','bin\yt-dlp.exe','bin\ffmpeg.exe','bin\deno.exe') {
             if (-not (Test-Path $p)) { $missing += $p }
           }
-          if ($missing.Count) {
-            Write-Error ("Runtime em falta: " + ($missing -join ', ') + ". Usa um runner self-hosted com o runtime ou descarrega-o antes do build (ver nota no topo do workflow).")
+          if ($missing.Count) { Write-Error ("Runtime em falta: " + ($missing -join ', ')) }
+
+      - name: Instalar Inno Setup (instalador)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe')) {
+            choco install innosetup -y --no-progress
+          } else {
+            Write-Output 'ISCC.exe ja instalado'
           }
 
       - name: Build (sem assinatura)
         shell: pwsh
         run: ./build_portable.ps1
 
+      # ------------------- SignPath (apenas com token) ---------------------
       - name: Empacotar artefacto para o SignPath
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
         shell: pwsh
         run: ./tools/prep_signpath.ps1
 
       - name: Carregar artefacto nao assinado
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
         id: upload-unsigned-artifact
         uses: actions/upload-artifact@v4
         with:
@@ -89,6 +103,8 @@ jobs:
           if-no-files-found: error
 
       - name: Submeter pedido de assinatura
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+        id: submit-signing-request
         uses: signpath/github-action-submit-signing-request@v3
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -101,6 +117,7 @@ jobs:
           output-artifact-directory: signed
 
       - name: Aplicar assinado + regenerar hashes
+        if: ${{ steps.submit-signing-request.outcome == 'success' }}
         shell: pwsh
         run: |
           $zip = Get-ChildItem signed -Recurse -Filter 'signpath-*.zip' | Select-Object -First 1
@@ -111,6 +128,10 @@ jobs:
             ./tools/apply_signed.ps1 -Source (Resolve-Path signed).Path
           }
 
+      # ---------------------------------------------------------------------
+      # Publicar release (em tags v* ou via workflow_dispatch com publish).
+      # Sem token SignPath, publica os artefactos NAO assinados com os hashes.
+      # ---------------------------------------------------------------------
       - name: Publicar release
         if: startsWith(github.ref, 'refs/tags/') || inputs.publish
         uses: softprops/action-gh-release@v2

@@ -16,11 +16,12 @@ SmartScreen. A decisão de licença (GPL-3.0) e a análise estão em
 |---|---|
 | Licença aprovada pela OSI | ✅ **GPL-3.0** (`LICENSE`, `licenses/GPL-3.0.txt`) |
 | Sem dupla-licença comercial / sem componentes proprietários | ⚠️ rever (WebView2/.NET são redistribuíveis, não proprietários do projeto) |
-| Repositório **público**, mantido e **já lançado** | ❌ criar repositório git + 1.ª release |
+| Repositório **público**, mantido e **já lançado** | ✅ `github.com/nunodacosta/MediaDesk` + release `v3.6.0` |
 | Builds verificáveis a partir do código | ✅ `build_portable.ps1` + `checksums.json` + `SHA256SUMS.txt` |
 | Política de assinatura + privacidade no repositório | ✅ `CODE_SIGNING_POLICY.md` (exigido pela SignPath Foundation) |
 | Metadados de versão nos executáveis (ProductName/ProductVersion) | ✅ `MediaDeskLauncher.csproj` (`Product`/`Version`) + Inno Setup |
 | MFA (autenticação multifator) na conta | ❌ a ativar ao criar a conta |
+| Candidatura ao plano OSS (repo + GPL-3.0 + release) | ❌ a submeter em <https://signpath.org/apply> |
 | Aprovação manual por release | ℹ️ a contar com ela no fluxo |
 
 O `config.json`, `cookies.txt`, `history.json`, `sessions.json` e `downloads\`
@@ -73,11 +74,10 @@ o Setup e o **`SHA256SUMS.txt`** (fora do ZIP, na página de release).
 
 ## 4. Preparar o repositório público (uma vez)
 
-> **Estado:** já feito — `git init` + 1.º commit em `main`. Falta criar o
-> repositório no GitHub e fazer `push`.
+> **Estado:** já feito — repo **público** `github.com/nunodacosta/MediaDesk`,
+> release `v3.6.0` publicada com os artefactos + `SHA256SUMS.txt`.
 
 ```powershell
-# criar o repositório VAZIO em https://github.com/new  (nome: MediaDesk, Public)
 git remote add origin https://github.com/nunodacosta/MediaDesk.git
 git push -u origin main
 ```
@@ -93,11 +93,16 @@ git push -u origin main
 1. Criar conta em <https://app.signpath.io> com **MFA** ativa.
 2. Candidatar o projeto ao **plano OSS** (indicar o repositório público e a
    licença GPL-3.0). Aguardar aprovação.
-3. Criar o **projeto** e uma **signing policy** (ex.: `release`) com SHA-256 +
+3. **Certificado de assinatura:** **não** criar/importar certificado na página
+   de certificados. No plano OSS, a **SignPath Foundation fornece o certificado**
+   (a chave privada fica no HSM da SignPath); as opções *self-signed*, *CSR* e
+   *import* servem para testes/compras próprias e não se aplicam.
+4. Criar o **projeto** (ex.: slug `mediadesk`) e uma **signing policy**
+   (ex.: `release-signing`) que use o certificado fornecido, com SHA-256 +
    *timestamp* RFC-3161.
-4. Criar uma **artifact configuration**: um ZIP com os ficheiros a assinar
+5. Criar uma **artifact configuration**: um ZIP com os ficheiros a assinar
    (é exatamente o que o `prep_signpath.ps1` produz).
-5. Por release: submeter o ZIP via interface (ou API/CI), aprovar e descarregar
+6. Por release: submeter o ZIP via interface (ou API/CI), aprovar e descarregar
    o ZIP assinado.
 
 > Alternativa CI: o SignPath tem *GitHub Action / GitLab integration* para
@@ -145,9 +150,10 @@ pelo que nunca substitui uma assinatura do SignPath por engano.
 ## 8. Automatizar com CI (GitHub Actions)
 
 O template está em [`.github/workflows/signpath.yml`](.github/workflows/signpath.yml).
-Faz: `build_portable.ps1` → `prep_signpath.ps1` → carrega o ZIP como artefacto
-do workflow → submete à SignPath (`signpath/github-action-submit-signing-request@v3`)
-→ `apply_signed.ps1` → publica a release (em tags `v*`).
+Faz: `tools/prepare_runtime.ps1` (runtime) → `build_portable.ps1` →
+`prep_signpath.ps1` → carrega o ZIP como artefacto do workflow → submete à
+SignPath (`signpath/github-action-submit-signing-request@v3`) → `apply_signed.ps1`
+→ publica a release (em tags `v*`).
 
 Configurar uma vez no repositório:
 
@@ -156,16 +162,23 @@ Configurar uma vez no repositório:
 - **Slugs** `SIGNPATH_PROJECT`, `SIGNPATH_POLICY`, `SIGNPATH_ARTIFACT_CONFIG`
   (ajustar aos definidos na SignPath).
 
-**Dois requisitos que o template assume:**
+**Comportamento do template:**
 
-1. **Runtime presente** — `bin\` (Python, yt-dlp, FFmpeg, Deno, ~520 MB) e
-   `ffmpeg\` **não** estão no repositório. No CI, use um *runner self-hosted*
-   com o runtime, ou descarregue-o (de um release anterior / cache) antes do
-   build. O workflow falha com mensagem clara se faltar.
-2. **Artifact configuration com restrições de metadados** — na SignPath, a
+1. **Runtime automático** — `bin\` (Python, yt-dlp, FFmpeg, Deno) **não** está no
+   repositório; o passo *Preparar runtime* repõe tudo a partir de fontes públicas
+   com versões fixadas (`tools/prepare_runtime.ps1`: Python 3.10 embeddable,
+   yt-dlp 2026.08.19, FFmpeg win64-gpl, deno 2.6.9). O Inno Setup é instalado
+   via `choco install innosetup` para gerar o instalador.
+2. **Robusto sem SignPath** — os passos da SignPath só correm quando o secret
+   `SIGNPATH_API_TOKEN` existe. Sem ele, o workflow **publica a release não
+   assinada** com o `SHA256SUMS.txt` gerado no build (estado atual do projeto).
+3. **Artifact configuration com restrições de metadados** — na SignPath, a
    configuração do artefacto deve impor, por *file metadata restrictions*:
    `ProductName = "YT-DLP Media Desk"` e `ProductVersion = <versão do build>`
    (já definidos nos executáveis; ver `MediaDeskLauncher.csproj`).
+
+O trigger por tag (`push: tags: ['v*']`) está **ativo**: cada tag `v*` dispara
+build + (quando configurado) assinatura + release.
 
 > O fluxo manual (secção 3) não precisa de CI e usa o mesmo `prep`/`apply`.
 
@@ -176,5 +189,6 @@ Configurar uma vez no repositório:
 | `CODE_SIGNING_POLICY.md` | Política de assinatura + privacidade (exigida pela SignPath Foundation) |
 | `tools\prep_signpath.ps1` | Empacota os executáveis finais num ZIP para submeter |
 | `tools\apply_signed.ps1` | Aplica o ZIP/pasta assinado, recria o ZIP da pasta, regenera hashes |
+| `tools\prepare_runtime.ps1` | Repõe o runtime `bin\` (Python/yt-dlp/FFmpeg/Deno) a partir de fontes públicas (CI e reconstruções) |
 | `tools\new_selfsigned_cert.ps1` | Certificado de teste (validar o pipeline localmente) |
 | `.github\workflows\signpath.yml` | CI (GitHub Actions) de build + assinatura + release |
