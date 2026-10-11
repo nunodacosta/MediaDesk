@@ -28,9 +28,13 @@ on:
         description: 'Publicar os artefactos como GitHub Release'
         type: boolean
         default: false
-  push:
-    tags:
-      - 'v*'
+  # ATENCAO: o trigger por tag esta DESATIVADO de proposito.
+  # O build precisa do runtime em bin\ (nao versionado). Reativar so depois de
+  # o CI conseguir obter esse runtime (self-hosted runner ou passo de download),
+  # para nao gerar execucoes falhadas a cada tag de release.
+  # push:
+  #   tags:
+  #     - 'v*'
 
 permissions:
   contents: write
@@ -107,8 +111,8 @@ jobs:
             ./tools/apply_signed.ps1 -Source (Resolve-Path signed).Path
           }
 
-      - name: Publicar release (tag)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publicar release
+        if: startsWith(github.ref, 'refs/tags/') || inputs.publish
         uses: softprops/action-gh-release@v2
         with:
           files: |
