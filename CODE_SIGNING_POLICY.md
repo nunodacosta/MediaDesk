@@ -31,6 +31,19 @@ O processo de build é reproduzível a partir do código público
 (`build_portable.ps1`) e o conteúdo da aplicação é verificado por hashes
 (`checksums.json` + `verificar-integridade.ps1`).
 
+### Papéis (roles) e aprovação
+
+| Papel | Quem | Responsabilidade |
+|---|---|---|
+| **Autor (Author)** | Mantenedor (ALDACO) | Mantém o código-fonte, o build e a metadata de release |
+| **Revisor (Reviewer)** | Mantenedor (ALDACO) | Revê o diff da release, dependências e resultados do CI antes de se criar o pedido de assinatura |
+| **Aprovador (Approver)** | Mantenedor (ALDACO) | Confirma a proveniência do artefacto e aprova/rejeita explicitamente cada pedido de assinatura |
+
+A assinatura de release **nunca é automática** num *tag*: cada pedido passa por
+uma ação deliberada (aprovação manual). Sendo um projeto de um único
+mantenedor, os três papéis coincidem na mesma pessoa — isso é declarado
+explicitamente, em vez de se fingir uma separação que não existe.
+
 > **Nota de estado:** se a release que descarregou **não** tiver assinatura
 > digital, é porque foi publicada antes da aprovação no plano OSS da SignPath
 > Foundation. Nesse caso a integridade é garantida exclusivamente pelos hashes
