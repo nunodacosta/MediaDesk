@@ -1,0 +1,34 @@
+YT-DLP Media Desk — Avisos de terceiros (THIRD-PARTY NOTICES)
+=============================================================
+
+Este produto inclui componentes de terceiros. Os textos integrais das
+licenças encontram-se na pasta "licenses" desta distribuição.
+
+1. yt-dlp — Unlicense (domínio público)
+   Ficheiro: licenses/yt-dlp-UNLICENSE.txt
+   Projeto:  https://github.com/yt-dlp/yt-dlp
+
+2. FFmpeg — GNU General Public License v3.0 (GPL-3.0-or-later)
+   Ficheiro: licenses/GPL-3.0.txt
+   Binário de build GPL (BtbN/FFmpeg-Builds). O código-fonte correspondente
+   é disponibilizado publicamente em https://github.com/BtbN/FFmpeg-Builds.
+
+3. Python — Python Software Foundation License (PSF-2.0)
+   Ficheiro: licenses/Python-PSF-LICENSE.txt
+   Projeto:  https://www.python.org/
+
+4. Deno — MIT License
+   Ficheiro: licenses/Deno-MIT-LICENSE.txt
+   Projeto:  https://deno.com/
+
+5. Microsoft Edge WebView2 Runtime — licença Microsoft
+   Ficheiro: licenses/WebView2-NOTICE.txt
+   Projeto:  https://developer.microsoft.com/microsoft-edge/webview2/
+
+6. .NET — MIT License
+   Ficheiro: licenses/.NET-MIT-LICENSE.txt
+   Projeto:  https://dotnet.microsoft.com/
+
+O YT-DLP Media Desk (launcher, servidor e interface) é da autoria de
+ALDACO com IA. O motor de downloads é o yt-dlp; o design e a interação
+são da ALDACO.

@@ -1,0 +1,20 @@
+Microsoft Edge WebView2 Runtime
+===============================
+
+O YT-DLP Media Desk usa o componente de apresentação WebView2 da Microsoft
+para renderizar a interface web na janela da aplicação.
+
+A distribuição do Microsoft Edge WebView2 Runtime rege-se pelos termos de
+licença da Microsoft. O texto integral está disponível em:
+
+    https://developer.microsoft.com/microsoft-edge/webview2/
+
+e nos termos de utilização de software redistribuível da Microsoft:
+
+    https://www.microsoft.com/exporting/
+
+Nota: o WebView2 Runtime é um componente redistribuível da Microsoft e não é
+modificado por esta aplicação.
+
+O próprio YT-DLP Media Desk (launcher, servidor e interface) é da autoria de
+ALDACO com IA.

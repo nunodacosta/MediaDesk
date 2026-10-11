@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net7.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile><IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <AssemblyName>YT-DLP-Media-Desk</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Product>YT-DLP Media Desk</Product>
+    <AssemblyTitle>YT-DLP Media Desk</AssemblyTitle>
+    <Company>ALDACO</Company>
+    <Copyright>Design e interacao por ALDACO. Motor de downloads por YT-DLP. Software livre: GPL-3.0.</Copyright>
+    <Version>3.6.0</Version>
+    <FileVersion>3.6.0.0</FileVersion>
+    <InformationalVersion>3.6.0</InformationalVersion>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+  </PropertyGroup>
+  <ItemGroup><PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" /></ItemGroup>
+</Project>

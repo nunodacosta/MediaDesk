@@ -1,0 +1,121 @@
+{
+  "name": "YT-DLP Media Desk",
+  "version": "3.6.0",
+  "date": "2026-10-11",
+  "build": 2026101102,
+  "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
+  "history": [
+    {
+      "version": "3.6.0",
+      "date": "2026-10-11",
+      "groups": {
+        "Adicionado": [
+          "Interface multilingue (Português, English, Español, Français, Deutsch) com deteção automática do idioma do sistema",
+          "Seletor de idioma na Configuração, guardado em config.json",
+          "Aviso legal de propriedade intelectual (ALDACO) integrado na aplicação e distribuído em licenses/ALDACO-IP-NOTICE.txt"
+        ],
+        "Melhorado": [
+          "Caixa de pesquisa centrada e com largura proporcional à da janela",
+          "Marca com o subtítulo «YT-DLP INTERFACE» em caixa alta, centrado e ajustado ao comprimento de «Media Desk»",
+          "Ligações (tooltips) e notificações (toasts) com a cor do tema: borda fina e fundo adaptado à variante clara/escura",
+          "As mensagens da aplicação passam a aparecer no registo técnico e também como notificação",
+          "Borda fina da janela do executável sincronizada com o tema",
+          "Licenças de terceiros mantidas no texto original; traduzida apenas a descrição"
+        ],
+        "Corrigido": [
+          "Cabeçalho com a pesquisa centrada e a marca alinhada ao ícone em todos os idiomas"
+        ]
+      }
+    },
+    {
+      "version": "3.5.0",
+      "date": "2026-10-11",
+      "groups": {
+        "Adicionado": [
+          "Secção «Acerca» na ajuda: função da aplicação, motor yt-dlp e créditos à ALDACO com IA",
+          "Janela de licenças de terceiros (yt-dlp, FFmpeg, Python, Deno, WebView2, .NET)",
+          "Controlo de ecrã inteiro na barra de janela",
+          "Verificação de integridade dos ficheiros (hashes SHA-256) em segundo plano",
+          "Versionamento automático por categorias (Adicionado/Melhorado/Corrigido/Removido)",
+          "Indicador de versão alinhado com a marca no cabeçalho"
+        ],
+        "Melhorado": [
+          "Cabeçalho com a marca (ícone, nome e versão) centrado horizontalmente",
+          "Rodapé com créditos: «Motor de downloads por YT-DLP» e «Design e interação por ALDACO»",
+          "Executável de arranque e instalador com ícone próprio (app.ico)",
+          "Diagnóstico de arranque com registo em ficheiro, em vez de janela preta sem informação"
+        ],
+        "Corrigido": [
+          "Arranque em pastas só de leitura: pasta de dados do WebView2 movida para %LOCALAPPDATA%",
+          "Erros de servidor ou WebView2 deixam de aparecer como janela preta sem indicação"
+        ],
+        "Removido": [
+          "Scripts .bat de arranque e de construção da distribuição (substituídos pelo executável)"
+        ]
+      }
+    },
+    {
+      "version": "3.4.0",
+      "date": "2026-10-11",
+      "changes": [
+        "Opção para agrupar os downloads por canal/uploader numa pasta própria",
+        "Pacote portátil auto-extraível revisto para distribuição",
+        "Fechar a aplicação encerra o servidor e processos associados"
+      ]
+    },
+    {
+      "version": "3.3.0",
+      "date": "2026-10-11",
+      "changes": [
+        "Versão portátil auto-extraível: um único executável, sem dependências externas",
+        "Níveis de notificação completos: erro, aviso, informação e interação",
+        "Os switches de seleção permanecem visíveis nos itens escolhidos para remoção em lote",
+        "Tooltips em estilo balão de comunicação, com seta a apontar para o elemento",
+        "Fechar a aplicação encerra o servidor e todos os processos associados"
+      ]
+    },
+    {
+      "version": "3.2.0",
+      "date": "2026-10-10",
+      "changes": [
+        "Aplicação instalável (PWA) com suporte offline",
+        "Modo kiosk: janela sem barra nativa com controlos próprios (minimizar, restaurar, fechar)",
+        "6 paletas de tema, cada uma com variante clara e escura",
+        "Sistema de notificações (toasts) e confirmações da aplicação",
+        "Tooltips contextuais em toda a interface",
+        "Ícones monocromáticos (plataformas e interface)",
+        "Polimento visual: foco, contraste, scrollbars e microinterações"
+      ]
+    },
+    {
+      "version": "3.1.0",
+      "date": "2026-05-10",
+      "changes": [
+        "Filtros laterais: Vídeo / Áudio / Todos",
+        "Switches elegantes de seleção",
+        "Interface mais moderna e responsiva",
+        "Pesquisa condicionada aos filtros selecionados",
+        "Seleção múltipla e remoção em lote",
+        "Remoção seletiva (arquivo/histórico/link)",
+        "Associação link-ficheiro no histórico",
+        "Layout melhorado para legendas",
+        "Barra de progresso melhorada para playlists"
+      ]
+    },
+    {
+      "version": "3.0.0",
+      "date": "2026-05-08",
+      "changes": [
+        "Auto-fallback para múltiplas estratégias de autenticação",
+        "Extração automática de cookies do navegador",
+        "Suporte a PO Token e Visitor Data",
+        "Mudança automática de cliente",
+        "Impersonate Chrome",
+        "Log detalhado de cada tentativa",
+        "Escolha do interpretador Python",
+        "Ordenação por dropdown",
+        "Console com botão de minimizar/expandir"
+      ]
+    }
+  ]
+}

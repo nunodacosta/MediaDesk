@@ -1,0 +1,127 @@
+===============================================================================
+YT-DLP MEDIA DESK
+AVISO LEGAL, LICENÇA E CRÉDITOS
+LEGAL NOTICE, LICENSE AND CREDITS
+===============================================================================
+
+Este ficheiro reproduz, de forma integral, o aviso legal apresentado na
+aplicação (menu Ajuda > Termos e aviso legal). A versão portuguesa prevalece.
+
+This file reproduces, in full, the legal notice shown in the application
+(Help menu > Terms and legal notice). The Portuguese version prevails.
+
+-------------------------------------------------------------------------------
+PORTUGUÊS
+-------------------------------------------------------------------------------
+
+AVISO LEGAL, LICENÇA E CRÉDITOS
+
+© 2026 Alexandre da Costa, sob a designação ALDACO. Este programa é software
+livre, distribuído nos termos da GNU General Public License v3 (GPL-3.0).
+
+1. Autor e titularidade
+O código-fonte, a arquitetura, a estrutura e o design das interfaces, a
+navegação, os fluxos de interação, os elementos gráficos, os textos e a
+documentação resultam da criação intelectual de Alexandre da Costa, que
+utiliza a designação ALDACO (ainda sem registo oficial como entidade). A
+titularidade originária pertence ao autor, enquanto criador intelectual da
+obra, independentemente de registo ou de qualquer formalidade.
+
+2. Participação de inteligência artificial
+O desenvolvimento contou com a participação de ferramentas de inteligência
+artificial, que atuaram como executoras técnicas das ideias, dos conceitos,
+das decisões de design, da estrutura e das especificações definidos pelo
+autor. O autor concebeu, dirigiu, selecionou, reviu e aprovou o resultado
+final. A inteligência artificial não é titular de direitos nem é considerada
+autora para efeitos legais.
+
+3. Licença
+Este programa é software livre: pode redistribuí-lo e/ou modificá-lo nos
+termos da GNU General Public License versão 3 (GPL-3.0), publicada pela Free
+Software Foundation. A cópia integral da licença acompanha esta distribuição
+em «licenses/GPL-3.0.txt» (raiz do projeto: «LICENSE»). Tal como previsto
+nessa licença, não há qualquer garantia.
+
+4. Créditos (termo adicional, GPL-3.0 §7)
+Ao distribuir ou modificar este programa, mantenha este aviso e indique de
+forma explícita e visível os créditos seguintes: «Conceito, design e direção:
+Alexandre da Costa / ALDACO. Implementação técnica assistida por inteligência
+artificial, sob direção do autor.»; assinale as alterações efetuadas; e não
+sugira que o autor aprova ou subscreve a versão modificada ou o seu
+utilizador.
+
+5. Direitos morais
+O autor mantém o direito de reivindicar a paternidade da obra e de se opor a
+modificações que a desvirtuem (CDADC, art. 56.º). A remoção ou ocultação dos
+créditos viola estes termos e os direitos morais do autor.
+
+6. Componentes de terceiros
+O pacote inclui componentes de terceiros com licenças próprias (yt-dlp:
+Unlicense; FFmpeg: GPL; Python: PSF; Deno: MIT; Microsoft Edge WebView2:
+Microsoft; .NET: MIT). As licenças e atribuições constam em «licenses.json»
+e na pasta «licenses».
+
+7. Ausência de garantia
+O programa é fornecido «tal como está», sem garantias de qualquer tipo, na
+medida permitida pela lei aplicável.
+
+8. Lei aplicável
+Lei portuguesa, com competência dos tribunais portugueses, sem prejuízo da
+Convenção de Berna, que assegura proteção internacional automática.
+
+-------------------------------------------------------------------------------
+ENGLISH
+-------------------------------------------------------------------------------
+
+LEGAL NOTICE, LICENSE AND CREDITS
+
+© 2026 Alexandre da Costa, under the name ALDACO. This program is free
+software, distributed under the GNU General Public License v3 (GPL-3.0).
+
+1. Authorship and ownership
+The source code, architecture, interface structure and design, navigation,
+interaction flows, graphic elements, texts and documentation result from the
+intellectual creation of Alexandre da Costa, who uses the name ALDACO (not yet
+officially registered as an entity). Original ownership vests in the author as
+the intellectual creator of the work, regardless of registration or any
+formality.
+
+2. Artificial intelligence involvement
+The development involved artificial intelligence tools, which acted as
+technical executors of the ideas, concepts, design decisions, structure and
+specifications defined by the author. The author conceived, directed, selected,
+reviewed and approved the final result. Artificial intelligence is not a rights
+holder and is not regarded as an author for legal purposes.
+
+3. License
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, version 3. The full license accompanies this distribution at
+«licenses/GPL-3.0.txt» (project root: «LICENSE»). As provided under that
+license, there is no warranty.
+
+4. Credits (additional term, GPL-3.0 §7)
+When distributing or modifying this program, keep this notice and state the
+following credits explicitly and visibly: "Concept, design and direction:
+Alexandre da Costa / ALDACO. Technical implementation assisted by artificial
+intelligence, under the author's direction."; indicate any changes made; and do
+not suggest that the author endorses the modified version or its user.
+
+5. Moral rights
+The author retains the right to claim authorship and to object to modifications
+that distort the work (Portuguese Copyright Code, art. 56). Removing or
+concealing the credits violates these terms and the author's moral rights.
+
+6. Third-party components
+The package includes third-party components under their own licenses (yt-dlp:
+Unlicense; FFmpeg: GPL; Python: PSF; Deno: MIT; Microsoft Edge WebView2:
+Microsoft; .NET: MIT). Licenses and attributions are listed in «licenses.json»
+and in the «licenses» folder.
+
+7. No warranty
+The program is provided "as is", without warranties of any kind, to the extent
+permitted by applicable law.
+
+8. Governing law
+Portuguese law, with jurisdiction of the Portuguese courts, without prejudice to
+the Berne Convention, which provides automatic international protection.

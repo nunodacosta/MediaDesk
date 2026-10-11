@@ -1,0 +1,39 @@
+# ============================================================================
+#  YT-DLP Media Desk — .gitignore
+#  Mantém fora do repositório PÚBLICO os dados de utilizador/dev e as pastas
+#  de build. Requisito para o repo público (SignPath OSS) e para privacidade.
+# ============================================================================
+
+# --- Dados de utilizador/dev (NUNCA publicar) --------------------------------
+config.json
+cookies.txt
+history.json
+sessions.json
+downloads/
+
+# --- Saídas de build / runtime local ----------------------------------------
+dist/
+build/
+bin/
+ffmpeg/
+obj/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# --- Pastas locais/de trabalho ----------------------------------------------
+bkp/
+dev/
+Actualizações/
+*.WebView2/
+
+# --- Restos locais -----------------------------------------------------------
+YT-DLP-Media-Desk.exe
+*.pfx
+*.p12
+*.snk
+
+# --- Notas locais (rascunho, nao publicar) -----------------------------------
+fimes.txt
+ADICIONAR.txt
+correções e implementações.txt

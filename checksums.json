@@ -1,0 +1,14 @@
+{
+    "gerado":  "2026-10-11T16:30:29",
+    "algoritmo":  "SHA-256",
+    "ficheiros":  {
+                      "server.py":  "9ee59fa68620331b7ed34771ec2a5e6cf5d59edf28621660079c8ef5ce267ec4",
+                      "index.html":  "d9d14509ad992681e84db1a2d2a45a734eae7818b1ef21aa4c7d193b6bd18796",
+                      "sw.js":  "3166dc964032ae7b404500ce6bad594d6ab3b4a46a804d497c2e66f5629a9144",
+                      "version.json":  "9e5209722b71557b4fab062cb9d1d8f041cc5c30b4781570db8d70610e9208ec",
+                      "licenses.json":  "e56bcca08c67d339b84bcb20027e7e5b1190a75725dfa31797bea43f1d50a038",
+                      "manifest.webmanifest":  "c347b65bb917d8b8f559daa9c81acb8b79d6a55f53b9ae4d884d73721e848584",
+                      "favicon.svg":  "46f95481fe7248c09f2d61b6d1add294d47d4a557deb4117017989a846f4029c",
+                      "bin/yt-dlp.exe":  "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a"
+                  }
+}

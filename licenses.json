@@ -1,0 +1,48 @@
+{
+  "nome": "YT-DLP Media Desk",
+  "descricao": "Lista de componentes de terceiros e respetivas licenças. Os textos integrais acompanham a distribuição na pasta 'licenses'.",
+  "componentes": [
+    {
+      "nome": "yt-dlp",
+      "licenca": "Unlicense",
+      "descricao": "Motor de downloads (domínio público). Binário yt-dlp.exe.",
+      "url": "https://github.com/yt-dlp/yt-dlp",
+      "ficheiro": "licenses/yt-dlp-UNLICENSE.txt"
+    },
+    {
+      "nome": "FFmpeg",
+      "licenca": "GPL-3.0-or-later",
+      "descricao": "Junção e conversão de media. Binário de build GPL (BtbN/FFmpeg-Builds). É disponibilizado o código-fonte correspondente em github.com/BtbN/FFmpeg-Builds.",
+      "url": "https://github.com/BtbN/FFmpeg-Builds",
+      "ficheiro": "licenses/GPL-3.0.txt"
+    },
+    {
+      "nome": "Python",
+      "licenca": "PSF-2.0",
+      "descricao": "Interpretador embebido (Python Software Foundation License).",
+      "url": "https://www.python.org/",
+      "ficheiro": "licenses/Python-PSF-LICENSE.txt"
+    },
+    {
+      "nome": "Deno",
+      "licenca": "MIT",
+      "descricao": "Runtime JavaScript usado pelo yt-dlp para resolver desafios.",
+      "url": "https://deno.com/",
+      "ficheiro": "licenses/Deno-MIT-LICENSE.txt"
+    },
+    {
+      "nome": "Microsoft Edge WebView2 Runtime",
+      "licenca": "Microsoft",
+      "descricao": "Componente de apresentação web redistribuível da Microsoft.",
+      "url": "https://developer.microsoft.com/microsoft-edge/webview2/",
+      "ficheiro": "licenses/WebView2-NOTICE.txt"
+    },
+    {
+      "nome": ".NET",
+      "licenca": "MIT",
+      "descricao": "Runtime do launcher (dotnet/runtime).",
+      "url": "https://dotnet.microsoft.com/",
+      "ficheiro": "licenses/.NET-MIT-LICENSE.txt"
+    }
+  ]
+}

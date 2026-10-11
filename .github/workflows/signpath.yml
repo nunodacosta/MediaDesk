@@ -1,0 +1,119 @@
+# =============================================================================
+#  Release + assinatura via SignPath (GitHub Actions)
+#  ---------------------------------------------------------------------------
+#  Fluxo (ver SIGNPATH.md):
+#    build (sem assinatura) -> empacota o ZIP dos executaveis finais ->
+#    carrega como artefacto do workflow -> submete ao SignPath ->
+#    aplica os ficheiros assinados -> regenera hashes -> publica a release.
+#
+#  PREREQUISITOS (configurar UMA vez no repositorio):
+#    - Secret  SIGNPATH_API_TOKEN            (token de submissor da SignPath)
+#    - Variable SIGNPATH_ORGANIZATION_ID     (id da organizacao SignPath)
+#    - Ajustar os slugs abaixo (projeto/politica) aos definidos na SignPath.
+#    - Criar a "artifact configuration" na SignPath para este ZIP (os 3
+#      executaveis: MediaDesk-Portable.exe, MediaDesk-Setup.exe,
+#      MediaDesk-Portable\YT-DLP-Media-Desk.exe) com restricoes de metadados
+#      (ProductName = "YT-DLP Media Desk", ProductVersion = a versao do build).
+#
+#  NOTA sobre o runtime: bin\ (Python, yt-dlp, FFmpeg, Deno) NAO esta no
+#  repositorio (e pesado ~520 MB). Use um runner self-hosted com o runtime,
+#  ou descarregue-o de um release anterior/artefacto de cache antes do build.
+# =============================================================================
+name: Release + SignPath
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publicar os artefactos como GitHub Release'
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '7.0.x'
+  SIGNPATH_PROJECT: 'yt-dlp-media-desk'      # <- slug do projeto na SignPath
+  SIGNPATH_POLICY: 'release-signing'         # <- slug da signing policy
+  SIGNPATH_ARTIFACT_CONFIG: ''               # vazio = artifact configuration por omissao
+
+jobs:
+  build-sign-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # ---------------------------------------------------------------------
+      # O runtime tem de estar presente (bin\python, bin\yt-dlp.exe,
+      # bin\ffmpeg.exe, bin\deno.exe). Nao esta versionado (e grande).
+      # ---------------------------------------------------------------------
+      - name: Verificar runtime (bin\)
+        shell: pwsh
+        run: |
+          $missing = @()
+          foreach ($p in 'bin\python\python.exe','bin\yt-dlp.exe','bin\ffmpeg.exe','bin\deno.exe') {
+            if (-not (Test-Path $p)) { $missing += $p }
+          }
+          if ($missing.Count) {
+            Write-Error ("Runtime em falta: " + ($missing -join ', ') + ". Usa um runner self-hosted com o runtime ou descarrega-o antes do build (ver nota no topo do workflow).")
+          }
+
+      - name: Build (sem assinatura)
+        shell: pwsh
+        run: ./build_portable.ps1
+
+      - name: Empacotar artefacto para o SignPath
+        shell: pwsh
+        run: ./tools/prep_signpath.ps1
+
+      - name: Carregar artefacto nao assinado
+        id: upload-unsigned-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signpath-unsigned
+          path: build/signpath/signpath-*.zip
+          if-no-files-found: error
+
+      - name: Submeter pedido de assinatura
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY }}
+          artifact-configuration-slug: ${{ env.SIGNPATH_ARTIFACT_CONFIG }}
+          github-artifact-id: ${{ steps.upload-unsigned-artifact.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Aplicar assinado + regenerar hashes
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem signed -Recurse -Filter 'signpath-*.zip' | Select-Object -First 1
+          if ($zip) {
+            ./tools/apply_signed.ps1 -Source $zip.FullName
+          } else {
+            # A action pode entregar a pasta de ficheiros assinados diretamente.
+            ./tools/apply_signed.ps1 -Source (Resolve-Path signed).Path
+          }
+
+      - name: Publicar release (tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/MediaDesk-Portable.zip
+            dist/MediaDesk-Portable.exe
+            dist/MediaDesk-Setup.exe
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
