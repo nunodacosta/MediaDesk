@@ -18,7 +18,7 @@ código OV.
 |---|---|
 | Projeto | YT-DLP Media Desk |
 | Licença | **GPL-3.0** (`LICENSE`, `licenses/GPL-3.0.txt`) — licença aprovada pela OSI |
-| Repositório (código-fonte) | `<URL do repositório público>` |
+| Repositório (código-fonte) | <https://github.com/nunodacosta/MediaDesk> |
 | Mantenedor | ALDACO |
 
 Executáveis assinados em cada release:

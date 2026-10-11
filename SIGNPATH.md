@@ -73,12 +73,12 @@ o Setup e o **`SHA256SUMS.txt`** (fora do ZIP, na página de release).
 
 ## 4. Preparar o repositório público (uma vez)
 
+> **Estado:** já feito — `git init` + 1.º commit em `main`. Falta criar o
+> repositório no GitHub e fazer `push`.
+
 ```powershell
-git init
-git add .
-git commit -m "YT-DLP Media Desk 3.6.0 (GPL-3.0)"
-# criar o remoto no fornecedor (GitHub/GitLab) e:
-git remote add origin <url-do-repositorio>
+# criar o repositório VAZIO em https://github.com/new  (nome: MediaDesk, Public)
+git remote add origin https://github.com/nunodacosta/MediaDesk.git
 git push -u origin main
 ```
 
