@@ -6,6 +6,8 @@
 
 # --- Dados de utilizador/dev (NUNCA publicar) --------------------------------
 config.json
+config.json.bak
+*.bak
 cookies.txt
 history.json
 sessions.json

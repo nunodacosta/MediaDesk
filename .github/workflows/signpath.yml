@@ -40,7 +40,7 @@ permissions:
   contents: write
 
 env:
-  DOTNET_VERSION: '7.0.x'
+  DOTNET_VERSION: '8.0.x'
   SIGNPATH_PROJECT: 'mediadesk'              # <- slug do projeto na SignPath (ajustar ao criado na SignPath)
   SIGNPATH_POLICY: 'release-signing'         # <- slug da signing policy
   SIGNPATH_ARTIFACT_CONFIG: ''               # vazio = artifact configuration por omissao

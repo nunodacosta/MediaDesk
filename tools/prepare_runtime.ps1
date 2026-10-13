@@ -6,7 +6,7 @@
 
       bin\python\python.exe  <- Python 3.10 embeddable (python.org)
       bin\yt-dlp.exe         <- yt-dlp (GitHub releases, versao fixada)
-      bin\ffmpeg.exe         <- FFmpeg win64-gpl (BtbN FFmpeg-Builds)
+      bin\ffmpeg.exe         <- FFmpeg win64-gpl (BtbN FFmpeg-Builds, tag fixada)
       bin\deno.exe           <- Deno (GitHub releases, versao fixada)
 
     O ficheiro ._pth do Python e ajustado para ativar `import site` (igual ao
@@ -17,6 +17,8 @@
       -PythonVersion <3.10.11>   versao do Python embeddable
       -YtDlpVersion  <2026.08.19>  versao (tag) do yt-dlp
       -DenoVersion   <2.6.9>      versao do Deno
+      -FFmpegTag     <autobuild-...>  tag do release BtbN (FFmpeg win64-gpl)
+      -FFmpegAsset   <ffmpeg-N-...-win64-gpl.zip>  nome do asset nessa tag
       -SkipDownloads reutilizar o que ja existe em bin\ (nao descarrega nada)
       -Destination   <raiz>\bin   onde colocar o runtime (para testes)
 
@@ -29,6 +31,12 @@ param(
     [string]$PythonVersion = '3.10.11',
     [string]$YtDlpVersion  = '2026.08.19',
     [string]$DenoVersion   = '2.6.9',
+    # FFmpeg (BtbN FFmpeg-Builds): fixar a tag de auto-build E o nome do asset
+    # (o asset inclui a versao N-.../g-hash, por isso nao se deriva so da tag).
+    # Nao usar a tag movel "latest": o build tem de ser reproduzivel a partir do
+    # repositorio (requisito de origin verification da SignPath).
+    [string]$FFmpegTag     = 'autobuild-2026-10-12-13-12',
+    [string]$FFmpegAsset   = 'ffmpeg-N-127388-g615b07170e-win64-gpl.zip',
     [switch]$SkipDownloads,
     [string]$Destination = ''
 )
@@ -138,9 +146,9 @@ Ok "yt-dlp: $yv"
 # --- FFmpeg -------------------------------------------------------------------
 $ff = Join-Path $bin 'ffmpeg.exe'
 if (Refresh-IfStale $ff) {
-    Info 'FFmpeg win64-gpl (BtbN FFmpeg-Builds, master)...'
+    Info "FFmpeg win64-gpl (BtbN FFmpeg-Builds, $FFmpegTag)..."
     $ffZip = Join-Path $dl 'ffmpeg.zip'
-    Get-Dl 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip' $ffZip -AsZip
+    Get-Dl "https://github.com/BtbN/FFmpeg-Builds/releases/download/$FFmpegTag/$FFmpegAsset" $ffZip -AsZip
     $ffDir = Join-Path $dl 'ffmpeg'
     Extract-Zip $ffZip $ffDir
     $exe = Get-ChildItem $ffDir -Recurse -Filter ffmpeg.exe | Select-Object -First 1

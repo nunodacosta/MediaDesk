@@ -141,7 +141,7 @@ Write-Host "===============================================" -ForegroundColor Ma
 foreach ($f in @('bin\python\python.exe', 'bin\yt-dlp.exe', 'bin\ffmpeg.exe')) {
     if (-not (Test-Path (Join-Path $root $f))) { Die "Dependencia em falta: $f" }
 }
-if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { Die "dotnet (SDK 7.0+) nao encontrado no PATH." }
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { Die "dotnet (SDK 8.0+) nao encontrado no PATH." }
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
 New-Item -ItemType Directory -Path $build -Force | Out-Null
 if (Test-Path $sfxPath) { try { Remove-Item $sfxPath -Force } catch { Die "Nao foi possivel substituir $sfxPath (pode estar em execucao)." } }

@@ -180,6 +180,43 @@ Configurar uma vez no repositório:
 O trigger por tag (`push: tags: ['v*']`) está **ativo**: cada tag `v*` dispara
 build + (quando configurado) assinatura + release.
 
+### 8.1 Restrições de metadados e o padding do Inno Setup
+
+A *artifact configuration* deve ter o **root `<zip-file>`** (o GitHub empacota o
+artefacto num ZIP) e restringir os metadados dos `<pe-file>`:
+
+```xml
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="**/*.exe" max-matches="unbounded" product-name="YT-DLP Media Desk">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>
+```
+
+> ⚠️ **Padding do instalador (Inno Setup).** O `.exe` gerado pelo Inno Setup tem
+> os campos da *Version Info* com **espaços de preenchimento** (o stub traz os
+> campos com largura fixa — é um comportamento do próprio Inno, não um bug
+> nosso). Confirmado nos artefactos deste projeto:
+>
+> | Campo | Valor real | Comprimento no PE |
+> |---|---|---|
+> | `ProductName` | `YT-DLP Media Desk` | 60 (com espaços à direita) |
+> | `ProductVersion` | `3.6.0` | 50 |
+> | `FileVersion` | `3.6.0` | 20 |
+> | `CompanyName` | `ALDACO` | 60 |
+>
+> O launcher e o auto-extraível **não** têm padding (`ProductName` com 17 chars).
+> Como as *file metadata restrictions* da SignPath comparam o valor do PE tal como
+> está, ao criar a configuração **verifica** se a restrição exata
+> `product-name="YT-DLP Media Desk"` é aceite no `MediaDesk-Setup.exe`. Se a
+> SignPath não ignorar os espaços à direita, define a restrição do instalador em
+> conformidade (ou confirma com o suporte da SignPath se o `Trim` é aplicado).
+> O código do template do Inno é fixo, pelo que não há diretiva para remover o
+> padding sem reescrever o recurso de versão após o build (o que quebraria a
+> reprodutibilidade — a evitar).
+
 > O fluxo manual (secção 3) não precisa de CI e usa o mesmo `prep`/`apply`.
 
 ## 9. Ficheiros relevantes

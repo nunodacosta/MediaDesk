@@ -37,7 +37,7 @@ Os executáveis de release são assinados através da **SignPath Foundation** (s
 
 ## Compilar a partir do código
 
-Requer Windows, **SDK do .NET 7**, **Inno Setup 6** e o runtime em `bin\` (Python, yt-dlp, FFmpeg, Deno):
+Requer Windows, **SDK do .NET 8**, **Inno Setup 6** e o runtime em `bin\` (Python, yt-dlp, FFmpeg, Deno):
 
 ```powershell
 .\build_portable.ps1          # gera dist\ (pasta portátil, SFX, Setup, hashes)
