@@ -51,6 +51,10 @@ env:
 jobs:
   build-sign-release:
     runs-on: windows-latest
+    env:
+      # O contexto `secrets` NAO e permitido em `if:` de step (torna o workflow
+      # invalido). Mapeamos para env a nivel de job, que e um contexto valido.
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,12 +104,12 @@ jobs:
 
       # ------------------- SignPath (apenas com token) ---------------------
       - name: Empacotar artefacto para o SignPath
-        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+        if: ${{ env.SIGNPATH_API_TOKEN != '' }}
         shell: pwsh
         run: ./tools/prep_signpath.ps1
 
       - name: Carregar artefacto nao assinado
-        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+        if: ${{ env.SIGNPATH_API_TOKEN != '' }}
         id: upload-unsigned-artifact
         uses: actions/upload-artifact@v4
         with:
@@ -116,7 +120,7 @@ jobs:
           if-no-files-found: error
 
       - name: Submeter pedido de assinatura
-        if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+        if: ${{ env.SIGNPATH_API_TOKEN != '' }}
         id: submit-signing-request
         uses: signpath/github-action-submit-signing-request@v3
         with:
