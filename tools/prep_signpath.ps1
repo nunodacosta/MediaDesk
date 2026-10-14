@@ -6,6 +6,14 @@
     O SignPath assina os executaveis DENTRO do ZIP e devolve o ZIP assinado com a
     mesma estrutura. Este script so empacota - nao altera nada no projeto.
 
+    Deixa uma pasta 'stage\' com os 3 executaveis crus (e cria tambem um ZIP para
+    submissao manual na web). No CI carrega-se a PASTA (nao o ZIP): o GitHub
+    empacota-a num ZIP de transporte e a artifact configuration ve os .exe
+    diretamente. Subir o ZIP criaria um ZIP aninhado que a SignPath nao desce.
+
+    O instalador (Inno Setup) e normalizado (padding dos metadados removido) na
+    copia em stage\ - ver tools/normalize_versioninfo.ps1.
+
     Inclui os 3 ficheiros finais que o utilizador executara/instalara:
       - MediaDesk-Portable.exe                  (auto-extraivel)
       - MediaDesk-Setup.exe                     (instalador)
@@ -77,17 +85,30 @@ foreach ($r in $relativos) {
     Info ("{0,-42} {1,8}  {2}" -f $r, ("{0:N0} MB" -f ((Get-Item $src).Length / 1MB)), $estado)
 }
 
+# O instalador do Inno Setup tem os campos da Version Info preenchidos com
+# espacos (largura fixa do stub). A SignPath exige product-name/product-version
+# EXATOS nas restricoes de metadados, por isso limpa-se o padding na COPIA que
+# vai ser assinada (nao no dist\, que se mantem como saiu do Inno).
+$stagedSetup = Join-Path $stage 'MediaDesk-Setup.exe'
+if (Test-Path $stagedSetup) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'normalize_versioninfo.ps1') -Path $stagedSetup
+    if ($LASTEXITCODE -ne 0) { Die 'Falha ao normalizar os metadados do instalador.' }
+}
+
 if (Test-Path $zipOut) { Remove-Item $zipOut -Force }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zipOut, [System.IO.Compression.CompressionLevel]::Optimal, $false)
-Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
+# Mantem-se a pasta 'stage': o CI carrega-a como artefacto do GitHub (os ficheiros
+# CRUS, sem o ZIP - ver SIGNPATH.md). Sem o ZIP pelo meio, a artifact
+# configuration ve os .exe diretamente (sem ZIP aninhado).
 
 Write-Host ""
-Ok ("ZIP para o SignPath: $zipOut  (" + ("{0:N0} MB" -f ((Get-Item $zipOut).Length / 1MB)) + ")")
+Ok ("Pasta de artefactos (CI): $stage")
+Ok ("ZIP para submissao manual: $zipOut  (" + ("{0:N0} MB" -f ((Get-Item $zipOut).Length / 1MB)) + ")")
 Write-Host ""
 Write-Host "Proximos passos (ver SIGNPATH.md):" -ForegroundColor Cyan
-Write-Host "  1. Submeter o ZIP no SignPath (pedido de assinatura OSS)."
-Write-Host "  2. Aprovar e descarregar o ZIP assinado."
-Write-Host "  3. Aplicar e regenerar hashes:"
-Write-Host "       powershell -File tools\apply_signed.ps1 -Source <zip assinado>"
+Write-Host "  Manual: submeter o ZIP no SignPath, aprovar e descarregar."
+Write-Host "  CI    : carregar a PASTA stage\ como artefacto do GitHub (nao o ZIP)."
+Write-Host "  Aplicar o resultado assinado e regenerar hashes:"
+Write-Host "       powershell -File tools\apply_signed.ps1 -Source <zip ou pasta assinada>"
 Write-Host ""

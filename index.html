@@ -423,6 +423,9 @@
             .delete-history-btn { position:absolute; right:.65rem; top:.65rem; width:32px; min-width:32px; height:32px; min-height:32px; padding:7px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--danger) 42%,var(--border)); border-radius:7px; color:var(--danger); background:var(--danger-soft); box-shadow:none; }
             .delete-history-btn:hover { color:#fff; background:var(--danger-hover); border-color:var(--danger-hover); }
             .delete-history-btn .icon { width:16px; height:16px; }
+            .history-folder-btn { position:absolute; right:3.2rem; top:.65rem; width:32px; min-width:32px; height:32px; min-height:32px; padding:7px; display:grid; place-items:center; border:1px solid var(--border); border-radius:7px; color:var(--text-secondary); background:transparent; box-shadow:none; }
+            .history-folder-btn:hover { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 42%,var(--border)); background:color-mix(in srgb,var(--accent) 14%,transparent); }
+            .history-folder-btn .icon { width:16px; height:16px; }
             .history-status { width:19px; height:19px; display:inline-grid; place-items:center; border-radius:50%; }
             .history-status.success { color:var(--success); background:var(--success-soft); }
             .history-status.failed { color:var(--danger); background:var(--danger-soft); }
@@ -625,6 +628,116 @@
             .history-line > span:last-child { overflow:hidden; text-overflow:ellipsis; }
             .history-fail { display:flex; align-items:center; gap:7px; margin-top:.3rem; font-size:.72rem; color:var(--danger); }
             .history-fail .icon { width:14px; height:14px; }
+            /* ===== Gavetas e movimentacao de ficheiros ===== */
+            .library-item-meta { display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; }
+            .library-item-category { display:inline-flex; align-items:center; gap:5px; font-size:.66rem; padding:1px 8px; border-radius:999px; border:1px solid color-mix(in srgb,var(--cat-color,var(--accent)) 45%,var(--border)); color:var(--cat-color,var(--accent)); background:color-mix(in srgb,var(--cat-color,var(--accent)) 14%,transparent); }
+            .library-item-category .icon { width:11px; height:11px; }
+            .cat-dot { width:7px; height:7px; border-radius:50%; background:var(--cat-color,var(--accent)); flex:none; box-shadow:0 0 0 1px color-mix(in srgb,var(--cat-color,var(--accent)) 45%,transparent); }
+            .header-move-btn { display:none; align-items:center; gap:0.25rem; margin-left:0.5rem; cursor:pointer; font-size:0.9rem; color:var(--accent); opacity:0.7; transition:opacity 0.2s ease; }
+            .header-move-btn.visible { display:flex; }
+            .header-move-btn:hover { opacity:1; transform:scale(1.05); }
+            .header-move-btn .icon { width:16px; height:16px; }
+            /* Gavetas: criar (esquerda) + cartas dos criados (direita) */
+            .cat-split { display:grid; grid-template-columns:minmax(230px,340px) 1fr; gap:1.1rem; margin-top:.6rem; align-items:start; }
+            @media (max-width:760px) { .cat-split { grid-template-columns:1fr; } }
+            .cat-area-row { display:flex; gap:.4rem; margin-bottom:.6rem; }
+            .cat-area-opt { display:inline-flex; align-items:center; gap:.4rem; padding:.34rem .7rem; border:1px solid var(--border); border-radius:999px; font-size:.76rem; color:var(--text-secondary); cursor:pointer; user-select:none; transition:all .15s ease; }
+            .cat-area-opt:hover { color:var(--text-primary); border-color:color-mix(in srgb,var(--accent) 30%,var(--border)); }
+            .cat-area-opt input { width:auto; margin:0; accent-color:var(--accent); cursor:pointer; }
+            .cat-area-opt .icon { width:14px; height:14px; }
+            .cat-area-opt.active { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--border)); background:color-mix(in srgb,var(--accent) 12%,transparent); }
+            .categories-add-row { display:flex; gap:.45rem; align-items:stretch; }
+            .categories-add-row input { flex:1 1 auto; min-width:0; }
+            .categories-add-row button { width:auto; flex:0 0 auto; padding:.5rem .85rem; white-space:nowrap; }
+            .categories-add-row button .icon { width:15px; height:15px; }
+            .cat-per-row { display:flex; align-items:center; gap:.5rem; margin-top:.6rem; font-size:.76rem; color:var(--text-secondary); }
+            .cat-per-row label { flex:1 1 auto; min-width:0; }
+            .cat-per-row select { width:auto; flex:0 0 auto; padding:.3rem 1.9rem .3rem .55rem; font-size:.78rem; }
+            .cat-note { font-size:.72rem; line-height:1.5; color:var(--text-secondary); margin-top:.55rem; }
+            .categories-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:.5rem; align-content:start; }
+            .category-row { position:relative; display:flex; flex-direction:column; gap:.32rem; padding:.55rem .6rem; border:1px solid var(--border); border-radius:10px; background:color-mix(in srgb,var(--bg-secondary) 55%,transparent); min-height:66px; }
+            .category-row .category-name { display:flex; align-items:center; gap:.42rem; font-size:.8rem; min-width:0; padding-right:56px; }
+            .category-row .category-name span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .category-row .category-name .icon { width:15px; height:15px; flex:none; color:var(--cat-color,var(--accent)); }
+            .category-row .category-count { font-size:.67rem; color:var(--text-secondary); }
+            .category-row .category-actions { position:absolute; top:.32rem; right:.32rem; display:flex; align-items:center; gap:.15rem; }
+            .category-row .category-remove { cursor:pointer; color:var(--danger); opacity:.65; display:grid; place-items:center; width:24px; height:24px; border-radius:6px; border:1px solid transparent; }
+            .category-row .category-remove:hover { opacity:1; border-color:color-mix(in srgb,var(--danger) 42%,var(--border)); background:var(--danger-soft); }
+            .category-row .category-remove .icon { width:14px; height:14px; }
+            /* Identificador de cor: mostra apenas o circulo com a cor da gaveta. */
+            .category-color { display:grid; place-items:center; width:24px; height:24px; padding:0; border:none; border-radius:50%; cursor:pointer; background:transparent; position:relative; overflow:visible; }
+            .category-color:hover { background:transparent; transform:none; }
+            .category-color::after { content:""; width:14px; height:14px; border-radius:50%; background:var(--cat-color,var(--accent)); box-shadow:0 0 0 1px color-mix(in srgb,var(--cat-color,var(--accent)) 45%,transparent); transition:transform .12s ease, box-shadow .12s ease; }
+            .category-color:hover::after { transform:scale(1.16); box-shadow:0 0 0 3px color-mix(in srgb,var(--cat-color,var(--accent)) 26%,transparent); }
+            .category-color input { position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; border:none; padding:0; }
+            /* Seletor de cor: grelha da paleta da app + cor personalizada */
+            .cat-color-menu { position:fixed; z-index:90; display:none; flex-direction:column; gap:.6rem; width:238px; padding:.75rem .8rem; border:1px solid var(--border); border-radius:12px; background:var(--bg-primary); box-shadow:0 18px 44px rgba(0,0,0,.34); }
+            .cat-color-menu.open { display:flex; }
+            .cat-color-menu-title { display:flex; align-items:center; gap:.45rem; font-size:.66rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); }
+            .cat-color-menu-title .icon { width:13px; height:13px; color:var(--accent); }
+            .cat-color-swatches { display:grid; grid-template-columns:repeat(5,1fr); gap:.42rem; }
+            .cat-color-swatch { position:relative; width:100%; aspect-ratio:1/1; padding:0; border-radius:8px; cursor:pointer; background:var(--cat-color); border:1px solid color-mix(in srgb,var(--cat-color) 62%,var(--border)); transition:transform .12s ease, box-shadow .12s ease; }
+            .cat-color-swatch:hover { transform:scale(1.09); }
+            .cat-color-swatch.active { box-shadow:0 0 0 2px var(--bg-primary), 0 0 0 4px color-mix(in srgb,var(--cat-color) 72%,transparent); }
+            .cat-color-swatch.active::after { content:""; position:absolute; inset:0; margin:auto; width:7px; height:7px; border-radius:50%; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.28); }
+            .cat-color-custom { display:flex; align-items:center; gap:.55rem; font-size:.76rem; color:var(--text-secondary); cursor:pointer; padding-top:.1rem; border-top:1px solid var(--border); margin-top:.05rem; padding-top:.6rem; }
+            .cat-color-custom:hover { color:var(--text-primary); }
+            .cat-color-custom input[type=color] { flex:0 0 auto; width:34px; height:28px; padding:0; border:1px solid var(--border); border-radius:7px; background:transparent; cursor:pointer; }
+            .cat-color-custom span { min-width:0; }
+            .categories-empty { font-size:.78rem; color:var(--text-secondary); border:1px dashed var(--border); border-radius:10px; padding:.9rem; text-align:center; }
+            .cat-filter-specials { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.4rem; }
+            .cat-filter-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--cat-cell,84px),1fr)); gap:.3rem; max-width:calc(var(--cat-cols,3) * var(--cat-cell,84px) + (var(--cat-cols,3) - 1) * .3rem); }
+            .cat-filter-btn { font-size:.73rem; padding:.4rem .5rem; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); cursor:pointer; transition:all .15s ease; display:flex; align-items:center; gap:.4rem; width:100%; text-align:left; min-width:0; }
+            .cat-filter-btn .icon { width:13px; height:13px; flex:none; color:var(--cat-color,currentColor); }
+            .cat-filter-label { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .cat-filter-count { flex:none; font-size:.66rem; min-width:20px; text-align:center; padding:.05rem .42rem; border-radius:999px; background:color-mix(in srgb,var(--text-secondary) 16%,transparent); color:var(--text-secondary); }
+            .cat-filter-btn:hover { color:var(--text-primary); }
+            .cat-filter-btn.active { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--border)); background:color-mix(in srgb,var(--accent) 14%,transparent); }
+            .cat-filter-btn.active .cat-filter-count { background:color-mix(in srgb,var(--accent) 22%,transparent); color:var(--accent); }
+            .cat-filter-btn .cat-dot { width:8px; height:8px; }
+            .cat-filter-specials .cat-filter-btn > .icon { order:1; }
+            .cat-filter-specials .cat-filter-btn > .cat-filter-label { order:2; }
+            .cat-filter-specials .cat-filter-btn > .cat-filter-count { order:3; }
+            .cat-filter-grid .cat-filter-btn { display:grid; grid-template-columns:1fr auto; grid-template-areas:"icon count" "label label"; align-items:center; gap:.22rem .35rem; padding:.42rem .5rem; }
+            .cat-filter-grid .cat-filter-btn > .icon { grid-area:icon; }
+            .cat-filter-grid .cat-filter-btn > .cat-filter-count { grid-area:count; justify-self:end; }
+            .cat-filter-grid .cat-filter-btn > .cat-filter-label { grid-area:label; width:100%; }
+            /* Carta de gaveta: permite remover diretamente do painel lateral */
+            .cat-filter-cell { position:relative; display:flex; min-width:0; }
+            .cat-filter-cell > .cat-filter-btn { flex:1 1 auto; }
+            .cat-filter-grid .cat-filter-btn > .cat-filter-count { transition:opacity .12s ease; }
+            .cat-filter-cell:hover .cat-filter-btn > .cat-filter-count,
+            .cat-filter-cell:focus-within .cat-filter-btn > .cat-filter-count { opacity:0; }
+            .cat-filter-remove { position:absolute; top:1px; right:1px; z-index:2; width:18px; height:18px; padding:0; border-radius:50%; display:none; align-items:center; justify-content:center; background:var(--danger); color:#fff; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.32); }
+            .cat-filter-cell:hover .cat-filter-remove, .cat-filter-cell:focus-within .cat-filter-remove { display:flex; }
+            .cat-filter-remove:hover { background:var(--danger-hover,var(--danger)); }
+            .cat-filter-remove .icon { width:11px; height:11px; }
+            .history-moved { display:flex; align-items:center; gap:7px; margin-top:.3rem; font-size:.72rem; color:var(--accent); }
+            .history-cat { color:var(--cat-color,var(--accent)); }
+            .history-moved .icon { width:14px; height:14px; }
+            .move-dest-path { font-size:.72rem; color:var(--text-secondary); word-break:break-all; margin-top:.15rem; }
+            .move-hint { font-size:.72rem; color:var(--text-secondary); margin-top:.35rem; }
+            /* ===== Menu vertical de movimentacao por cartao ===== */
+            .library-item-action.move-btn { display:inline-flex; align-items:center; opacity:.62; }
+            .library-item-action.move-btn:hover, .library-item-action.move-btn.open { opacity:1; color:var(--accent); }
+            .library-item-actions .item-switch { margin-left:auto; }
+            .item-menu { position:fixed; z-index:80; display:none; flex-direction:column; gap:.12rem; min-width:210px; max-width:min(330px, 90vw); padding:.3rem; border:1px solid var(--border); border-radius:10px; background:var(--bg-primary); box-shadow:0 18px 44px rgba(0,0,0,.3); }
+            .item-menu.open { display:flex; }
+            .item-menu-item { display:flex; align-items:center; gap:.6rem; width:100%; padding:.5rem .6rem; border:none; border-radius:7px; background:transparent; color:var(--text-primary); font-size:.8rem; text-align:left; cursor:pointer; }
+            .item-menu-item:hover { background:var(--bg-secondary); color:var(--accent); }
+            .item-menu-item .icon { width:15px; height:15px; }
+            .item-menu-item.danger { color:var(--danger); }
+            .item-menu-item.danger:hover { background:var(--danger-soft); color:var(--danger); }
+            .item-menu-sep { height:1px; background:var(--border); margin:.25rem; }
+            .item-menu-title { display:flex; align-items:center; gap:.5rem; padding:.35rem .6rem .25rem; font-size:.68rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); }
+            .item-menu-title .icon { width:13px; height:13px; }
+            .item-menu-item > span:not(.cat-dot) { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .item-menu-item .cat-dot { width:9px; height:9px; margin:0 3px; }
+            .item-menu-item.current { color:var(--cat-color,var(--accent)); background:color-mix(in srgb,var(--cat-color,var(--accent)) 12%,transparent); }
+            .item-menu-item.current:hover { color:var(--cat-color,var(--accent)); }
+            .item-menu-item .icon:last-child { margin-left:auto; width:14px; height:14px; }
+            .item-menu-item:disabled { opacity:.45; cursor:default; }
+            .item-menu-empty { padding:.5rem .6rem; font-size:.75rem; color:var(--text-secondary); }
             /* ---- Acerca / Licenças / créditos ---- */
             .footer-credit { display:inline-flex; align-items:center; gap:6px; }
             .footer-credit .icon { width:13px; height:13px; color:var(--accent); }
@@ -677,7 +790,7 @@
                 <div class="brand">
                     <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
                     <div class="brand-text">
-                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.6.0</span></div>
+                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.7.0</span></div>
                         <div class="brand-subtitle" id="brand-subtitle" data-i18n="brand.subtitle">YT-DLP INTERFACE</div>
                     </div>
                 </div>
@@ -757,6 +870,37 @@
                                 <div style="display:flex; align-items:center; gap:.75rem; margin-top:.5rem">
                                     <button type="button" onclick="saveDownloadsDir()" class="soft settings-action" style="width:auto"><span data-icon="save"></span><span data-i18n="btn.save">Guardar</span></button>
                                     <span id="dl-current" class="config-label" style="margin:0; font-size:.72rem; color:var(--text-secondary)"></span>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            <h2 data-i18n="settings.categories">Gavetas</h2>
+                            <div class="cat-split">
+                                <div class="cat-create">
+                                    <div class="cat-area-row" id="cat-area-row" role="radiogroup" aria-label="Tipo de ficheiros" data-i18n-aria="categories.areaAria">
+                                        <label class="cat-area-opt"><input type="radio" name="cat-area" value="video" checked><span data-icon="video"></span><span data-i18n="categories.areaVideo">Vídeo</span></label>
+                                        <label class="cat-area-opt"><input type="radio" name="cat-area" value="audio"><span data-icon="audio"></span><span data-i18n="categories.areaAudio">Áudio</span></label>
+                                    </div>
+                                    <div class="categories-add-row">
+                                        <input type="text" id="new-category-input" maxlength="64" placeholder="ex.: filmes, vídeos, tutoriais" data-i18n-placeholder="categories.placeholderVideo" aria-label="Nome da gaveta" data-i18n-aria="categories.nameAria">
+                                        <button type="button" class="soft settings-action" onclick="addCategory()"><span data-icon="plus"></span><span data-i18n="categories.add">Criar</span></button>
+                                    </div>
+                                    <div class="cat-per-row">
+                                        <label for="cat-per-row" data-i18n="categories.perRow">Gavetas por linha</label>
+                                        <select id="cat-per-row" data-i18n-aria="categories.perRowAria" aria-label="Gavetas por linha" onchange="setCategoriesPerRow(this.value)">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                        </select>
+                                    </div>
+                                    <p class="cat-note" id="cat-note" data-i18n="categories.helpVideo">Uma gaveta é uma subpasta dentro da pasta de downloads, para separar os vídeos por tema. Os ficheiros mantêm a pasta de origem.</p>
+                                </div>
+                                <div class="cat-cards">
+                                    <div id="categories-list" class="categories-list"></div>
+                                    <div id="categories-empty" class="categories-empty" style="display:none"></div>
                                 </div>
                             </div>
                             
@@ -848,6 +992,11 @@
                             <button class="filter-btn active" data-filter="all" data-i18n-tip="filter.all.tip" data-tip="Mostrar todos os ficheiros"><span data-icon="grid"></span> <span data-i18n="filter.all">Todos</span></button>
                         </div>
                     </div>
+                    <div class="filter-section" id="category-filter-section" style="display:none">
+                        <div class="filter-title" data-i18n="filter.categories">GAVETAS</div>
+                        <div class="cat-filter-specials" id="category-filter-specials"></div>
+                        <div class="cat-filter-grid" id="category-filters"></div>
+                    </div>
                     <div class="library-list" id="library-container"></div>
                     <div class="preview-container" id="preview-box">
                         <div class="preview-header"><span id="preview-name"></span><button class="icon-only" onclick="closePreview()" style="color:white; padding:0" data-i18n-aria="preview.close.aria" aria-label="Fechar pré-visualização"><span data-icon="close"></span></button></div>
@@ -890,13 +1039,38 @@
             </div>
         </div>
         
+        <!-- Menu vertical de acoes do cartao da mediateca -->
+        <div id="item-menu" class="item-menu" role="menu"></div>
+
+        <!-- Seletor de cor da gaveta (paleta da app + cor personalizada) -->
+        <div id="cat-color-menu" class="cat-color-menu" role="dialog" aria-label="Cor da gaveta"></div>
+        
+        <!-- Modal de movimentacao (interno / externo) -->
+        <div id="move-modal" class="modal-overlay" onclick="if(event.target===this)closeMoveModal()">
+            <div class="modal-content">
+                <h3 id="move-modal-title" style="display:flex;align-items:center;gap:9px"><span data-icon="move"></span> <span data-i18n="move.title">Mover ficheiros</span></h3>
+                <p id="move-modal-message" style="color:var(--text-secondary)">Escolha o destino:</p>
+                <div class="modal-options" id="move-dest-list"></div>
+                <button type="button" class="soft settings-action" id="move-external-btn" style="width:100%" onclick="chooseExternalFolder()"><span data-icon="folder"></span><span data-i18n="move.external">Escolher pasta externa…</span></button>
+                <p class="move-hint" id="move-external-path" style="display:none"></p>
+                <div class="modal-buttons">
+                    <button onclick="closeMoveModal()" class="secondary" data-i18n="btn.cancel">Cancelar</button>
+                    <button onclick="confirmMove()" data-i18n="move.confirm">Mover</button>
+                </div>
+            </div>
+        </div>
+        
         <div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelpModal()">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem"><h3 style="margin:0;display:flex;align-items:center;gap:9px"><span data-icon="help"></span> <span data-i18n="help.title">Ajuda</span></h3><button onclick="closeHelpModal()" style="width:32px;min-width:32px;padding:0.25rem; background:transparent; color:var(--text-secondary); border:1px solid var(--border)" data-i18n-aria="help.close.aria" aria-label="Fechar ajuda"><span data-icon="close"></span></button></div>
                 <h4 class="help-heading"><span data-icon="download"></span> <span data-i18n="help.download.h">Download</span></h4><p data-i18n="help.download.p">Cole a URL, escolha qualidade e clique em Download.</p>
-                <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.filters.h">Filtros</span></h4><p data-i18n="help.filters.p">Use Vídeo/Áudio/Todos para filtrar a mediateca. A pesquisa respeita o filtro.</p>
+                <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.filters.h">Filtros</span></h4><p data-i18n="help.filters.p">Use Vídeo/Áudio/Todos para filtrar a mediateca. No painel lateral, as gavetas aparecem numa grelha e o filtro de tipo mostra apenas as gavetas desse tipo.</p>
+                <h4 class="help-heading"><span data-icon="tag"></span> <span data-i18n="help.categories.h">Gavetas</span></h4><p data-i18n="help.categories.p">Na Configuração pode criar gavetas — cada uma pertence a Vídeo ou Áudio e tem uma cor. Na mediateca, cada ficheiro mostra a gaveta a que pertence e pode ser movido entre gavetas do mesmo tipo pelo menu da carta.</p>
+                <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.counts.h">Contagens</span></h4><p data-i18n="help.counts.p">Os totais de vídeos e áudios aparecem nos separadores Vídeo/Áudio. Em cada grupo da mediateca, os dísticos mostram quantos ficheiros vieram de cada rede social.</p>
+                <h4 class="help-heading"><span data-icon="download"></span> <span data-i18n="help.progress.h">Progresso</span></h4><p data-i18n="help.progress.p">Durante um download, o ícone da rede e a percentagem seguem a barra. A ponta da barra acompanha o carril e encaixa no fim.</p>
                 <h4 class="help-heading"><span data-icon="trash"></span> <span data-i18n="help.removal.h">Remoção</span></h4><p data-i18n="help.removal.p">Clique no balde do lixo no cabeçalho do grupo para remover itens selecionados. Use os switches nos itens para selecionar múltiplos ficheiros.</p>
                 <h4 class="help-heading"><span data-icon="link"></span> <span data-i18n="help.history.h">Histórico</span></h4><p data-i18n="help.history.p">Cada entrada no histórico mostra o link para o ficheiro associado. Pode remover apenas o link do histórico sem apagar o ficheiro.</p>
+                <h4 class="help-heading"><span data-icon="shield"></span> <span data-i18n="help.integrity.h">Integridade</span></h4><p data-i18n="help.integrity.p">Em «Acerca» pode verificar a integridade dos ficheiros instalados (hashes SHA-256). O código-fonte, a licença GPL-3.0 e os hashes das releases estão publicados no repositório.</p>
                 <h4 class="help-heading"><span data-icon="alert"></span> <span data-i18n="help.auth.h">Erro de autenticação</span></h4><p data-i18n="help.auth.p">Ative "Usar cookies.txt" e "PO Token" nas Definições (já vêm ativados por padrão).</p>
                 <h4 class="help-heading"><span data-icon="info"></span> <span data-i18n="help.about.h">Acerca</span></h4>
                 <div class="about-block">
@@ -954,6 +1128,24 @@
             </div>
         </div>
 
+        <!-- Escolha ao remover uma gaveta que ainda tem ficheiros -->
+        <div id="cat-remove-modal" class="modal-overlay" onclick="if(event.target===this)resolveCategoryRemove(null)">
+            <div class="modal-content">
+                <div class="confirm-head">
+                    <div class="confirm-icon danger" id="cat-remove-icon"></div>
+                    <div style="flex:1;min-width:0">
+                        <h3 id="cat-remove-title" style="margin:0 0 6px" data-i18n="categories.remove">Remover gaveta</h3>
+                        <p id="cat-remove-message" style="margin:0; color:var(--text-secondary); white-space:pre-line"></p>
+                    </div>
+                </div>
+                <div class="modal-buttons" style="flex-wrap:wrap">
+                    <button class="secondary" id="cat-remove-cancel" onclick="resolveCategoryRemove(null)" data-i18n="btn.cancel">Cancelar</button>
+                    <button class="danger" id="cat-remove-delete" onclick="resolveCategoryRemove('delete')" data-i18n="categories.deleteFiles">Apagar ficheiros</button>
+                    <button id="cat-remove-keep" onclick="resolveCategoryRemove('keep')" data-i18n="categories.keepFiles">Manter ficheiros</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Toasts e tooltip -->
         <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
         <div class="tooltip" id="tooltip" role="tooltip" aria-hidden="true"></div>
@@ -964,7 +1156,7 @@
                 help:'<circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1-1.4 2.1"/><path d="M12 17h.01"/>',
                 moon:'<path d="M20.5 14.2A8 8 0 0 1 9.8 3.5 8 8 0 1 0 20.5 14.2z"/>', sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
                 download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>', settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/>',
-                history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', pause:'<path d="M8 5v14M16 5v14"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1"/>', terminal:'<path d="M4 6l4 4-4 4M10 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/>', library:'<path d="M4 4v16M9 4v16M14 5l4 14"/>', refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.5-2L20 12M4 12l2.4 5a7 7 0 0 0 11.5-2"/>', video:'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2z"/>', audio:'<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>', grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>', trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>', user:'<circle cx="12" cy="8" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/>', save:'<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>', news:'<path d="M4 5h14v14H6a2 2 0 0 1-2-2z"/><path d="M8 9h6M8 13h7M8 17h4M18 8h2v9a2 2 0 0 1-2 2"/>', disk:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>', update:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 8.5A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15.5"/>', check:'<path d="M5 12l4 4L19 6"/>', pointer:'<path d="M5 3l6.4 16.6 2.7-6.5 6.5-2.7z"/>', eye:'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/>', tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h5a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.3"/>', folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', link:'<path d="M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9"/><path d="M14 11a5 5 0 0 0-7.1 0L4.5 13.4a5 5 0 0 0 7.1 7.1L13 19.1"/>', alert:'<path d="M12 3.2l9 15.6H3z"/><path d="M12 9.6v4.2M12 17.2h.01"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', close:'<path d="M6 6l12 12M18 6L6 18"/>', minimize:'<path d="M5 12h14"/>', maximize:'<rect x="5" y="5" width="14" height="14" rx="2"/>', restore:'<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V6a1 1 0 0 1 1-1h9"/>', monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', palette:'<path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.3c1.5 0 2.7-1.2 2.7-2.7C20 6.6 16.4 3 12 3z"/><circle cx="7.6" cy="10.6" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="16.4" cy="10.6" r="1.1"/>', install:'<path d="M12 3v10M8.5 9.5L12 13l3.5-3.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>', 'chevron-up':'<path d="M6 15l6-6 6 6"/>', 'chevron-down':'<path d="M6 9l6 6 6-6"/>', 'chevron-right':'<path d="M9 6l6 6-6 6"/>', external:'<path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>', sort:'<path d="M8 5v14M5 8l3-3 3 3"/><path d="M16 19V5M13 16l3 3 3-3"/>', play:'<path d="M8 5v14l11-7z"/>', file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>', 'fullscreen':'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'fullscreen-exit':'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>', license:'<path d="M6 3h12v18l-6-3-6 3z"/><path d="M9 8h6M9 12h4"/>', shield:'<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/><path d="M9 12l2 2 4-4"/>', copyright:'<circle cx="12" cy="12" r="9"/><path d="M14.6 9.3a3.6 3.6 0 1 0 0 5.4"/>', code:'<path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/>', sparkle:'<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="M18 16l.7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7z"/>'
+                history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', pause:'<path d="M8 5v14M16 5v14"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1"/>', terminal:'<path d="M4 6l4 4-4 4M10 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/>', library:'<path d="M4 4v16M9 4v16M14 5l4 14"/>', refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.5-2L20 12M4 12l2.4 5a7 7 0 0 0 11.5-2"/>', video:'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2z"/>', audio:'<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>', grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>', trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>', user:'<circle cx="12" cy="8" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/>', save:'<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>', news:'<path d="M4 5h14v14H6a2 2 0 0 1-2-2z"/><path d="M8 9h6M8 13h7M8 17h4M18 8h2v9a2 2 0 0 1-2 2"/>', disk:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>', update:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 8.5A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15.5"/>', check:'<path d="M5 12l4 4L19 6"/>', pointer:'<path d="M5 3l6.4 16.6 2.7-6.5 6.5-2.7z"/>', eye:'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/>', tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h5a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.3"/>', folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', plus:'<path d="M12 5v14M5 12h14"/>', move:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 9.5v4M10 11.5l2 2 2-2"/>', kebab:'<g fill="currentColor" stroke="none"><circle cx="12" cy="5.4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.6" r="1.6"/></g>', link:'<path d="M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9"/><path d="M14 11a5 5 0 0 0-7.1 0L4.5 13.4a5 5 0 0 0 7.1 7.1L13 19.1"/>', alert:'<path d="M12 3.2l9 15.6H3z"/><path d="M12 9.6v4.2M12 17.2h.01"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', close:'<path d="M6 6l12 12M18 6L6 18"/>', minimize:'<path d="M5 12h14"/>', maximize:'<rect x="5" y="5" width="14" height="14" rx="2"/>', restore:'<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V6a1 1 0 0 1 1-1h9"/>', monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', palette:'<path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.3c1.5 0 2.7-1.2 2.7-2.7C20 6.6 16.4 3 12 3z"/><circle cx="7.6" cy="10.6" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="16.4" cy="10.6" r="1.1"/>', install:'<path d="M12 3v10M8.5 9.5L12 13l3.5-3.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>', 'chevron-up':'<path d="M6 15l6-6 6 6"/>', 'chevron-down':'<path d="M6 9l6 6 6-6"/>', 'chevron-right':'<path d="M9 6l6 6-6 6"/>', external:'<path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>', sort:'<path d="M8 5v14M5 8l3-3 3 3"/><path d="M16 19V5M13 16l3 3 3-3"/>', play:'<path d="M8 5v14l11-7z"/>', file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>', 'fullscreen':'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'fullscreen-exit':'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>', license:'<path d="M6 3h12v18l-6-3-6 3z"/><path d="M9 8h6M9 12h4"/>', shield:'<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/><path d="M9 12l2 2 4-4"/>', copyright:'<circle cx="12" cy="12" r="9"/><path d="M14.6 9.3a3.6 3.6 0 1 0 0 5.4"/>', code:'<path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/>', sparkle:'<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="M18 16l.7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7z"/>'
             };
             function icon(name, cls='icon') { return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`; }
             function hydrateIcons(root=document) { root.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML=icon(el.dataset.icon); }); }
@@ -1119,15 +1311,23 @@
                     "help.download.h": "Download",
                     "help.download.p": "Cole a URL, escolha qualidade e clique em Download.",
                     "help.filters.h": "Filtros",
-                    "help.filters.p": "Use Vídeo/Áudio/Todos para filtrar a mediateca. A pesquisa respeita o filtro.",
+                    "help.filters.p": "Use Vídeo/Áudio/Todos para filtrar a mediateca. No painel lateral, as gavetas aparecem numa grelha (máximo por linha configurável) e o filtro de tipo mostra apenas as gavetas desse tipo. A pesquisa respeita sempre o filtro ativo.",
+                    "help.categories.h": "Gavetas",
+                    "help.categories.p": "Na Configuração pode criar gavetas — cada uma pertence a Vídeo ou Áudio e tem uma cor. Na mediateca, cada ficheiro mostra a gaveta a que pertence e pode ser movido entre gavetas do mesmo tipo pelo menu da carta. Nunca se cruza vídeo com áudio. Pode remover uma gaveta a partir da sua carta no painel lateral; se tiver ficheiros, escolhe se os mantém (movidos para «Sem gaveta») ou os apaga. As cores seguem a paleta da aplicação e o tema.",
+                    "help.counts.h": "Contagens",
+                    "help.counts.p": "Os totais de vídeos e áudios aparecem nos separadores Vídeo/Áudio. Em cada grupo da mediateca, os dísticos mostram quantos ficheiros vieram de cada rede social; no painel lateral, cada gaveta mostra quantos ficheiros contém.",
+                    "help.progress.h": "Progresso",
+                    "help.progress.p": "Durante um download, o ícone da rede e a percentagem seguem a barra. A ponta da barra acompanha o carril e encaixa no fim.",
                     "help.removal.h": "Remoção",
                     "help.removal.p": "Clique no balde do lixo no cabeçalho do grupo para remover itens selecionados. Use os switches nos itens para selecionar múltiplos ficheiros.",
                     "help.history.h": "Histórico",
-                    "help.history.p": "Cada entrada no histórico mostra o link para o ficheiro associado. Pode remover apenas o link do histórico sem apagar o ficheiro.",
+                    "help.history.p": "Cada entrada mostra o nome do ficheiro junto ao link, além do estado, da rede social, da data e da gaveta a que pertence. Pode remover apenas o link do histórico sem apagar o ficheiro.",
+                    "help.integrity.h": "Integridade",
+                    "help.integrity.p": "Em «Acerca» pode verificar a integridade dos ficheiros instalados (hashes SHA-256). O código-fonte, a licença GPL-3.0 e os hashes das releases estão publicados no repositório.",
                     "help.auth.h": "Erro de autenticação",
                     "help.auth.p": "Ative \"Usar cookies.txt\" e \"PO Token\" nas Definições (já vêm ativados por padrão).",
                     "help.about.h": "Acerca",
-                    "about.p1": "O <strong>YT-DLP Media Desk</strong> descarrega e organiza media (vídeo e áudio) em lote e gere uma mediateca local com filtros, pesquisa, histórico e remoção em massa.",
+                    "about.p1": "O <strong>YT-DLP Media Desk</strong> descarrega e organiza media (vídeo e áudio) em lote e gere uma mediateca local com filtros, gavetas (com cor), pesquisa, histórico e remoção em massa.",
                     "about.p2": "Os downloads são efetuados pelo <strong>yt-dlp</strong>, um motor open-source (licença <em>Unlicense</em>). A conversão e junção de ficheiros usa <strong>FFmpeg</strong>; a resolução de desafios JavaScript usa <strong>Deno</strong>.",
                     "about.p3": "<strong>Conceito, design e direção: Alexandre da Costa / ALDACO.</strong> Implementação técnica assistida por inteligência artificial, sob direção do autor.",
                     "about.copyright": "© 2026 Alexandre da Costa (ALDACO)",
@@ -1178,6 +1378,64 @@
                     "group.removeAudios": "Remover áudios selecionados",
                     "item.unknownOrigin": "Origem desconhecida",
                     "item.removeFile": "Remover ficheiro",
+                    "item.showInFolder": "Mostrar na pasta",
+                    "toast.showInFolderError": "Não foi possível abrir a pasta do ficheiro.",
+                    "item.move": "Mover para…",
+                    "item.actions": "Ações do ficheiro",
+                    "settings.categories": "Gavetas",
+                    "categories.help": "Crie gavetas para separar filmes, séries ou outros grupos. Cada gaveta é uma pasta dentro da pasta de downloads.",
+                    "categories.helpVideo": "Uma gaveta é uma subpasta dentro da pasta de downloads, para separar os vídeos por tema. Os ficheiros mantêm a pasta de origem.",
+                    "categories.helpAudio": "Uma gaveta é uma subpasta dentro da pasta de downloads, para separar o áudio por estilo. Os ficheiros mantêm a pasta de origem.",
+                    "categories.placeholder": "Nome da gaveta",
+                    "categories.placeholderVideo": "ex.: filmes, vídeos, tutoriais",
+                    "categories.placeholderAudio": "ex.: pop, metal, clássica, rock",
+                    "categories.areaAria": "Tipo de ficheiros da gaveta",
+                    "categories.areaVideo": "Vídeo",
+                    "categories.areaAudio": "Áudio",
+                    "categories.nameAria": "Nome da gaveta",
+                    "categories.fileCount": "{n} ficheiro(s)",
+                    "categories.emptyFor": "Ainda não há gavetas de {area}.",
+                    "categories.add": "Criar",
+                    "categories.empty": "Ainda não há gavetas.",
+                    "categories.color": "Cor da gaveta",
+                    "categories.perRow": "Gavetas por linha",
+                    "categories.perRowAria": "Número máximo de gavetas por linha",
+                    "categories.remove": "Remover gaveta",
+                    "categories.removeConfirm": "Remover a gaveta «{name}»? Os ficheiros que estão dentro dela voltam para a pasta principal.",
+                    "categories.palette": "Paleta da aplicação",
+                    "categories.custom": "Personalizada",
+                    "categories.keepFiles": "Manter ficheiros",
+                    "categories.deleteFiles": "Apagar ficheiros",
+                    "categories.removeWithFiles": "A gaveta «{name}» contém {n} ficheiro(s). Pode mantê-los (serão movidos para «Sem gaveta») ou apagá-los do disco.",
+                    "categories.added": "Gaveta «{name}» criada.",
+                    "categories.removed": "Gaveta removida.",
+                    "categories.duplicate": "Essa gaveta já existe.",
+                    "categories.invalid": "Nome inválido. Não use barras, dois pontos, asteriscos nem nomes reservados do Windows (con, nul…).",
+                    "categories.error": "Não foi possível guardar as gavetas.",
+                    "filter.categories": "GAVETAS",
+                    "filter.allCategories": "Todos",
+                    "filter.noCategory": "Sem gaveta",
+                    "move.title": "Mover ficheiros",
+                    "move.titleBatch": "Mover {n} ficheiro(s)",
+                    "move.message": "Escolha o destino:",
+                    "move.none": "Sem gaveta (pasta principal)",
+                    "move.external": "Escolher pasta externa…",
+                    "move.externalHint": "O ficheiro sai da aplicação e fica apenas na pasta escolhida.",
+                    "move.confirm": "Mover",
+                    "move.done": "{n} ficheiro(s) movido(s).",
+                    "move.noneMoved": "Nada foi movido.",
+                    "move.noCategories": "Crie primeiro uma gaveta nas Definições.",
+                    "move.pickFolderFirst": "Escolha a pasta externa de destino.",
+                    "move.samePlace": "O ficheiro já está nesse destino.",
+                    "move.error": "Não foi possível mover o(s) ficheiro(s).",
+                    "move.errorNotFound": "O ficheiro já não existe no disco.",
+                    "move.errorTarget": "A pasta externa não está acessível.",
+                    "move.errorUnknownCategory": "Gaveta desconhecida.",
+                    "move.errorMedia": "Essa gaveta é de outro tipo (vídeo/áudio). Use uma gaveta do mesmo tipo do ficheiro.",
+                    "group.moveVideos": "Mover os vídeos selecionados",
+                    "group.moveAudios": "Mover os áudios selecionados",
+                    "history.movedTo": "Movido para «{name}»",
+                    "history.movedExternal": "Movido para fora da aplicação",
                     "item.select": "Selecionar para eliminação em massa",
                     "item.selected": "Selecionado para eliminação em massa · clique para desselecionar",
                     "item.selected.aria": "Selecionado para eliminação em massa. Clique para desselecionar.",
@@ -1392,15 +1650,23 @@
                     "help.download.h": "Download",
                     "help.download.p": "Paste the URL, choose the quality and click Download.",
                     "help.filters.h": "Filters",
-                    "help.filters.p": "Use Video/Audio/All to filter the media library. Search respects the filter.",
+                    "help.filters.p": "Use Video/Audio/All to filter the media library. In the side panel, drawers appear in a grid (configurable maximum per row) and the type filter shows only drawers of that type. Search always respects the active filter.",
+                    "help.categories.h": "Drawers",
+                    "help.categories.p": "In Settings you can create drawers — each one belongs to Video or Audio and has a colour. In the media library, each file shows the drawer it belongs to and can be moved between drawers of the same type from the card menu. Video and audio are never mixed. You can remove a drawer from its card in the side panel; if it has files, you choose whether to keep them (moved to «No drawer») or delete them. Colours follow the app palette and theme.",
+                    "help.counts.h": "Counts",
+                    "help.counts.p": "Video and audio totals appear on the Video/Audio tabs. In each library group, the badges show how many files came from each social network; in the side panel, each drawer shows how many files it contains.",
+                    "help.progress.h": "Progress",
+                    "help.progress.p": "During a download, the network icon and percentage follow the bar. The bar tip tracks the track and fits it at the end.",
                     "help.removal.h": "Removal",
                     "help.removal.p": "Click the trash can in the group header to remove selected items. Use the switches on items to select multiple files.",
                     "help.history.h": "History",
-                    "help.history.p": "Each history entry shows the link to the associated file. You can remove only the history link without deleting the file.",
+                    "help.history.p": "Each entry shows the file name next to the link, plus status, network, date and the drawer it belongs to. You can remove only the history link without deleting the file.",
+                    "help.integrity.h": "Integrity",
+                    "help.integrity.p": "Under “About” you can verify the integrity of the installed files (SHA-256 hashes). The source code, the GPL-3.0 license and the release hashes are published in the repository.",
                     "help.auth.h": "Authentication error",
                     "help.auth.p": "Enable \"Use cookies.txt\" and \"PO Token\" in Settings (they are on by default).",
                     "help.about.h": "About",
-                    "about.p1": "<strong>YT-DLP Media Desk</strong> downloads and organizes media (video and audio) in batches and manages a local media library with filters, search, history and bulk removal.",
+                    "about.p1": "<strong>YT-DLP Media Desk</strong> downloads and organizes media (video and audio) in batches and manages a local media library with filters, drawers (with colour), search, history and bulk removal.",
                     "about.p2": "Downloads are handled by <strong>yt-dlp</strong>, an open-source engine (<em>Unlicense</em>). File conversion and merging use <strong>FFmpeg</strong>; JavaScript challenge solving uses <strong>Deno</strong>.",
                     "about.p3": "<strong>Concept, design and direction: Alexandre da Costa / ALDACO.</strong> Technical implementation assisted by artificial intelligence, under the author's direction.",
                     "about.copyright": "© 2026 Alexandre da Costa (ALDACO)",
@@ -1451,6 +1717,64 @@
                     "group.removeAudios": "Remove selected audio",
                     "item.unknownOrigin": "Unknown source",
                     "item.removeFile": "Remove file",
+                    "item.showInFolder": "Show in folder",
+                    "toast.showInFolderError": "Could not open the file's folder.",
+                    "item.move": "Move to…",
+                    "item.actions": "File actions",
+                    "settings.categories": "Drawers",
+                    "categories.help": "Create drawers to separate films, series or other groups. Each drawer is a folder inside the downloads folder.",
+                    "categories.helpVideo": "A drawer is a subfolder inside the downloads folder, to separate videos by topic. Files keep their original folder.",
+                    "categories.helpAudio": "A drawer is a subfolder inside the downloads folder, to separate audio by genre. Files keep their original folder.",
+                    "categories.placeholder": "Drawer name",
+                    "categories.placeholderVideo": "e.g. films, videos, tutorials",
+                    "categories.placeholderAudio": "e.g. pop, metal, classical, rock",
+                    "categories.areaAria": "File type of the drawer",
+                    "categories.areaVideo": "Video",
+                    "categories.areaAudio": "Audio",
+                    "categories.nameAria": "Drawer name",
+                    "categories.fileCount": "{n} file(s)",
+                    "categories.emptyFor": "No {area} drawers yet.",
+                    "categories.add": "Create",
+                    "categories.empty": "No drawers yet.",
+                    "categories.color": "Drawer colour",
+                    "categories.perRow": "Drawers per row",
+                    "categories.perRowAria": "Maximum number of drawers per row",
+                    "categories.remove": "Remove drawer",
+                    "categories.removeConfirm": "Remove the drawer «{name}»? The files inside it are returned to the main folder.",
+                    "categories.palette": "App palette",
+                    "categories.custom": "Custom",
+                    "categories.keepFiles": "Keep files",
+                    "categories.deleteFiles": "Delete files",
+                    "categories.removeWithFiles": "The drawer «{name}» contains {n} file(s). You can keep them (they will be moved to «No drawer») or delete them from disk.",
+                    "categories.added": "Drawer «{name}» created.",
+                    "categories.removed": "Drawer removed.",
+                    "categories.duplicate": "That drawer already exists.",
+                    "categories.invalid": "Invalid name. Do not use slashes, colons, asterisks or reserved Windows names (con, nul…).",
+                    "categories.error": "Could not save the drawers.",
+                    "filter.categories": "DRAWERS",
+                    "filter.allCategories": "All",
+                    "filter.noCategory": "No drawer",
+                    "move.title": "Move files",
+                    "move.titleBatch": "Move {n} file(s)",
+                    "move.message": "Choose the destination:",
+                    "move.none": "No drawer (main folder)",
+                    "move.external": "Choose external folder…",
+                    "move.externalHint": "The file leaves the application and stays only in the chosen folder.",
+                    "move.confirm": "Move",
+                    "move.done": "{n} file(s) moved.",
+                    "move.noneMoved": "Nothing was moved.",
+                    "move.noCategories": "Create a drawer first in Settings.",
+                    "move.pickFolderFirst": "Choose the external destination folder.",
+                    "move.samePlace": "The file is already in that destination.",
+                    "move.error": "Could not move the file(s).",
+                    "move.errorNotFound": "The file no longer exists on disk.",
+                    "move.errorTarget": "The external folder is not accessible.",
+                    "move.errorUnknownCategory": "Unknown drawer.",
+                    "move.errorMedia": "That drawer is for a different type (video/audio). Use a drawer of the file's type.",
+                    "group.moveVideos": "Move the selected videos",
+                    "group.moveAudios": "Move the selected audios",
+                    "history.movedTo": "Moved to «{name}»",
+                    "history.movedExternal": "Moved outside the application",
                     "item.select": "Select for bulk removal",
                     "item.selected": "Selected for bulk removal · click to deselect",
                     "item.selected.aria": "Selected for bulk removal. Click to deselect.",
@@ -1665,15 +1989,23 @@
                     "help.download.h": "Descarga",
                     "help.download.p": "Pega la URL, elige la calidad y haz clic en Descargar.",
                     "help.filters.h": "Filtros",
-                    "help.filters.p": "Usa Vídeo/Audio/Todos para filtrar la mediateca. La búsqueda respeta el filtro.",
+                    "help.filters.p": "Usa Vídeo/Áudio/Todos para filtrar la mediateca. En el panel lateral, los cajones aparecen en una cuadrícula (máximo por fila configurable) y el filtro de tipo muestra solo los cajones de ese tipo. La búsqueda respeta siempre el filtro activo.",
+                    "help.categories.h": "Cajones",
+                    "help.categories.p": "En Ajustes puedes crear cajones: cada uno pertenece a Vídeo o Áudio y tiene un color. En la mediateca, cada archivo muestra el cajón al que pertenece y puede moverse entre cajones del mismo tipo desde el menú de la tarjeta. Nunca se mezcla vídeo con audio. Puedes eliminar un cajón desde su tarjeta en el panel lateral; si tiene archivos, eliges si los conservas (se mueven a «Sin cajón») o los eliminas. Los colores siguen la paleta de la aplicación y el tema.",
+                    "help.counts.h": "Recuentos",
+                    "help.counts.p": "Los totales de vídeo y audio aparecen en las pestañas Vídeo/Áudio. En cada grupo de la mediateca, las insignias muestran cuántos archivos provienen de cada red social; en el panel lateral, cada cajón muestra cuántos archivos contiene.",
+                    "help.progress.h": "Progreso",
+                    "help.progress.p": "Durante una descarga, el icono de la red y el porcentaje siguen la barra. La punta de la barra recorre el carril y encaja al final.",
                     "help.removal.h": "Eliminación",
                     "help.removal.p": "Haz clic en la papelera del encabezado del grupo para eliminar los elementos seleccionados. Usa los interruptores de los elementos para seleccionar varios archivos.",
                     "help.history.h": "Historial",
-                    "help.history.p": "Cada entrada del historial muestra el enlace al archivo asociado. Puedes eliminar solo el enlace del historial sin borrar el archivo.",
+                    "help.history.p": "Cada entrada muestra el nombre del archivo junto al enlace, además del estado, la red, la fecha y el cajón al que pertenece. Puedes eliminar solo el enlace del historial sin borrar el archivo.",
+                    "help.integrity.h": "Integridad",
+                    "help.integrity.p": "En “Acerca de” puedes verificar la integridad de los archivos instalados (hashes SHA-256). El código fuente, la licencia GPL-3.0 y los hashes de las versiones están publicados en el repositorio.",
                     "help.auth.h": "Error de autenticación",
                     "help.auth.p": "Activa \"Usar cookies.txt\" y \"PO Token\" en Ajustes (ya vienen activados por defecto).",
                     "help.about.h": "Acerca de",
-                    "about.p1": "El <strong>YT-DLP Media Desk</strong> descarga y organiza medios (vídeo y audio) por lotes y gestiona una mediateca local con filtros, búsqueda, historial y eliminación masiva.",
+                    "about.p1": "El <strong>YT-DLP Media Desk</strong> descarga y organiza medios (vídeo y audio) por lotes y gestiona una mediateca local con filtros, cajones (con color), búsqueda, historial y eliminación masiva.",
                     "about.p2": "Las descargas las realiza <strong>yt-dlp</strong>, un motor de código abierto (licencia <em>Unlicense</em>). La conversión y unión de archivos usa <strong>FFmpeg</strong>; la resolución de desafíos JavaScript usa <strong>Deno</strong>.",
                     "about.p3": "<strong>Concepto, diseño y dirección: Alexandre da Costa / ALDACO.</strong> Implementación técnica asistida por inteligencia artificial, bajo la dirección del autor.",
                     "about.copyright": "© 2026 Alexandre da Costa (ALDACO)",
@@ -1724,6 +2056,64 @@
                     "group.removeAudios": "Eliminar audios seleccionados",
                     "item.unknownOrigin": "Origen desconocido",
                     "item.removeFile": "Eliminar archivo",
+                    "item.showInFolder": "Mostrar en la carpeta",
+                    "toast.showInFolderError": "No se pudo abrir la carpeta del archivo.",
+                    "item.move": "Mover a…",
+                    "item.actions": "Acciones del archivo",
+                    "settings.categories": "Cajones",
+                    "categories.help": "Cree cajones para separar películas, series u otros grupos. Cada cajón es una carpeta dentro de la carpeta de descargas.",
+                    "categories.helpVideo": "Un cajón es una subcarpeta dentro de la carpeta de descargas, para separar los vídeos por tema. Los archivos mantienen su carpeta de origen.",
+                    "categories.helpAudio": "Un cajón es una subcarpeta dentro de la carpeta de descargas, para separar el audio por estilo. Los archivos mantienen su carpeta de origen.",
+                    "categories.placeholder": "Nombre del cajón",
+                    "categories.placeholderVideo": "ej.: películas, vídeos, tutoriales",
+                    "categories.placeholderAudio": "ej.: pop, metal, clásica, rock",
+                    "categories.areaAria": "Tipo de archivos del cajón",
+                    "categories.areaVideo": "Vídeo",
+                    "categories.areaAudio": "Audio",
+                    "categories.nameAria": "Nombre del cajón",
+                    "categories.fileCount": "{n} archivo(s)",
+                    "categories.emptyFor": "Todavía no hay cajones de {area}.",
+                    "categories.add": "Crear",
+                    "categories.empty": "Todavía no hay cajones.",
+                    "categories.color": "Color del cajón",
+                    "categories.perRow": "Cajones por fila",
+                    "categories.perRowAria": "Número máximo de cajones por fila",
+                    "categories.remove": "Eliminar cajón",
+                    "categories.removeConfirm": "¿Eliminar el cajón «{name}»? Los archivos que contiene vuelven a la carpeta principal.",
+                    "categories.palette": "Paleta de la aplicación",
+                    "categories.custom": "Personalizado",
+                    "categories.keepFiles": "Conservar archivos",
+                    "categories.deleteFiles": "Eliminar archivos",
+                    "categories.removeWithFiles": "El cajón «{name}» contiene {n} archivo(s). Puedes conservarlos (se moverán a «Sin cajón») o eliminarlos del disco.",
+                    "categories.added": "Cajón «{name}» creado.",
+                    "categories.removed": "Cajón eliminado.",
+                    "categories.duplicate": "Ese cajón ya existe.",
+                    "categories.invalid": "Nombre no válido. No use barras, dos puntos, asteriscos ni nombres reservados de Windows (con, nul…).",
+                    "categories.error": "No se pudieron guardar los cajones.",
+                    "filter.categories": "CAJONES",
+                    "filter.allCategories": "Todos",
+                    "filter.noCategory": "Sin cajón",
+                    "move.title": "Mover archivos",
+                    "move.titleBatch": "Mover {n} archivo(s)",
+                    "move.message": "Elija el destino:",
+                    "move.none": "Sin cajón (carpeta principal)",
+                    "move.external": "Elegir carpeta externa…",
+                    "move.externalHint": "El archivo sale de la aplicación y queda solo en la carpeta elegida.",
+                    "move.confirm": "Mover",
+                    "move.done": "{n} archivo(s) movido(s).",
+                    "move.noneMoved": "No se movió nada.",
+                    "move.noCategories": "Cree primero un cajón en Ajustes.",
+                    "move.pickFolderFirst": "Elija la carpeta externa de destino.",
+                    "move.samePlace": "El archivo ya está en ese destino.",
+                    "move.error": "No se pudieron mover los archivos.",
+                    "move.errorNotFound": "El archivo ya no existe en el disco.",
+                    "move.errorTarget": "La carpeta externa no es accesible.",
+                    "move.errorUnknownCategory": "Cajón desconocido.",
+                    "move.errorMedia": "Ese cajón es de otro tipo (vídeo/audio). Use un cajón del mismo tipo que el archivo.",
+                    "group.moveVideos": "Mover los vídeos seleccionados",
+                    "group.moveAudios": "Mover los audios seleccionados",
+                    "history.movedTo": "Movido a «{name}»",
+                    "history.movedExternal": "Movido fuera de la aplicación",
                     "item.select": "Seleccionar para eliminación masiva",
                     "item.selected": "Seleccionado para eliminación masiva · haz clic para deseleccionar",
                     "item.selected.aria": "Seleccionado para eliminación masiva. Haz clic para deseleccionar.",
@@ -1938,15 +2328,23 @@
                     "help.download.h": "Téléchargement",
                     "help.download.p": "Collez l'URL, choisissez la qualité et cliquez sur Télécharger.",
                     "help.filters.h": "Filtres",
-                    "help.filters.p": "Utilisez Vidéo/Audio/Tous pour filtrer la médiathèque. La recherche respecte le filtre.",
+                    "help.filters.p": "Utilisez Vidéo/Audio/Tous pour filtrer la médiathèque. Dans le panneau latéral, les tiroirs apparaissent dans une grille (maximum par ligne configurable) et le filtre de type n’affiche que les tiroirs de ce type. La recherche respecte toujours le filtre actif.",
+                    "help.categories.h": "Tiroirs",
+                    "help.categories.p": "Dans les Paramètres, vous pouvez créer des tiroirs : chacun appartient à Vidéo ou Audio et possède une couleur. Dans la médiathèque, chaque fichier indique le tiroir auquel il appartient et peut être déplacé entre tiroirs du même type via le menu de la carte. Vidéo et audio ne sont jamais mélangés. Vous pouvez supprimer un tiroir depuis sa carte dans le panneau latéral ; s'il contient des fichiers, vous choisissez de les conserver (déplacés vers « Sans tiroir ») ou de les supprimer. Les couleurs suivent la palette et le thème de l'application.",
+                    "help.counts.h": "Comptages",
+                    "help.counts.p": "Les totaux vidéo et audio apparaissent dans les onglets Vidéo/Audio. Dans chaque groupe de la médiathèque, les badges indiquent combien de fichiers proviennent de chaque réseau social ; dans le panneau latéral, chaque tiroir indique combien de fichiers il contient.",
+                    "help.progress.h": "Progression",
+                    "help.progress.p": "Pendant un téléchargement, l’icône du réseau et le pourcentage suivent la barre. La pointe de la barre suit la piste et s’y ajuste à la fin.",
                     "help.removal.h": "Suppression",
                     "help.removal.p": "Cliquez sur la corbeille dans l'en-tête du groupe pour supprimer les éléments sélectionnés. Utilisez les interrupteurs des éléments pour sélectionner plusieurs fichiers.",
                     "help.history.h": "Historique",
-                    "help.history.p": "Chaque entrée de l'historique affiche le lien vers le fichier associé. Vous pouvez supprimer uniquement le lien de l'historique sans effacer le fichier.",
+                    "help.history.p": "Chaque entrée affiche le nom du fichier à côté du lien, ainsi que l’état, le réseau, la date et le tiroir auquel il appartient. Vous pouvez supprimer uniquement le lien de l’historique sans effacer le fichier.",
+                    "help.integrity.h": "Intégrité",
+                    "help.integrity.p": "Dans « À propos », vous pouvez vérifier l’intégrité des fichiers installés (hachages SHA-256). Le code source, la licence GPL-3.0 et les hachages des versions sont publiés dans le dépôt.",
                     "help.auth.h": "Erreur d'authentification",
                     "help.auth.p": "Activez « Utiliser cookies.txt » et « PO Token » dans les Paramètres (activés par défaut).",
                     "help.about.h": "À propos",
-                    "about.p1": "Le <strong>YT-DLP Media Desk</strong> télécharge et organise des médias (vidéo et audio) par lots et gère une médiathèque locale avec filtres, recherche, historique et suppression groupée.",
+                    "about.p1": "Le <strong>YT-DLP Media Desk</strong> télécharge et organise des médias (vidéo et audio) par lots et gère une médiathèque locale avec filtres, tiroirs (avec couleur), recherche, historique et suppression groupée.",
                     "about.p2": "Les téléchargements sont effectués par <strong>yt-dlp</strong>, un moteur open source (licence <em>Unlicense</em>). La conversion et la fusion des fichiers utilisent <strong>FFmpeg</strong> ; la résolution des défis JavaScript utilise <strong>Deno</strong>.",
                     "about.p3": "<strong>Concept, design et direction : Alexandre da Costa / ALDACO.</strong> Mise en œuvre technique assistée par intelligence artificielle, sous la direction de l'auteur.",
                     "about.copyright": "© 2026 Alexandre da Costa (ALDACO)",
@@ -1997,6 +2395,64 @@
                     "group.removeAudios": "Supprimer les audios sélectionnés",
                     "item.unknownOrigin": "Source inconnue",
                     "item.removeFile": "Supprimer le fichier",
+                    "item.showInFolder": "Afficher dans le dossier",
+                    "toast.showInFolderError": "Impossible d'ouvrir le dossier du fichier.",
+                    "item.move": "Déplacer vers…",
+                    "item.actions": "Actions du fichier",
+                    "settings.categories": "Tiroirs",
+                    "categories.help": "Créez des tiroirs pour séparer films, séries ou autres groupes. Chaque tiroir est un dossier dans le dossier des téléchargements.",
+                    "categories.helpVideo": "Un tiroir est un sous-dossier du dossier des téléchargements, pour séparer les vidéos par thème. Les fichiers gardent leur dossier d'origine.",
+                    "categories.helpAudio": "Un tiroir est un sous-dossier du dossier des téléchargements, pour séparer l'audio par style. Les fichiers gardent leur dossier d'origine.",
+                    "categories.placeholder": "Nom du tiroir",
+                    "categories.placeholderVideo": "ex. : films, vidéos, tutoriels",
+                    "categories.placeholderAudio": "ex. : pop, metal, classique, rock",
+                    "categories.areaAria": "Type de fichiers du tiroir",
+                    "categories.areaVideo": "Vidéo",
+                    "categories.areaAudio": "Audio",
+                    "categories.nameAria": "Nom du tiroir",
+                    "categories.fileCount": "{n} fichier(s)",
+                    "categories.emptyFor": "Aucun tiroir {area} pour le moment.",
+                    "categories.add": "Créer",
+                    "categories.empty": "Aucun tiroir pour le moment.",
+                    "categories.color": "Couleur du tiroir",
+                    "categories.perRow": "Tiroirs par ligne",
+                    "categories.perRowAria": "Nombre maximum de tiroirs par ligne",
+                    "categories.remove": "Supprimer le tiroir",
+                    "categories.removeConfirm": "Supprimer le tiroir « {name} » ? Les fichiers qu'il contient reviennent dans le dossier principal.",
+                    "categories.palette": "Palette de l'application",
+                    "categories.custom": "Personnalisée",
+                    "categories.keepFiles": "Conserver les fichiers",
+                    "categories.deleteFiles": "Supprimer les fichiers",
+                    "categories.removeWithFiles": "Le tiroir « {name} » contient {n} fichier(s). Vous pouvez les conserver (ils seront déplacés vers « Sans tiroir ») ou les supprimer du disque.",
+                    "categories.added": "Tiroir « {name} » créé.",
+                    "categories.removed": "Tiroir supprimé.",
+                    "categories.duplicate": "Ce tiroir existe déjà.",
+                    "categories.invalid": "Nom invalide. N'utilisez pas de barres, de deux-points, d'astérisques ni de noms réservés de Windows (con, nul…).",
+                    "categories.error": "Impossible d'enregistrer les tiroirs.",
+                    "filter.categories": "TIROIRS",
+                    "filter.allCategories": "Tous",
+                    "filter.noCategory": "Sans tiroir",
+                    "move.title": "Déplacer des fichiers",
+                    "move.titleBatch": "Déplacer {n} fichier(s)",
+                    "move.message": "Choisissez la destination :",
+                    "move.none": "Sans tiroir (dossier principal)",
+                    "move.external": "Choisir un dossier externe…",
+                    "move.externalHint": "Le fichier quitte l'application et reste uniquement dans le dossier choisi.",
+                    "move.confirm": "Déplacer",
+                    "move.done": "{n} fichier(s) déplacé(s).",
+                    "move.noneMoved": "Rien n'a été déplacé.",
+                    "move.noCategories": "Créez d'abord un tiroir dans les Paramètres.",
+                    "move.pickFolderFirst": "Choisissez le dossier externe de destination.",
+                    "move.samePlace": "Le fichier est déjà à cette destination.",
+                    "move.error": "Impossible de déplacer le(s) fichier(s).",
+                    "move.errorNotFound": "Le fichier n'existe plus sur le disque.",
+                    "move.errorTarget": "Le dossier externe n'est pas accessible.",
+                    "move.errorUnknownCategory": "Tiroir inconnu.",
+                    "move.errorMedia": "Ce tiroir est d'un autre type (vidéo/audio). Utilisez un tiroir du même type que le fichier.",
+                    "group.moveVideos": "Déplacer les vidéos sélectionnées",
+                    "group.moveAudios": "Déplacer les audios sélectionnés",
+                    "history.movedTo": "Déplacé vers « {name} »",
+                    "history.movedExternal": "Déplacé hors de l'application",
                     "item.select": "Sélectionner pour suppression groupée",
                     "item.selected": "Sélectionné pour suppression groupée · cliquez pour désélectionner",
                     "item.selected.aria": "Sélectionné pour suppression groupée. Cliquez pour désélectionner.",
@@ -2211,15 +2667,23 @@
                     "help.download.h": "Download",
                     "help.download.p": "Fügen Sie die URL ein, wählen Sie die Qualität und klicken Sie auf Download.",
                     "help.filters.h": "Filter",
-                    "help.filters.p": "Verwenden Sie Video/Audio/Alle, um die Mediathek zu filtern. Die Suche berücksichtigt den Filter.",
+                    "help.filters.p": "Verwenden Sie Video/Audio/Alle, um die Mediathek zu filtern. Im Seitenbereich erscheinen die Schubladen in einem Raster (konfigurierbares Maximum pro Zeile); der Typfilter zeigt nur Schubladen dieses Typs. Die Suche berücksichtigt immer den aktiven Filter.",
+                    "help.categories.h": "Schubladen",
+                    "help.categories.p": "In den Einstellungen können Sie Schubladen erstellen – jede gehört zu Video oder Audio und hat eine Farbe. In der Mediathek zeigt jede Datei die Schublade, zu der sie gehört, und kann über das Kartenmenü zwischen Schubladen desselben Typs verschoben werden. Video und Audio werden nie vermischt. Sie können eine Schublade über ihre Karte im Seitenbereich entfernen; enthält sie Dateien, wählen Sie, ob Sie sie behalten (verschoben nach «Keine Schublade») oder löschen. Die Farben folgen der App-Palette und dem Theme.",
+                    "help.counts.h": "Zählungen",
+                    "help.counts.p": "Die Gesamtzahlen für Video und Audio stehen in den Tabs Video/Audio. In jeder Gruppe der Mediathek zeigen die Abzeichen, wie viele Dateien aus welchem sozialen Netzwerk stammen; im Seitenbereich zeigt jede Schublade, wie viele Dateien sie enthält.",
+                    "help.progress.h": "Fortschritt",
+                    "help.progress.p": "Während eines Downloads folgen Netzwerksymbol und Prozentsatz dem Balken. Die Balkenspitze folgt der Spur und passt am Ende genau hinein.",
                     "help.removal.h": "Entfernen",
                     "help.removal.p": "Klicken Sie auf das Papierkorb-Symbol in der Gruppenüberschrift, um ausgewählte Elemente zu entfernen. Verwenden Sie die Schalter an den Elementen, um mehrere Dateien auszuwählen.",
                     "help.history.h": "Verlauf",
-                    "help.history.p": "Jeder Verlaufseintrag zeigt den Link zur zugehörigen Datei. Sie können nur den Verlaufslink entfernen, ohne die Datei zu löschen.",
+                    "help.history.p": "Jeder Eintrag zeigt den Dateinamen neben dem Link sowie Status, Netzwerk, Datum und die Schublade, zu der die Datei gehört. Sie können nur den Verlaufseintrag entfernen, ohne die Datei zu löschen.",
+                    "help.integrity.h": "Integrität",
+                    "help.integrity.p": "Unter „Über“ können Sie die Integrität der installierten Dateien prüfen (SHA-256-Hashes). Der Quellcode, die GPL-3.0-Lizenz und die Release-Hashes sind im Repository veröffentlicht.",
                     "help.auth.h": "Authentifizierungsfehler",
                     "help.auth.p": "Aktivieren Sie „cookies.txt verwenden“ und „PO Token“ in den Einstellungen (standardmäßig aktiviert).",
                     "help.about.h": "Über",
-                    "about.p1": "Der <strong>YT-DLP Media Desk</strong> lädt Medien (Video und Audio) im Stapel herunter, organisiert sie und verwaltet eine lokale Mediathek mit Filtern, Suche, Verlauf und Massenlöschung.",
+                    "about.p1": "Der <strong>YT-DLP Media Desk</strong> lädt Medien (Video und Audio) im Stapel herunter, organisiert sie und verwaltet eine lokale Mediathek mit Filtern, Schubladen (mit Farbe), Suche, Verlauf und Massenlöschung.",
                     "about.p2": "Die Downloads werden von <strong>yt-dlp</strong> durchgeführt, einer Open-Source-Engine (Lizenz <em>Unlicense</em>). Konvertierung und Zusammenführung von Dateien übernimmt <strong>FFmpeg</strong>; die Lösung von JavaScript-Herausforderungen übernimmt <strong>Deno</strong>.",
                     "about.p3": "<strong>Konzept, Design und Leitung: Alexandre da Costa / ALDACO.</strong> Technische Umsetzung unterstützt durch künstliche Intelligenz, unter der Leitung des Autors.",
                     "about.copyright": "© 2026 Alexandre da Costa (ALDACO)",
@@ -2270,6 +2734,64 @@
                     "group.removeAudios": "Ausgewählte Audios entfernen",
                     "item.unknownOrigin": "Unbekannte Quelle",
                     "item.removeFile": "Datei entfernen",
+                    "item.showInFolder": "Im Ordner anzeigen",
+                    "toast.showInFolderError": "Der Ordner der Datei konnte nicht geöffnet werden.",
+                    "item.move": "Verschieben nach…",
+                    "item.actions": "Dateiaktionen",
+                    "settings.categories": "Schubladen",
+                    "categories.help": "Erstellen Sie Schubladen, um Filme, Serien oder andere Gruppen zu trennen. Jede Schublade ist ein Ordner im Download-Ordner.",
+                    "categories.helpVideo": "Eine Schublade ist ein Unterordner im Download-Ordner, um Videos nach Thema zu trennen. Die Dateien behalten ihren Ursprungsordner.",
+                    "categories.helpAudio": "Eine Schublade ist ein Unterordner im Download-Ordner, um Audio nach Stil zu trennen. Die Dateien behalten ihren Ursprungsordner.",
+                    "categories.placeholder": "Name der Schublade",
+                    "categories.placeholderVideo": "z. B. Filme, Videos, Tutorials",
+                    "categories.placeholderAudio": "z. B. Pop, Metal, Klassik, Rock",
+                    "categories.areaAria": "Dateityp der Schublade",
+                    "categories.areaVideo": "Video",
+                    "categories.areaAudio": "Audio",
+                    "categories.nameAria": "Name der Schublade",
+                    "categories.fileCount": "{n} Datei(en)",
+                    "categories.emptyFor": "Noch keine {area}-Schubladen.",
+                    "categories.add": "Erstellen",
+                    "categories.empty": "Noch keine Schubladen.",
+                    "categories.color": "Farbe der Schublade",
+                    "categories.perRow": "Schubladen pro Zeile",
+                    "categories.perRowAria": "Maximale Anzahl der Schubladen pro Zeile",
+                    "categories.remove": "Schublade entfernen",
+                    "categories.removeConfirm": "Schublade «{name}» entfernen? Die enthaltenen Dateien kehren in den Hauptordner zurück.",
+                    "categories.palette": "App-Palette",
+                    "categories.custom": "Benutzerdefiniert",
+                    "categories.keepFiles": "Dateien behalten",
+                    "categories.deleteFiles": "Dateien löschen",
+                    "categories.removeWithFiles": "Die Schublade «{name}» enthält {n} Datei(en). Sie können sie behalten (sie werden nach «Keine Schublade» verschoben) oder von der Festplatte löschen.",
+                    "categories.added": "Schublade «{name}» erstellt.",
+                    "categories.removed": "Schublade entfernt.",
+                    "categories.duplicate": "Diese Schublade existiert bereits.",
+                    "categories.invalid": "Ungültiger Name. Keine Schrägstriche, Doppelpunkte, Sternchen und keine reservierten Windows-Namen (con, nul…) verwenden.",
+                    "categories.error": "Die Schubladen konnten nicht gespeichert werden.",
+                    "filter.categories": "SCHUBLADEN",
+                    "filter.allCategories": "Alle",
+                    "filter.noCategory": "Ohne Schublade",
+                    "move.title": "Dateien verschieben",
+                    "move.titleBatch": "{n} Datei(en) verschieben",
+                    "move.message": "Ziel wählen:",
+                    "move.none": "Ohne Schublade (Hauptordner)",
+                    "move.external": "Externen Ordner wählen…",
+                    "move.externalHint": "Die Datei verlässt die Anwendung und bleibt nur im gewählten Ordner.",
+                    "move.confirm": "Verschieben",
+                    "move.done": "{n} Datei(en) verschoben.",
+                    "move.noneMoved": "Es wurde nichts verschoben.",
+                    "move.noCategories": "Erstellen Sie zuerst eine Schublade in den Einstellungen.",
+                    "move.pickFolderFirst": "Wählen Sie den externen Zielordner.",
+                    "move.samePlace": "Die Datei ist bereits an diesem Ziel.",
+                    "move.error": "Die Dateien konnten nicht verschoben werden.",
+                    "move.errorNotFound": "Die Datei existiert nicht mehr auf dem Datenträger.",
+                    "move.errorTarget": "Der externe Ordner ist nicht erreichbar.",
+                    "move.errorUnknownCategory": "Unbekannte Schublade.",
+                    "move.errorMedia": "Diese Schublade ist für einen anderen Typ (Video/Audio). Verwenden Sie eine Schublade desselben Dateityps.",
+                    "group.moveVideos": "Ausgewählte Videos verschieben",
+                    "group.moveAudios": "Ausgewählte Audios verschieben",
+                    "history.movedTo": "Verschoben nach «{name}»",
+                    "history.movedExternal": "Aus der Anwendung verschoben",
                     "item.select": "Für Massenlöschung auswählen",
                     "item.selected": "Für Massenlöschung ausgewählt · zum Abwählen klicken",
                     "item.selected.aria": "Für Massenlöschung ausgewählt. Zum Abwählen klicken.",
@@ -2420,6 +2942,10 @@
                 if (_langSel) _langSel.value = lang;
                 document.title = t("app.title");
                 applyI18n(document);
+                // Atualiza as partes dinamicas das gavetas (placeholder, nota e cartas).
+                if (typeof setCategoryArea === "function") { try { setCategoryArea(categoryArea); } catch(e) {} }
+                else if (typeof renderCategoriesList === "function") { try { renderCategoriesList(); } catch(e) {} }
+                if (typeof renderCategoryFilters === "function") { try { renderCategoryFilters(); } catch(e) {} }
                 // Atualizar partes geradas dinamicamente que não usam data-i18n
                 if (typeof buildPaletteGrid === "function") { try { buildPaletteGrid(); } catch(e) {} }
                 try { layoutBrandSubtitle(); } catch(e) {}
@@ -2714,10 +3240,18 @@
             });
             // ==================== SISTEMA DE VERSÃO ====================
             // VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao.
-            const APP_VERSION = "3.6.0";
-            const APP_VERSION_DATE = "2026-10-11";
-            const APP_BUILD = 2026101102;
+            const APP_VERSION = "3.7.0";
+            const APP_VERSION_DATE = "2026-10-14";
+            const APP_BUILD = 2026101402;
             const VERSION_HISTORY = [
+                {
+                    version: "3.7.0",
+                    date: "2026-10-14",
+                    groups: {
+                        "Adicionado": ["Gavetas (categorias) com duas áreas — Vídeo e Áudio — criadas na Configuração como pastas dentro da pasta de downloads, com uma grelha de cartas e contagem de ficheiros por gaveta", "Cor por gaveta (escolhida na Configuração) e dístico colorido com o nome da gaveta em cada ficheiro, na mediateca e na Atividade", "Menu vertical de movimentação em cada cartão de ficheiro: propõe apenas as gavetas do mesmo tipo (Vídeo ou Áudio), além de «Sem gaveta»", "A movimentação de um ficheiro na mediateca reflete-se de imediato na Atividade", "Movimentação de ficheiros para uma pasta externa, escolhida no momento da ação", "O filtro de gavetas do painel lateral acompanha o tipo escolhido (Vídeo mostra gavetas de vídeo, Áudio os de áudio, Todos mostra todos) e indica quantos ficheiros tem cada uma", "As gavetas do painel lateral surgem numa grelha que se ajusta ao espaço disponível, até um número máximo por linha configurável (1 a 6) na Configuração, deixando «Todos» e «Sem gaveta» em destaque acima da grelha", "Remoção de uma gaveta diretamente a partir da sua carta no painel lateral: se ainda tiver ficheiros, o utilizador escolhe se os mantém (movidos para «Sem gaveta») ou se os apaga do disco"],
+                        "Melhorado": ["O seletor de cor das gavetas passa a usar a paleta da aplicação, com a cor personalizada harmonizada automaticamente à paleta e ao tema (matiz preservada; saturação e luminosidade ajustadas) para garantir legibilidade nos temas claro e escuro", "Cada gaveta pertence a uma área (Vídeo ou Áudio): nunca é possível mover um vídeo para uma gaveta de áudio, nem o contrário, com validação também no servidor", "Os cartões dos ficheiros mantêm o aspeto da versão 3.6.0 (autor, apagar e seletor), agora com a gaveta e o menu de movimentação", "A Atividade reflete cada movimentação, com nota do destino, dístico da gaveta e acesso à pasta mesmo para ficheiros movidos para fora da aplicação", "Launcher migrado para .NET 8 (LTS) e FFmpeg fixado a uma build imutável, para pacotes reprodutíveis", "Preparação para assinatura de código (SignPath Foundation): configuração de artefactos versionada e metadados do instalador normalizados"],
+                    }
+                },
                 {
                     version: "3.6.0",
                     date: "2026-10-11",
@@ -2822,6 +3356,11 @@
             let systemReady = false;
             let currentFilter = "all";
             let selectedItems = { video: new Set(), audio: new Set() };
+            let categories = [];              // [{ name, media: "video"|"audio" }]
+            let categoryArea = "video";       // area selecionada na Configuracao
+            let currentCategoryFilter = "all";
+            let categoriesPerRow = 3;         // maximo de gavetas por linha (grelha lateral)
+            let pendingMove = { paths: [], type: "", destination: null };
             let pendingDelete = { paths: [], type: "", batch: false };
             
             let currentDownloadIndex = 0;
@@ -2979,6 +3518,8 @@
                     const res = await fetch("/get_downloads"); 
                     currentFiles = await res.json(); 
                     renderLibrary(); 
+                    if (typeof renderCategoriesList === "function") { try { renderCategoriesList(); } catch(e) {} }
+                    if (typeof renderCategoryFilters === "function") { try { renderCategoryFilters(); } catch(e) {} }
                     updateSearchIndex(); 
                 } catch(e) { console.error(e); } 
             }
@@ -2994,11 +3535,12 @@
             
             function setFilter(filter) {
                 currentFilter = filter;
-                document.querySelectorAll(".filter-btn").forEach(btn => {
+                document.querySelectorAll(".filter-btn[data-filter]").forEach(btn => {
                     if (btn.dataset.filter === filter) btn.classList.add("active");
                     else btn.classList.remove("active");
                 });
                 renderLibrary();
+                renderCategoryFilters();
                 const searchInput = document.getElementById("search-input");
                 if (searchInput.value.trim()) updateAutocomplete(searchInput.value);
             }
@@ -3047,6 +3589,16 @@
                         headerTrash.classList.remove('visible');
                     }
                 }
+                const headerMove = document.getElementById(`${type}-header-move`);
+                if (headerMove) {
+                    if (count > 0) {
+                        headerMove.style.display = 'flex';
+                        headerMove.classList.add('visible');
+                    } else {
+                        headerMove.style.display = 'none';
+                        headerMove.classList.remove('visible');
+                    }
+                }
             }
             
             function deleteSelected(type) {
@@ -3064,6 +3616,687 @@
                 document.getElementById("delete-modal-message").textContent = t("delete.messageSingle", { name: name });
                 pendingDelete = { paths: [path], type: type, batch: false };
                 document.getElementById("delete-modal").style.display = "flex";
+            }
+
+            // Pede ao servidor para abrir o Explorador de Ficheiros com o ficheiro
+            // descarregado selecionado (ou a pasta, se nao existir).
+            // Aceita um caminho da mediateca (string) ou {path} / {absolute}.
+            async function showInFolder(target) {
+                if (!target) return;
+                const body = (typeof target === "string") ? { path: target } : target;
+                if (!body.path && !body.absolute) return;
+                try {
+                    const res = await fetch("/show_in_folder", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || !data.ok) {
+                        showToast(t("toast.showInFolderError"), { type: "error" });
+                    }
+                } catch (e) {
+                    console.error("Erro ao mostrar na pasta:", e);
+                    showToast(t("toast.showInFolderError"), { type: "error" });
+                }
+            }
+
+            // ===== Gavetas (categorias) =====
+            // O servidor devolve [{ name, media, color }]. Normalizamos aqui (aceitando
+            // tambem texto simples de configuracoes antigas) e agrupamos pela area escolhida.
+            const CAT_PALETTE = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#06b6d4", "#ef4444", "#84cc16", "#14b8a6", "#f97316"];
+            function defaultCategoryColor(name) {
+                const base = (name || "").trim().toLowerCase();
+                if (!base) return CAT_PALETTE[0];
+                let h = 0;
+                for (let i = 0; i < base.length; i++) h += base.charCodeAt(i);
+                return CAT_PALETTE[h % CAT_PALETTE.length];
+            }
+            function isValidCategoryColor(v) { return typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v.trim()); }
+
+            // --- Harmonia de cor com o tema e a paleta da app ---
+            // A cor escolhida pelo utilizador conserva a matiz (a sua intencao),
+            // mas a saturacao e a luminosidade sao ajustadas a uma faixa tonal
+            // que garante boa leitura tanto no tema claro como no escuro e que
+            // fica coerente com a paleta dos restantes gavetas.
+            function hexToRgb(hex) {
+                const m = /^#?([0-9a-f]{6})$/i.exec((hex || "").trim());
+                if (!m) return null;
+                const n = parseInt(m[1], 16);
+                return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+            }
+            function rgbToHex(r, g, b) {
+                const f = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+                return "#" + f(r) + f(g) + f(b);
+            }
+            function hexToHsl(hex) {
+                const rgb = hexToRgb(hex);
+                if (!rgb) return null;
+                const [r0, g0, b0] = rgb.map((v) => v / 255);
+                const max = Math.max(r0, g0, b0), min = Math.min(r0, g0, b0);
+                const l = (max + min) / 2, d = max - min;
+                let h = 0, s = 0;
+                if (d) {
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    if (max === r0) h = (g0 - b0) / d + (g0 < b0 ? 6 : 0);
+                    else if (max === g0) h = (b0 - r0) / d + 2;
+                    else h = (r0 - g0) / d + 4;
+                    h /= 6;
+                }
+                return { h: h * 360, s: s, l: l };
+            }
+            function hslToHex(h, s, l) {
+                h = (((h % 360) + 360) % 360) / 360;
+                const hue = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                let r, g, b;
+                if (s === 0) { r = g = b = l; }
+                else {
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue(p, q, h + 1 / 3); g = hue(p, q, h); b = hue(p, q, h - 1 / 3);
+                }
+                return rgbToHex(r * 255, g * 255, b * 255);
+            }
+            // Faixa tonal da paleta: saturacao 35%–90%, luminosidade 40%–62%.
+            // Cores quase sem cor (preto, branco, cinzento) recebem a matiz da
+            // cor de destaque da app, para nao destoarem com um tom arbitrario.
+            function accentHue() {
+                const v = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+                const hsl = hexToHsl(v);
+                return hsl ? hsl.h : 217;
+            }
+            function harmonizeCategoryColor(hex) {
+                if (!isValidCategoryColor(hex)) return hex;
+                const hsl = hexToHsl(hex);
+                if (!hsl) return hex;
+                let h = hsl.h, s = hsl.s;
+                if (s < 0.18) { h = accentHue(); s = 0.42; }
+                s = Math.min(0.90, Math.max(0.35, s));
+                const l = Math.min(0.62, Math.max(0.40, hsl.l));
+                return hslToHex(h, s, l).toLowerCase();
+            }
+            function normalizeCategories(raw) {
+                if (!Array.isArray(raw)) return [];
+                const out = [], seen = new Set();
+                raw.forEach(item => {
+                    const name = (item && typeof item === "object") ? item.name : item;
+                    const media = (item && typeof item === "object" && (item.media === "audio" || item.media === "video")) ? item.media : "video";
+                    if (typeof name !== "string") return;
+                    const clean = name.trim();
+                    if (!clean || seen.has(clean.toLowerCase())) return;
+                    seen.add(clean.toLowerCase());
+                    const color = (item && typeof item === "object" && isValidCategoryColor(item.color)) ? item.color.trim().toLowerCase() : defaultCategoryColor(clean);
+                    out.push({ name: clean, media, color });
+                });
+                return out;
+            }
+            function categoryNames() { return categories.map(c => c.name); }
+            function categoriesOf(media) { return categories.filter(c => c.media === media); }
+            function categoryMedia(name) { const c = categories.find(x => x.name === name); return c ? c.media : null; }
+            function categoryColor(name) { const c = categories.find(x => x.name === name); return (c && c.color) || defaultCategoryColor(name || ""); }
+            function currentFilesFor(media) {
+                const cf = (typeof currentFiles === "object" && currentFiles) ? currentFiles : {};
+                if (media === "video") return (cf.video || []).slice();
+                if (media === "audio") return (cf.audio || []).slice();
+                return [...(cf.video || []), ...(cf.audio || [])];
+            }
+            function allCurrentFiles() { return currentFilesFor("all"); }
+            function fileMedia(f) {
+                if (!f) return null;
+                const cf = (typeof currentFiles === "object" && currentFiles) ? currentFiles : {};
+                if ((cf.audio || []).some(x => x.path === f.path)) return "audio";
+                if ((cf.video || []).some(x => x.path === f.path)) return "video";
+                return categoryMedia(f.category);
+            }
+
+            function setCategoryArea(area) {
+                categoryArea = (area === "audio") ? "audio" : "video";
+                document.querySelectorAll("#cat-area-row .cat-area-opt").forEach(opt => {
+                    const input = opt.querySelector("input");
+                    const on = !!input && input.value === categoryArea;
+                    if (input) input.checked = on;
+                    opt.classList.toggle("active", on);
+                });
+                const input = document.getElementById("new-category-input");
+                if (input) input.setAttribute("placeholder", t(categoryArea === "audio" ? "categories.placeholderAudio" : "categories.placeholderVideo"));
+                const note = document.getElementById("cat-note");
+                if (note) note.textContent = t(categoryArea === "audio" ? "categories.helpAudio" : "categories.helpVideo");
+                renderCategoriesList();
+            }
+
+            async function loadCategories() {
+                try {
+                    const res = await fetch("/get_categories");
+                    const data = await res.json();
+                    categories = normalizeCategories(data.categories);
+                } catch (e) { categories = []; }
+                setCategoryArea(categoryArea);
+                renderCategoryFilters();
+            }
+
+            function renderCategoriesList() {
+                const box = document.getElementById("categories-list");
+                const empty = document.getElementById("categories-empty");
+                if (!box) return;
+                const mine = categoriesOf(categoryArea);
+                const areaName = t(categoryArea === "audio" ? "categories.areaAudio" : "categories.areaVideo");
+                if (!mine.length) {
+                    box.innerHTML = "";
+                    if (empty) { empty.textContent = t("categories.emptyFor", { area: areaName.toLowerCase() }); empty.style.display = ""; }
+                    return;
+                }
+                if (empty) empty.style.display = "none";
+                box.innerHTML = "";
+                const files = allCurrentFiles();
+                mine.forEach(cat => {
+                    const count = files.filter(f => f.category === cat.name).length;
+                    const color = cat.color || defaultCategoryColor(cat.name);
+                    const row = document.createElement("div");
+                    row.className = "category-row";
+                    row.style.setProperty("--cat-color", color);
+                    row.innerHTML = `<div class="category-name">${icon(cat.media === "audio" ? "audio" : "video")}<span title="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</span></div>
+                        <div class="category-count">${escapeHtml(t("categories.fileCount", { n: count }))}</div>
+                        <div class="category-actions">
+                            <button type="button" class="category-color" aria-haspopup="true" aria-expanded="false" data-tip="${escapeHtml(t("categories.color"))}" aria-label="${escapeHtml(t("categories.color"))}"></button>
+                            <div class="category-remove" role="button" tabindex="0" data-tip="${escapeHtml(t("categories.remove"))}" aria-label="${escapeHtml(t("categories.remove"))}">${icon("trash")}</div>
+                        </div>`;
+                    const removeBtn = row.querySelector(".category-remove");
+                    const removeAct = () => removeCategoryConfirm(cat.name);
+                    removeBtn.addEventListener("click", removeAct);
+                    removeBtn.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); removeAct(); } });
+                    const colorBtn = row.querySelector(".category-color");
+                    if (colorBtn) colorBtn.addEventListener("click", (e) => { e.stopPropagation(); openCategoryColorMenu(cat.name, colorBtn); });
+                    box.appendChild(row);
+                });
+            }
+
+            function renderCategoryFilters() {
+                const section = document.getElementById("category-filter-section");
+                const grid = document.getElementById("category-filters");
+                const specials = document.getElementById("category-filter-specials");
+                if (!section || !grid || !specials) return;
+                const names = categoryNames();
+                if (!names.length) {
+                    section.style.display = "none";
+                    grid.innerHTML = "";
+                    specials.innerHTML = "";
+                    currentCategoryFilter = "all";
+                    return;
+                }
+                // Só mostramos as gavetas da área escolhida no filtro de tipo
+                // (vídeo -> gavetas de vídeo, áudio -> de áudio, todos -> todos).
+                const scoped = (currentFilter === "video" || currentFilter === "audio")
+                    ? categories.filter(c => c.media === currentFilter)
+                    : categories.slice();
+                if (currentCategoryFilter !== "all" && currentCategoryFilter !== "none" && !scoped.some(c => c.name === currentCategoryFilter)) {
+                    currentCategoryFilter = "all";
+                }
+                section.style.display = "";
+                grid.innerHTML = "";
+                specials.innerHTML = "";
+                const cols = Math.min(6, Math.max(1, parseInt(categoriesPerRow, 10) || 3));
+                grid.style.setProperty("--cat-cols", String(cols));
+                const files = currentFilesFor(currentFilter);
+                const build = (value, label, iconName, count, color) => {
+                    const b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "cat-filter-btn" + (currentCategoryFilter === value ? " active" : "");
+                    b.dataset.cat = value;
+                    if (color) b.style.setProperty("--cat-color", color);
+                    b.innerHTML = (iconName ? icon(iconName) : "")
+                        + `<span class="cat-filter-count">${count}</span>`
+                        + `<span class="cat-filter-label" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
+                    b.addEventListener("click", () => setCategoryFilter(value));
+                    return b;
+                };
+                // "Todos" e "Sem gaveta" têm espaço próprio, acima da grelha.
+                specials.appendChild(build("all", t("filter.allCategories"), "grid", files.length, null));
+                specials.appendChild(build("none", t("filter.noCategory"), "tag", files.filter(f => !f.category).length, null));
+                // As gavetas da área ativa ficam numa grelha ajustável (máx. X por linha).
+                // Cada carta permite remover a gaveta diretamente daqui.
+                scoped.forEach(c => {
+                    const cell = document.createElement("div");
+                    cell.className = "cat-filter-cell";
+                    cell.appendChild(build(c.name, c.name, c.media === "audio" ? "audio" : "video", files.filter(f => f.category === c.name).length, c.color));
+                    const rm = document.createElement("span");
+                    rm.className = "cat-filter-remove";
+                    rm.setAttribute("role", "button");
+                    rm.tabIndex = 0;
+                    rm.setAttribute("data-tip", t("categories.remove"));
+                    rm.setAttribute("aria-label", t("categories.remove"));
+                    rm.innerHTML = icon("close");
+                    const removeAct = (e) => { e.stopPropagation(); removeCategoryConfirm(c.name); };
+                    rm.addEventListener("click", removeAct);
+                    rm.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); removeAct(e); } });
+                    cell.appendChild(rm);
+                    grid.appendChild(cell);
+                });
+            }
+
+            function setCategoriesPerRow(n) {
+                categoriesPerRow = Math.min(6, Math.max(1, parseInt(n, 10) || 3));
+                try { saveConfig({ categories_per_row: categoriesPerRow }); } catch (e) {}
+                renderCategoryFilters();
+            }
+
+            function setCategoryFilter(value) {
+                currentCategoryFilter = value;
+                document.querySelectorAll(".cat-filter-btn").forEach(b => b.classList.toggle("active", b.dataset.cat === value));
+                renderLibrary();
+            }
+
+            async function saveCategories(list, okMessage) {
+                try {
+                    const res = await fetch("/save_categories", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ categories: list })
+                    });
+                    const data = await res.json();
+                    categories = normalizeCategories(data.categories);
+                    setCategoryArea(categoryArea);
+                    renderCategoryFilters();
+                    if (data.rejected && data.rejected.length) {
+                        showToast(t("categories.invalid"), { type: "warning" });
+                    } else if (okMessage) {
+                        showToast(okMessage, { type: "success" });
+                    }
+                    return true;
+                } catch (e) {
+                    showToast(t("categories.error"), { type: "error" });
+                    return false;
+                }
+            }
+
+            // Muda a cor de uma gaveta (guardada na configuracao).
+            async function setCategoryColor(name, color) {
+                if (!isValidCategoryColor(color)) return;
+                const list = categories.map(c => ({ name: c.name, media: c.media, color: c.name === name ? color.trim().toLowerCase() : c.color }));
+                if (await saveCategories(list, null)) {
+                    renderLibrary();
+                }
+            }
+
+            // Seletor de cor: mostra a paleta da app (cores ja harmonizadas) e
+            // uma cor personalizada que e ajustada a faixa tonal da paleta.
+            let catColorMenuOwner = null;
+            function closeCategoryColorMenu() {
+                const menu = document.getElementById("cat-color-menu");
+                if (!menu) return;
+                menu.classList.remove("open");
+                menu.style.display = "none";
+                menu.innerHTML = "";
+                if (catColorMenuOwner) {
+                    catColorMenuOwner.classList.remove("open");
+                    catColorMenuOwner.setAttribute("aria-expanded", "false");
+                }
+                catColorMenuOwner = null;
+            }
+            function openCategoryColorMenu(name, btn) {
+                const menu = document.getElementById("cat-color-menu");
+                if (!menu) return;
+                if (catColorMenuOwner === btn) { closeCategoryColorMenu(); return; }
+                closeCategoryColorMenu();
+                const current = (categoryColor(name) || "").toLowerCase();
+                const swatch = (c) => `<button type="button" class="cat-color-swatch${c.toLowerCase() === current ? " active" : ""}" style="--cat-color:${c}" data-color="${c}" aria-label="${c}"></button>`;
+                menu.innerHTML = `<div class="cat-color-menu-title">${icon("tag")}<span>${escapeHtml(t("categories.palette"))}</span></div>
+                    <div class="cat-color-swatches">${CAT_PALETTE.map(swatch).join("")}</div>
+                    <label class="cat-color-custom"><input type="color" value="${isValidCategoryColor(current) ? current : CAT_PALETTE[0]}"><span>${escapeHtml(t("categories.custom"))}</span></label>`;
+                menu.querySelectorAll(".cat-color-swatch").forEach((sw) => {
+                    sw.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        const c = sw.dataset.color;
+                        closeCategoryColorMenu();
+                        await setCategoryColor(name, c);
+                    });
+                });
+                const input = menu.querySelector(".cat-color-custom input");
+                if (input) {
+                    input.addEventListener("input", () => {
+                        const c = harmonizeCategoryColor(input.value);
+                        menu.querySelectorAll(".cat-color-swatch").forEach((sw) => sw.classList.toggle("active", sw.dataset.color.toLowerCase() === c));
+                    });
+                    input.addEventListener("change", async () => {
+                        const c = harmonizeCategoryColor(input.value);
+                        closeCategoryColorMenu();
+                        await setCategoryColor(name, c);
+                    });
+                }
+                placeItemMenu(menu, btn);
+                catColorMenuOwner = btn;
+                btn.classList.add("open");
+                btn.setAttribute("aria-expanded", "true");
+            }
+
+            async function addCategory() {
+                const input = document.getElementById("new-category-input");
+                if (!input) return;
+                const name = (input.value || "").trim();
+                if (!name) return;
+                if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                    showToast(t("categories.duplicate"), { type: "warning" });
+                    return;
+                }
+                const list = categories.concat([{ name: name, media: categoryArea, color: defaultCategoryColor(name) }]);
+                if (await saveCategories(list, t("categories.added", { name: name }))) {
+                    input.value = "";
+                    input.focus();
+                }
+            }
+
+            // Escolha (ao remover uma gaveta com ficheiros): manter os
+            // ficheiros (mover para "Sem gaveta") ou apaga-los do disco.
+            let _catRemoveResolver = null;
+            function uiCategoryRemove(name, count) {
+                return new Promise((resolve) => {
+                    _catRemoveResolver = resolve;
+                    const modal = document.getElementById("cat-remove-modal");
+                    if (!modal) { resolve(null); return; }
+                    document.getElementById("cat-remove-title").textContent = t("categories.remove");
+                    document.getElementById("cat-remove-message").textContent = t("categories.removeWithFiles", { name: name, n: count });
+                    const ico = document.getElementById("cat-remove-icon");
+                    ico.className = "confirm-icon danger";
+                    ico.innerHTML = icon("trash");
+                    document.getElementById("cat-remove-keep").textContent = t("categories.keepFiles");
+                    document.getElementById("cat-remove-delete").textContent = t("categories.deleteFiles");
+                    modal.style.display = "flex";
+                    setTimeout(() => document.getElementById("cat-remove-keep").focus(), 40);
+                });
+            }
+            function resolveCategoryRemove(value) {
+                const modal = document.getElementById("cat-remove-modal");
+                if (modal) modal.style.display = "none";
+                if (_catRemoveResolver) { const r = _catRemoveResolver; _catRemoveResolver = null; r(value); }
+            }
+
+            function categoryFiles(name) {
+                return allCurrentFiles().filter(f => f.category === name);
+            }
+
+            async function doRemoveCategory(name, dissolve) {
+                try {
+                    const res = await fetch("/remove_category", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: name, dissolve: !!dissolve })
+                    });
+                    const data = await res.json();
+                    if (data && data.ok) {
+                        categories = normalizeCategories(data.categories);
+                        if (currentCategoryFilter === name) currentCategoryFilter = "all";
+                        setCategoryArea(categoryArea);
+                        renderCategoryFilters();
+                        showToast(t("categories.removed"), { type: "success" });
+                        loadLibrary();
+                        loadHistory();
+                    } else {
+                        showToast(t("categories.error"), { type: "error" });
+                    }
+                } catch (e) {
+                    showToast(t("categories.error"), { type: "error" });
+                }
+            }
+
+            async function deleteCategoryFiles(files) {
+                const paths = (files || []).map(f => f.path).filter(Boolean);
+                if (!paths.length) return;
+                try {
+                    await fetch("/delete_files", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ paths: paths, remove_file: true, remove_history: true })
+                    });
+                } catch (e) { /* a remocao da gaveta continua */ }
+            }
+
+            async function removeCategoryConfirm(name) {
+                const files = categoryFiles(name);
+                if (!files.length) {
+                    const ok = await uiConfirm(t("categories.removeConfirm", { name: name }), {
+                        title: t("categories.remove"), danger: true, icon: "trash", confirmText: t("btn.remove")
+                    });
+                    if (!ok) return;
+                    await doRemoveCategory(name, false);
+                    return;
+                }
+                const choice = await uiCategoryRemove(name, files.length);
+                if (choice === "keep") {
+                    await doRemoveCategory(name, true);
+                } else if (choice === "delete") {
+                    await deleteCategoryFiles(files);
+                    await doRemoveCategory(name, true);
+                }
+            }
+
+            // ===== Movimentacao de ficheiros =====
+            function moveSelected(type) {
+                const paths = Array.from(selectedItems[type] || []);
+                if (!paths.length) return;
+                openMoveModal(paths, type);
+            }
+
+            function filterByCategory(files) {
+                if (!files) return files;
+                if (currentCategoryFilter === "all") return files;
+                if (currentCategoryFilter === "none") return files.filter(f => !f.category);
+                return files.filter(f => f.category === currentCategoryFilter);
+            }
+
+            function openMoveModal(paths, type) {
+                if (!paths || !paths.length) return;
+                // So as gavetas da mesma area do ficheiro (video ou audio).
+                const available = categories.filter(c => !type || c.media === type);
+                if (!available.length) {
+                    showToast(t("move.noCategories"), { type: "warning" });
+                    return;
+                }
+                pendingMove = { paths: paths.slice(), type: type, destination: null };
+                document.getElementById("move-modal-title").innerHTML =
+                    `${icon("move")} ${escapeHtml(paths.length > 1 ? t("move.titleBatch", { n: paths.length }) : t("move.title"))}`;
+                document.getElementById("move-modal-message").textContent = t("move.message");
+                const extPath = document.getElementById("move-external-path");
+                extPath.style.display = "none";
+                extPath.textContent = "";
+                const list = document.getElementById("move-dest-list");
+                list.innerHTML = "";
+                const add = (value, label) => {
+                    const id = "move-opt-" + Math.random().toString(36).slice(2, 9);
+                    const row = document.createElement("div");
+                    row.className = "modal-option";
+                    row.innerHTML = `<input type="radio" name="move-dest" id="${id}"><label for="${id}">${icon("move")} ${escapeHtml(label)}</label>`;
+                    const radio = row.querySelector("input");
+                    radio.addEventListener("change", () => { if (radio.checked) pendingMove.destination = value; });
+                    row.addEventListener("click", (e) => {
+                        if (e.target.tagName !== "INPUT") radio.checked = true;
+                        pendingMove.destination = value;
+                    });
+                    list.appendChild(row);
+                };
+                add({ kind: "category", name: null }, t("move.none"));
+                available.forEach(c => add({ kind: "category", name: c.name }, c.name));
+                document.getElementById("move-modal").style.display = "flex";
+            }
+
+            function closeMoveModal() {
+                const modal = document.getElementById("move-modal");
+                if (modal) modal.style.display = "none";
+                pendingMove = { paths: [], type: "", destination: null };
+            }
+
+            async function chooseExternalFolder() {
+                try {
+                    const res = await fetch("/browse_folder", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: "{}"
+                    });
+                    const data = await res.json();
+                    if (data && data.path) {
+                        pendingMove.destination = { kind: "external", dir: data.path };
+                        document.querySelectorAll('#move-dest-list input[name="move-dest"]').forEach(i => { i.checked = false; });
+                        const extPath = document.getElementById("move-external-path");
+                        extPath.textContent = `${t("move.externalHint")}  ${data.path}`;
+                        extPath.style.display = "block";
+                    }
+                } catch (e) {
+                    showToast(t("toast.browseUnsupported"), { type: "warning" });
+                }
+            }
+
+            async function confirmMove() {
+                const dest = pendingMove.destination;
+                if (!dest) {
+                    showToast(t("move.message"), { type: "warning" });
+                    return;
+                }
+                const paths = pendingMove.paths.slice();
+                const type = pendingMove.type;
+                let data = null;
+                try {
+                    const res = await fetch("/move_files", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ paths: paths, destination: dest })
+                    });
+                    data = await res.json();
+                } catch (e) {
+                    showToast(t("move.error"), { type: "error" });
+                }
+                if (data) notifyMoveResult(data);
+                if (type && selectedItems[type]) selectedItems[type].clear();
+                closeMoveModal();
+                loadLibrary();
+                loadHistory();
+            }
+
+            // Mostra uma mensagem por tipo de erro (evita dezenas de avisos iguais).
+            function notifyMoveResult(data) {
+                const map = {
+                    not_found: "move.errorNotFound",
+                    target_missing: "move.errorTarget",
+                    invalid_target: "move.errorTarget",
+                    unknown_category: "move.errorUnknownCategory",
+                    media_mismatch: "move.errorMedia",
+                    same_place: "move.samePlace",
+                    invalid_path: "move.error"
+                };
+                const tipos = new Set((data.results || []).filter(r => !r.ok).map(r => map[r.error] || "move.error"));
+                if (data.moved > 0) showToast(t("move.done", { n: data.moved }), { type: "success" });
+                else if (!tipos.size) showToast(t("move.noneMoved"), { type: "warning" });
+                tipos.forEach(k => showToast(t(k), { type: "error" }));
+            }
+
+            // ===== Menu vertical de acoes por cartao (mostrar na pasta / mover / remover) =====
+            let itemMenuOwner = null;
+
+            function closeItemMenu() {
+                const menu = document.getElementById("item-menu");
+                if (!menu) return;
+                menu.classList.remove("open");
+                menu.style.display = "none";
+                menu.innerHTML = "";
+                if (itemMenuOwner) {
+                    itemMenuOwner.classList.remove("open");
+                    itemMenuOwner.setAttribute("aria-expanded", "false");
+                }
+                itemMenuOwner = null;
+            }
+
+            function toggleMoveMenu(btn, f, type) {
+                if (itemMenuOwner === btn) { closeItemMenu(); return; }
+                openMoveMenu(btn, f, type);
+            }
+
+            // Menu vertical de movimentacao: lista as gavetas da MESMA area do
+            // ficheiro (nunca cruza video<->audio) e move-o ao clicar.
+            function openMoveMenu(btn, f, type) {
+                const menu = document.getElementById("item-menu");
+                if (!menu) return;
+                closeItemMenu();
+                const media = type || fileMedia(f);
+                const targets = categories.filter(c => !media || c.media === media);
+                const addBtn = (label, iconName, color, current, disabled, handler) => {
+                    const b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "item-menu-item" + (current ? " current" : "");
+                    b.setAttribute("role", "menuitem");
+                    if (disabled) b.disabled = true;
+                    if (color) b.style.setProperty("--cat-color", color);
+                    const lead = color ? `<span class="cat-dot"></span>` : icon(iconName);
+                    const trail = current ? icon("check") : "";
+                    b.innerHTML = `${lead}<span>${escapeHtml(label)}</span>${trail}`;
+                    if (!disabled) b.addEventListener("click", (e) => { e.stopPropagation(); closeItemMenu(); handler(); });
+                    menu.appendChild(b);
+                };
+                const head = document.createElement("div");
+                head.className = "item-menu-title";
+                head.innerHTML = `${icon("move")}<span>${escapeHtml(t("item.move"))}</span>`;
+                menu.appendChild(head);
+                const inComp = !!f.category;
+                addBtn(t("move.none"), "folder", null, !inComp, false, () => moveFileTo(f.path, media, { kind: "category", name: null }));
+                if (!targets.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "item-menu-empty";
+                    empty.textContent = t("move.noCategories");
+                    menu.appendChild(empty);
+                } else {
+                    const sep = document.createElement("div");
+                    sep.className = "item-menu-sep";
+                    menu.appendChild(sep);
+                    targets.forEach(c => {
+                        const current = f.category === c.name;
+                        addBtn(c.name, c.media === "audio" ? "audio" : "video", c.color, current, current,
+                            () => moveFileTo(f.path, media, { kind: "category", name: c.name }));
+                    });
+                }
+                placeItemMenu(menu, btn);
+                itemMenuOwner = btn;
+                btn.classList.add("open");
+                btn.setAttribute("aria-expanded", "true");
+            }
+
+            // Move um ficheiro para uma gaveta (ou para a raiz) e atualiza as listas.
+            async function moveFileTo(path, type, destination) {
+                let data = null;
+                try {
+                    const res = await fetch("/move_files", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ paths: [path], destination: destination })
+                    });
+                    data = await res.json();
+                } catch (e) {
+                    showToast(t("move.error"), { type: "error" });
+                }
+                if (data) notifyMoveResult(data);
+                if (type && selectedItems[type]) selectedItems[type].delete(path);
+                loadLibrary();
+                loadHistory();
+            }
+
+            // Posiciona o menu flutuante junto ao botao que o abriu.
+            function placeItemMenu(menu, btn) {
+                menu.style.left = "-9999px";
+                menu.style.top = "0px";
+                menu.classList.add("open");
+                menu.style.display = "flex";
+                const r = btn.getBoundingClientRect();
+                const mw = menu.offsetWidth;
+                const mh = menu.offsetHeight;
+                let left = r.right - mw;
+                let top = r.bottom + 6;
+                if (left < 8) left = 8;
+                if (left + mw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - mw - 8);
+                if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+                menu.style.left = left + "px";
+                menu.style.top = top + "px";
             }
             
             function closeDeleteModal() {
@@ -3133,12 +4366,13 @@
             }
             
             function renderLibrary() {
+                closeItemMenu();
                 const container = document.getElementById("library-container");
                 container.innerHTML = "";
                 document.getElementById("video-total").textContent = (currentFiles.video||[]).length;
                 document.getElementById("audio-total").textContent = (currentFiles.audio||[]).length;
-                let videosToShow = currentFilter === "audio" ? [] : currentFiles.video;
-                let audiosToShow = currentFilter === "video" ? [] : currentFiles.audio;
+                let videosToShow = filterByCategory(currentFilter === "audio" ? [] : currentFiles.video);
+                let audiosToShow = filterByCategory(currentFilter === "video" ? [] : currentFiles.audio);
                 
                 if (videosToShow && videosToShow.length > 0) {
                     const group = document.createElement("div"); group.className = "library-group video-group";
@@ -3148,6 +4382,7 @@
                             <span class="library-group-name">${icon("video")} ${escapeHtml(t("library.videos"))}</span>
                             ${platformBreakdown(videosToShow)}
                             <div class="header-trash-btn" id="video-header-trash" role="button" tabindex="0" aria-label="${escapeHtml(t("group.removeVideos"))}" data-tip="${escapeHtml(t("group.removeVideos"))}" onclick="deleteSelected('video')">${icon("trash")}</div>
+                            <div class="header-move-btn" id="video-header-move" role="button" tabindex="0" aria-label="${escapeHtml(t("group.moveVideos"))}" data-tip="${escapeHtml(t("group.moveVideos"))}" onclick="moveSelected('video')">${icon("move")}</div>
                         </div>
                         <div class="sort-dropdown">
                             <button class="sort-trigger" data-group="video" aria-label="${escapeHtml(t("sort.videos.aria"))}" data-tip="${escapeHtml(t("sort.tip"))}">${icon("sort")}</button>
@@ -3175,6 +4410,7 @@
                             <span class="library-group-name">${icon("audio")} ${escapeHtml(t("library.audios"))}</span>
                             ${platformBreakdown(audiosToShow)}
                             <div class="header-trash-btn" id="audio-header-trash" role="button" tabindex="0" aria-label="${escapeHtml(t("group.removeAudios"))}" data-tip="${escapeHtml(t("group.removeAudios"))}" onclick="deleteSelected('audio')">${icon("trash")}</div>
+                            <div class="header-move-btn" id="audio-header-move" role="button" tabindex="0" aria-label="${escapeHtml(t("group.moveAudios"))}" data-tip="${escapeHtml(t("group.moveAudios"))}" onclick="moveSelected('audio')">${icon("move")}</div>
                         </div>
                         <div class="sort-dropdown">
                             <button class="sort-trigger" data-group="audio" aria-label="${escapeHtml(t("sort.audios.aria"))}" data-tip="${escapeHtml(t("sort.tip"))}">${icon("sort")}</button>
@@ -3222,6 +4458,7 @@
                 const sizeMB = (f.size / 1024 / 1024).toFixed(1);
                 const switchId = `switch-${f.path.replace(/\//g, '_')}`;
                 const isSelected = selectedItems[type].has(f.path);
+                const cardColor = categoryColor(f.category);
                 
                 div.innerHTML = `
                     <div class="library-item-icon">${itemIcon}</div>
@@ -3229,12 +4466,13 @@
                         <div class="library-item-name">${escapeHtml(f.name)}</div>
                         <div class="library-item-actions">
                             <div class="library-item-uploader">${icon("user")} ${escapeHtml(f.uploader || t("item.unknownOrigin"))}</div>
-                            <div class="library-item-action delete" data-tip="${escapeHtml(t("item.removeFile"))}" aria-label="${escapeHtml(t("item.removeFile"))}" onclick="event.stopPropagation(); deleteFile('${f.path}', '${f.name}', '${type}')">${icon("trash")}</div>
-                            <div class="item-switch ${isSelected ? 'active' : ''}" id="${switchId}" role="checkbox" aria-checked="${isSelected}" aria-label="${escapeHtml(isSelected ? t("item.selected.aria") : t("item.select"))}" data-tip="${escapeHtml(isSelected ? t("item.selected") : t("item.select"))}" onclick="event.stopPropagation(); toggleItemSwitch('${f.path}', '${type}')">
+                            <div class="library-item-action move-btn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-tip="${escapeHtml(t("item.move"))}" aria-label="${escapeHtml(t("item.move"))}">${icon("move")}</div>
+                            <div class="library-item-action delete" role="button" tabindex="0" data-tip="${escapeHtml(t("item.removeFile"))}" aria-label="${escapeHtml(t("item.removeFile"))}">${icon("trash")}</div>
+                            <div class="item-switch ${isSelected ? 'active' : ''}" id="${switchId}" role="checkbox" aria-checked="${isSelected}" aria-label="${escapeHtml(isSelected ? t("item.selected.aria") : t("item.select"))}" data-tip="${escapeHtml(isSelected ? t("item.selected") : t("item.select"))}">
                                 <div class="switch-slider"></div>
                             </div>
                         </div>
-                        <div class="library-item-meta">${sizeMB} MB</div>
+                        <div class="library-item-meta"><span>${sizeMB} MB</span>${f.category ? `<span class="library-item-category" style="--cat-color:${cardColor}"><span class="cat-dot"></span>${escapeHtml(f.category)}</span>` : ""}</div>
                     </div>
                 `;
                 
@@ -3243,6 +4481,26 @@
                         openPreview(f, type, div);
                     }
                 };
+
+                // Opcoes do cartao (como na versao 3.6.0): seletor + apagar.
+                const delBtn = div.querySelector(".library-item-action.delete");
+                if (delBtn) {
+                    const actDel = (e) => { e.stopPropagation(); deleteFile(f.path, f.name, type); };
+                    delBtn.addEventListener("click", actDel);
+                    delBtn.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); actDel(e); } });
+                }
+                const sw = div.querySelector(".item-switch");
+                if (sw) sw.addEventListener("click", (e) => { e.stopPropagation(); toggleItemSwitch(f.path, type); });
+                // Menu vertical para mover entre gavetas da mesma area.
+                const moveBtn = div.querySelector(".library-item-action.move-btn");
+                if (moveBtn) {
+                    const toggleMove = (e) => { e.stopPropagation(); e.preventDefault(); toggleMoveMenu(moveBtn, f, type); };
+                    moveBtn.addEventListener("click", toggleMove);
+                    moveBtn.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") toggleMove(e);
+                        else if (e.key === "Escape") closeItemMenu();
+                    });
+                }
 
                 if (isSelected) div.classList.add("selected");
 
@@ -3294,15 +4552,44 @@
                         }
                     }
                     if (matchedFile) usedFiles.add(matchedFile.path);
-                    const resolvedPath = matchedFile ? matchedFile.path : (item.file_path || "");
-                    const resolvedName = matchedFile ? matchedFile.name : (item.file_path ? decodeURIComponent(item.file_path.split("/").pop()) : "");
-                    const fileName = resolvedName || item.title || t("history.nameUnavailable");
-                    const fileNameHtml = (resolvedPath && resolvedName)
-                        ? `<a href="${resolvedPath}" target="_blank" style="color: var(--accent); text-decoration: none;" onclick="event.stopPropagation()">${escapeHtml(fileName)}</a>`
+                    // Nome a apresentar na Atividade: preferir o título registado (nome do vídeo/lista),
+                    // depois o nome do ficheiro associado e, por fim, o basename do caminho — sempre sem extensão.
+                    const stripExt = s => (s || "").replace(/\.[A-Za-z0-9]{1,5}$/, "");
+                    const titleName = stripExt((item.title || "").trim());
+                    const matchedName = matchedFile ? stripExt(matchedFile.name) : "";
+                    const pathName = item.file_path ? stripExt(decodeURIComponent(item.file_path.split("/").pop())) : "";
+                    const fileExists = !!matchedFile;
+                    const fileName = titleName || matchedName || pathName || t("history.nameUnavailable");
+                    const fileNameHtml = fileExists
+                        ? `<a href="${matchedFile.path}" target="_blank" style="color: var(--accent); text-decoration: none;" onclick="event.stopPropagation()">${escapeHtml(fileName)}</a>`
                         : escapeHtml(fileName);
                     const itemPlatform = item.platform || (item.url ? detectPlatformFromUrl(item.url) : "web");
                     let fileLink = (item.status === "failed")
                         ? `<div class="history-fail">${icon("alert")} ${escapeHtml(t("history.failed"))}</div>`
+                        : "";
+                    // Nota de movimentacao (gaveta interno ou pasta externa).
+                    const movedNote = (item.moved_to && typeof item.moved_to === "object") ? item.moved_to : null;
+                    const movedAbs = movedNote ? String(movedNote.path || "") : "";
+                    const movedLabel = movedNote
+                        ? (movedNote.kind === "external"
+                            ? t("history.movedExternal")
+                            : t("history.movedTo", { name: movedNote.name || t("filter.noCategory") }))
+                        : "";
+                    const movedHtml = (movedNote && !matchedFile)
+                        ? `<div class="history-moved">${icon("move")} <span>${escapeHtml(movedLabel)}</span>${movedAbs ? `<span class="move-dest-path" title="${escapeHtml(movedAbs)}">${escapeHtml(movedAbs)}</span>` : ""}</div>`
+                        : "";
+                    // Gaveta atual do ficheiro (se estiver dentro de um).
+                    const catName = matchedFile ? matchedFile.category : null;
+                    const categoryHtml = catName
+                        ? `<span class="meta-item history-cat" style="--cat-color:${categoryColor(catName)}"><span class="cat-dot"></span>${escapeHtml(catName)}</span>`
+                        : "";
+                    // Alvo a revelar: ficheiro no disco, caminho registado no historico ou o
+                    // caminho absoluto de um ficheiro que foi movido para fora da aplicacao.
+                    const revealTarget = matchedFile ? { path: matchedFile.path }
+                        : (item.file_path ? { path: item.file_path }
+                        : (movedAbs ? { absolute: movedAbs } : null));
+                    const folderBtnHtml = revealTarget
+                        ? `<button class="history-folder-btn" type="button" data-tip="${escapeHtml(t("item.showInFolder"))}" aria-label="${escapeHtml(t("item.showInFolder"))}">${icon("folder")}</button>`
                         : "";
                     
                     li.innerHTML = `
@@ -3312,15 +4599,26 @@
                             ${statusIcon}
                             <span class="meta-item">${platformIcon(itemPlatform)} ${platformLabel(itemPlatform)}</span>
                             <span class="meta-item">${icon("grid")} ${typeLabel}</span>
+                            ${categoryHtml}
                             <span class="meta-item">${icon("history")} ${dateStr}</span>
                         </div>
                         ${fileLink}
+                        ${movedHtml}
                         <button class="delete-history-btn" data-url="${escapeHtml(item.url)}" data-path="${item.file_path || ''}"
                             type="button" data-tip="${escapeHtml(t("history.removeLink"))}" aria-label="${escapeHtml(t("history.removeLink"))}"
                             onclick="event.stopPropagation(); removeHistoryEntry('${escapeHtml(item.url)}', '${item.file_path || ''}')">
                             ${icon("trash")}
                         </button>
+                        ${folderBtnHtml}
                     `; 
+                    
+                    const historyFolderBtn = li.querySelector(".history-folder-btn");
+                    if (historyFolderBtn) {
+                        historyFolderBtn.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            showInFolder(revealTarget);
+                        });
+                    }
                     
                     li.onclick = () => { 
                         document.getElementById("urls").value = item.url; 
@@ -3621,8 +4919,10 @@
             }
             
             document.addEventListener("DOMContentLoaded", () => {
-                setLanguage(detectLang(), { silent: true });
+                // Popular primeiro a lista de idiomas e so depois aplicar o idioma
+                // (garante que o <select> nunca fica sem opcoes).
                 initLanguage();
+                setLanguage(detectLang(), { silent: true });
                 layoutBrandSubtitle();
                 if (document.fonts && document.fonts.ready) { try { document.fonts.ready.then(() => { try { layoutBrandSubtitle(); } catch(e) {} }); } catch(e) {} }
                 window.addEventListener("resize", () => { try { layoutBrandSubtitle(); } catch(e) {} });
@@ -3637,7 +4937,7 @@
                 document.getElementById("console-toggle-btn").addEventListener("click", function(e) { e.stopPropagation(); toggleConsole(); });
                 
                 document.getElementById("help-btn").addEventListener("click", openHelpModal);
-                document.querySelectorAll(".filter-btn").forEach(btn => { btn.addEventListener("click", () => { setFilter(btn.dataset.filter); const label = btn.dataset.filter === "video" ? t("filter.videos.label") : (btn.dataset.filter === "audio" ? t("filter.audios.label") : t("filter.allFiles.label")); showToast(label, { type:"interaction", title: t("toast.filter.title") }); }); });
+                document.querySelectorAll(".filter-btn").forEach(btn => { btn.addEventListener("click", () => { setFilter(btn.dataset.filter); saveConfig({ library_filter: btn.dataset.filter }); const label = btn.dataset.filter === "video" ? t("filter.videos.label") : (btn.dataset.filter === "audio" ? t("filter.audios.label") : t("filter.allFiles.label")); showToast(label, { type:"interaction", title: t("toast.filter.title") }); }); });
                 document.querySelectorAll(".tab").forEach(btn => { 
                     btn.onclick = () => { 
                         document.querySelectorAll(".tab").forEach(b=>{ b.classList.remove("active"); b.setAttribute("aria-selected","false"); }); 
@@ -3690,6 +4990,11 @@
                     document.getElementById("sub_auto").checked = cfg.sub_auto!==false; 
                     toggleSubSettings(); 
                     document.getElementById("po-token-fields").style.display = cfg.use_po_token ? "block" : "none"; 
+                    categoriesPerRow = Math.min(6, Math.max(1, parseInt(cfg.categories_per_row, 10) || 3));
+                    const perRowSel = document.getElementById("cat-per-row");
+                    if (perRowSel) perRowSel.value = String(categoriesPerRow);
+                    const savedFilter = cfg.library_filter || "all";
+                    if (savedFilter !== "all" && typeof setFilter === "function") setFilter(savedFilter);
                 });
                 
                 window.toggleDiskStatus = toggleDiskStatus; 
@@ -3715,14 +5020,40 @@
                 window.confirmDelete = confirmDelete;
                 window.toggleCheckbox = toggleCheckbox;
                 window.removeHistoryEntry = removeHistoryEntry;
+                window.addCategory = addCategory;
+                window.setCategoryArea = setCategoryArea;
+                window.setCategoriesPerRow = setCategoriesPerRow;
+                window.chooseExternalFolder = chooseExternalFolder;
+                window.closeMoveModal = closeMoveModal;
+                window.confirmMove = confirmMove;
+                window.moveSelected = moveSelected;
+                window.closeItemMenu = closeItemMenu;
+                window.closeCategoryColorMenu = closeCategoryColorMenu;
+                window.resolveCategoryRemove = resolveCategoryRemove;
+                window.openCategoryColorMenu = openCategoryColorMenu;
                 
                 toggleVideoOptions();
                 loadSortPreferences();
                 updateProgressPosition(0);
                 window.addEventListener("resize", () => positionProgressIndicator(lastProgress));
+                window.addEventListener("resize", () => closeItemMenu());
+                window.addEventListener("resize", () => closeCategoryColorMenu());
+                document.addEventListener("click", () => { closeItemMenu(); closeCategoryColorMenu(); });
+                document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeItemMenu(); closeCategoryColorMenu(); } });
+                // Fecha o menu do cartao quando a lista rola (o menu e posicionado em fixed).
+                document.addEventListener("scroll", () => { closeItemMenu(); closeCategoryColorMenu(); }, true);
                 connectSSE(); 
                 fetch("/init_log"); 
+                loadCategories();
                 loadLibrary();
+                const catInput = document.getElementById("new-category-input");
+                if (catInput) catInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addCategory(); } });
+                const catAreaRow = document.getElementById("cat-area-row");
+                if (catAreaRow) {
+                    catAreaRow.addEventListener("change", (e) => {
+                        if (e.target && e.target.name === "cat-area") setCategoryArea(e.target.value);
+                    });
+                }
                 
                 document.getElementById("apply-python-mode").onclick = applyPythonPref; 
                 loadPythonPref();

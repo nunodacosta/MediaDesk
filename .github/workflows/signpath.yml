@@ -2,18 +2,21 @@
 #  Release + assinatura via SignPath (GitHub Actions)
 #  ---------------------------------------------------------------------------
 #  Fluxo (ver SIGNPATH.md):
-#    preparar runtime -> build (sem assinatura) -> empacota o ZIP dos
-#    executaveis finais -> (se token SignPath configurado) submete ao SignPath
-#    -> aplica os ficheiros assinados -> regenera hashes -> publica a release.
+#    preparar runtime -> build (sem assinatura) -> prepara os executaveis finais
+#    -> (se token SignPath configurado) submete ao SignPath -> aplica os
+#    ficheiros assinados -> regenera hashes -> publica a release.
 #
 #  PREREQUISITOS (configurar UMA vez no repositorio):
 #    - Secret  SIGNPATH_API_TOKEN            (token de submissor da SignPath)
 #    - Variable SIGNPATH_ORGANIZATION_ID     (id da organizacao SignPath)
 #    - Ajustar os slugs abaixo (projeto/politica) aos definidos na SignPath.
-#    - Criar a "artifact configuration" na SignPath para este ZIP (os 3
-#      executaveis: MediaDesk-Portable.exe, MediaDesk-Setup.exe,
-#      MediaDesk-Portable\YT-DLP-Media-Desk.exe) com restricoes de metadados
-#      (ProductName = "YT-DLP Media Desk", ProductVersion = a versao do build).
+#    - Criar a "artifact configuration" na SignPath (ver
+#      signpath/artifact-configuration.xml). Estrutura: carrega-se a PASTA
+#      stage\ (os 3 executaveis crus), NAO o ZIP. O actions/upload-artifact
+#      empacota-a num ZIP de transporte, por isso o elemento raiz da config e
+#      <zip-file> e os .exe ficam a um nivel (MediaDesk-Portable.exe,
+#      MediaDesk-Setup.exe, MediaDesk-Portable\YT-DLP-Media-Desk.exe). Subir o
+#      ZIP criaria um ZIP aninhado que a SignPath nao desce.
 #
 #  RUNTIME: bin\ (Python, yt-dlp, FFmpeg, Deno) NAO esta no repositorio (e
 #  grande). O passo "Preparar runtime" repoe-o a partir de fontes publicas com
@@ -41,9 +44,9 @@ permissions:
 
 env:
   DOTNET_VERSION: '8.0.x'
-  SIGNPATH_PROJECT: 'mediadesk'              # <- slug do projeto na SignPath (ajustar ao criado na SignPath)
-  SIGNPATH_POLICY: 'release-signing'         # <- slug da signing policy
-  SIGNPATH_ARTIFACT_CONFIG: ''               # vazio = artifact configuration por omissao
+  SIGNPATH_PROJECT: 'mediadesk'                  # <- slug do projeto na SignPath (ajustar ao criado na SignPath)
+  SIGNPATH_POLICY: 'release-signing'             # <- slug da signing policy
+  SIGNPATH_ARTIFACT_CONFIG: 'mediadesk-release'  # <- slug da artifact configuration (ver signpath/artifact-configuration.xml)
 
 jobs:
   build-sign-release:
@@ -87,6 +90,14 @@ jobs:
         shell: pwsh
         run: ./build_portable.ps1
 
+      - name: Ler versao (version.json)
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Get-Content version.json -Raw | ConvertFrom-Json).version
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Output "Versao: $v"
+
       # ------------------- SignPath (apenas com token) ---------------------
       - name: Empacotar artefacto para o SignPath
         if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
@@ -99,7 +110,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: signpath-unsigned
-          path: build/signpath/signpath-*.zip
+          # Pasta com os executaveis CRUS (nao o ZIP): o GitHub empacota-a num
+          # ZIP de transporte e a artifact configuration ve os .exe diretamente.
+          path: build/signpath/stage
           if-no-files-found: error
 
       - name: Submeter pedido de assinatura
@@ -115,17 +128,21 @@ jobs:
           github-artifact-id: ${{ steps.upload-unsigned-artifact.outputs.artifact-id }}
           wait-for-completion: true
           output-artifact-directory: signed
+          # Parametro consumido nas restricoes product-version="${version}".
+          parameters: |
+            version: "${{ steps.ver.outputs.version }}"
 
       - name: Aplicar assinado + regenerar hashes
         if: ${{ steps.submit-signing-request.outcome == 'success' }}
         shell: pwsh
         run: |
-          $zip = Get-ChildItem signed -Recurse -Filter 'signpath-*.zip' | Select-Object -First 1
+          $dir = (Resolve-Path signed).Path
+          $zip = Get-ChildItem $dir -Recurse -Filter 'signpath-*.zip' | Select-Object -First 1
           if ($zip) {
             ./tools/apply_signed.ps1 -Source $zip.FullName
           } else {
-            # A action pode entregar a pasta de ficheiros assinados diretamente.
-            ./tools/apply_signed.ps1 -Source (Resolve-Path signed).Path
+            # A action entrega a pasta de ficheiros assinados diretamente.
+            ./tools/apply_signed.ps1 -Source $dir
           }
 
       # ---------------------------------------------------------------------

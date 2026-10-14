@@ -1,10 +1,34 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.6.0",
-  "date": "2026-10-11",
-  "build": 2026101102,
+  "version": "3.7.0",
+  "date": "2026-10-14",
+  "build": 2026101402,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.7.0",
+      "date": "2026-10-14",
+      "groups": {
+        "Adicionado": [
+          "Gavetas (categorias) com duas áreas — Vídeo e Áudio — criadas na Configuração como pastas dentro da pasta de downloads, com uma grelha de cartas e contagem de ficheiros por gaveta",
+          "Cor por gaveta (escolhida na Configuração) e dístico colorido com o nome da gaveta em cada ficheiro, na mediateca e na Atividade",
+          "Menu vertical de movimentação em cada cartão de ficheiro: propõe apenas as gavetas do mesmo tipo (Vídeo ou Áudio), além de «Sem gaveta»",
+          "A movimentação de um ficheiro na mediateca reflete-se de imediato na Atividade",
+          "Movimentação de ficheiros para uma pasta externa, escolhida no momento da ação",
+          "O filtro de gavetas do painel lateral acompanha o tipo escolhido (Vídeo mostra gavetas de vídeo, Áudio os de áudio, Todos mostra todos) e indica quantos ficheiros tem cada uma",
+          "As gavetas do painel lateral surgem numa grelha que se ajusta ao espaço disponível, até um número máximo por linha configurável (1 a 6) na Configuração, deixando «Todos» e «Sem gaveta» em destaque acima da grelha",
+          "Remoção de uma gaveta diretamente a partir da sua carta no painel lateral: se ainda tiver ficheiros, o utilizador escolhe se os mantém (movidos para «Sem gaveta») ou se os apaga do disco"
+        ],
+        "Melhorado": [
+          "O seletor de cor das gavetas passa a usar a paleta da aplicação, com a cor personalizada harmonizada automaticamente à paleta e ao tema (matiz preservada; saturação e luminosidade ajustadas) para garantir legibilidade nos temas claro e escuro",
+          "Cada gaveta pertence a uma área (Vídeo ou Áudio): nunca é possível mover um vídeo para uma gaveta de áudio, nem o contrário, com validação também no servidor",
+          "Os cartões dos ficheiros mantêm o aspeto da versão 3.6.0 (autor, apagar e seletor), agora com a gaveta e o menu de movimentação",
+          "A Atividade reflete cada movimentação, com nota do destino, dístico da gaveta e acesso à pasta mesmo para ficheiros movidos para fora da aplicação",
+          "Launcher migrado para .NET 8 (LTS) e FFmpeg fixado a uma build imutável, para pacotes reprodutíveis",
+          "Preparação para assinatura de código (SignPath Foundation): configuração de artefactos versionada e metadados do instalador normalizados"
+        ]
+      }
+    },
     {
       "version": "3.6.0",
       "date": "2026-10-11",

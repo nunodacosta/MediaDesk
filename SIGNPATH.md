@@ -151,9 +151,18 @@ pelo que nunca substitui uma assinatura do SignPath por engano.
 
 O template está em [`.github/workflows/signpath.yml`](.github/workflows/signpath.yml).
 Faz: `tools/prepare_runtime.ps1` (runtime) → `build_portable.ps1` →
-`prep_signpath.ps1` → carrega o ZIP como artefacto do workflow → submete à
-SignPath (`signpath/github-action-submit-signing-request@v3`) → `apply_signed.ps1`
-→ publica a release (em tags `v*`).
+`prep_signpath.ps1` → carrega a **pasta** `build\signpath\stage` (os `.exe` crus)
+como artefacto do workflow → submete à SignPath
+(`signpath/github-action-submit-signing-request@v3`, com o parâmetro `version`) →
+`apply_signed.ps1` → publica a release (em tags `v*`).
+
+> ⚠️ **Não carregar o nosso ZIP no CI.** O `actions/upload-artifact` já empacota
+> o que lhe damos num ZIP. Se carregássemos `build\signpath\signpath-*.zip`,
+> ficaria um ZIP **dentro** de outro ZIP e os `<pe-file>` da configuração nunca
+> seriam encontrados (o pedido falharia). Por isso o CI carrega a **pasta** e a
+> configuração tem o root `<zip-file>` com os `.exe` a **um nível**. Para
+> submissão manual (secção 3) o ZIP continua a servir: a SignPath vê-o como um
+> `<zip-file>` com os mesmos 3 `.exe` dentro.
 
 Configurar uma vez no repositório:
 
@@ -172,50 +181,60 @@ Configurar uma vez no repositório:
 2. **Robusto sem SignPath** — os passos da SignPath só correm quando o secret
    `SIGNPATH_API_TOKEN` existe. Sem ele, o workflow **publica a release não
    assinada** com o `SHA256SUMS.txt` gerado no build (estado atual do projeto).
-3. **Artifact configuration com restrições de metadados** — na SignPath, a
-   configuração do artefacto deve impor, por *file metadata restrictions*:
-   `ProductName = "YT-DLP Media Desk"` e `ProductVersion = <versão do build>`
-   (já definidos nos executáveis; ver `MediaDeskLauncher.csproj`).
+3. **Artifact configuration com restrições de metadados** — está pronta em
+   [`signpath/artifact-configuration.xml`](signpath/artifact-configuration.xml);
+   criar na SignPath com o slug `mediadesk-release` (ou ajustar
+   `SIGNPATH_ARTIFACT_CONFIG`). Impõe, por *file metadata restrictions*,
+   `product-name="YT-DLP Media Desk"`, `product-version="${version}"` e
+   `company-name="ALDACO"` nos 3 executáveis. O `version` é o parâmetro que o
+   workflow lê de `version.json` (ver `MediaDeskLauncher.csproj`).
 
 O trigger por tag (`push: tags: ['v*']`) está **ativo**: cada tag `v*` dispara
 build + (quando configurado) assinatura + release.
 
-### 8.1 Restrições de metadados e o padding do Inno Setup
+### 8.1 Artifact configuration e o padding do Inno Setup
 
-A *artifact configuration* deve ter o **root `<zip-file>`** (o GitHub empacota o
-artefacto num ZIP) e restringir os metadados dos `<pe-file>`:
+A configuração de artefacto versionada é
+[`signpath/artifact-configuration.xml`](signpath/artifact-configuration.xml)
+(slug `mediadesk-release`). O essencial:
 
-```xml
-<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
-  <zip-file>
-    <pe-file path="**/*.exe" max-matches="unbounded" product-name="YT-DLP Media Desk">
-      <authenticode-sign />
-    </pe-file>
-  </zip-file>
-</artifact-configuration>
-```
+- **Root `<zip-file>`** — o GitHub entrega sempre um ZIP de transporte; o root
+  descreve esse ZIP e os `<pe-file>` ficam a **um nível**
+  (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe`,
+  `MediaDesk-Portable/YT-DLP-Media-Desk.exe`).
+- **Um só nível de ZIP** — por isso o CI carrega a **pasta**, não o nosso ZIP.
+- **Restrições de metadados** em cada `<pe-file>`:
+  `product-name`, `product-version="${version}"` e `company-name`.
 
-> ⚠️ **Padding do instalador (Inno Setup).** O `.exe` gerado pelo Inno Setup tem
-> os campos da *Version Info* com **espaços de preenchimento** (o stub traz os
-> campos com largura fixa — é um comportamento do próprio Inno, não um bug
-> nosso). Confirmado nos artefactos deste projeto:
+> ⚠️ **Padding do instalador (Inno Setup) — resolvido no fluxo.** O `.exe` do
+> Inno Setup sai com os campos da *Version Info* preenchidos com **espaços**
+> (largura fixa do stub — comportamento do Inno, sem diretiva para o desativar).
+> Confirmado nos artefactos deste projeto:
 >
-> | Campo | Valor real | Comprimento no PE |
+> | Campo | Valor real | Largura no PE |
 > |---|---|---|
 > | `ProductName` | `YT-DLP Media Desk` | 60 (com espaços à direita) |
 > | `ProductVersion` | `3.6.0` | 50 |
 > | `FileVersion` | `3.6.0` | 20 |
 > | `CompanyName` | `ALDACO` | 60 |
 >
-> O launcher e o auto-extraível **não** têm padding (`ProductName` com 17 chars).
-> Como as *file metadata restrictions* da SignPath comparam o valor do PE tal como
-> está, ao criar a configuração **verifica** se a restrição exata
-> `product-name="YT-DLP Media Desk"` é aceite no `MediaDesk-Setup.exe`. Se a
-> SignPath não ignorar os espaços à direita, define a restrição do instalador em
-> conformidade (ou confirma com o suporte da SignPath se o `Trim` é aplicado).
-> O código do template do Inno é fixo, pelo que não há diretiva para remover o
-> padding sem reescrever o recurso de versão após o build (o que quebraria a
-> reprodutibilidade — a evitar).
+> As *file metadata restrictions* comparam o valor **exato**, logo o padding tem
+> de sair antes de submeter. O
+> [`tools/normalize_versioninfo.ps1`](tools/normalize_versioninfo.ps1) substitui
+> os espaços à direita por NUL **no próprio ficheiro, sem alterar o tamanho nem
+> a estrutura do PE** (nada se desloca; o payload do instalador fica intacto — ao
+> contrário de reescrever o recurso com o Resource Hacker, que corrompe o
+> instalador). É chamado automaticamente por `tools/prep_signpath.ps1` só na
+> **cópia** que vai para assinatura; o `dist\MediaDesk-Setup.exe` original
+> mantém-se como saiu do Inno.
+>
+> Os executáveis `.NET` (launcher e auto-extraível) **não** têm padding
+> (`ProductName` com 17 chars), logo não precisam de normalização.
+>
+> Nota: não se restringe `file-version` (o Inno escreve `3.6.0`, o .NET escreve
+> `3.6.0.0`) nem `original-filename` (herdado como `YT-DLP-Media-Desk.dll`). As
+> restrições obrigatórias nos termos OSS são `product-name` e `product-version`,
+> ambas cumpridas.
 
 > O fluxo manual (secção 3) não precisa de CI e usa o mesmo `prep`/`apply`.
 
@@ -224,7 +243,9 @@ artefacto num ZIP) e restringir os metadados dos `<pe-file>`:
 | Ficheiro | Papel |
 |---|---|
 | `CODE_SIGNING_POLICY.md` | Política de assinatura + privacidade (exigida pela SignPath Foundation) |
-| `tools\prep_signpath.ps1` | Empacota os executáveis finais num ZIP para submeter |
+| `signpath\artifact-configuration.xml` | Configuração de artefacto da SignPath (restrições de metadados) |
+| `tools\prep_signpath.ps1` | Empacota os executáveis finais (pasta `stage\` + ZIP) para submeter |
+| `tools\normalize_versioninfo.ps1` | Remove o padding dos metadados do instalador (na cópia para assinatura) |
 | `tools\apply_signed.ps1` | Aplica o ZIP/pasta assinado, recria o ZIP da pasta, regenera hashes |
 | `tools\prepare_runtime.ps1` | Repõe o runtime `bin\` (Python/yt-dlp/FFmpeg/Deno) a partir de fontes públicas (CI e reconstruções) |
 | `tools\new_selfsigned_cert.ps1` | Certificado de teste (validar o pipeline localmente) |

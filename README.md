@@ -4,9 +4,21 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
-- **Versão:** 3.6.0
+- **Versão:** 3.7.0
 
 > Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[política de assinatura de código e privacidade](CODE_SIGNING_POLICY.md)**.
+
+## Principais funcionalidades
+
+- **Download** de vídeo e áudio com o yt-dlp, com escolha de formato/qualidade.
+- **Mediateca** local que organiza automaticamente a pasta de downloads.
+- **Gavetas:** subpastas reais (Vídeo ou Áudio) com **cor própria**, grelha no
+  painel lateral, contagem de ficheiros e filtro por tipo. Cada ficheiro mostra a
+  sua gaveta e pode ser movido entre gavetas do mesmo tipo — ou para uma pasta
+  externa — pelo menu da carta. Uma gaveta pode ser removida da sua carta,
+  mantendo os ficheiros (movidos para «Sem gaveta») ou apagando-os.
+- **Atividade** com o histórico dos downloads e a gaveta de cada ficheiro.
+- **Interface em 5 idiomas** (PT/EN/ES/FR/DE), temas claro/escuro e paletas de cor.
 
 ## Descarga
 
