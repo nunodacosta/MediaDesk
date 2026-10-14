@@ -1,0 +1,48 @@
+FFmpeg - AVISO DE LICENCA E OFERTA DO CODIGO-FONTE CORRESPONDENTE
+=================================================================
+FFmpeg - LICENSE NOTICE AND CORRESPONDING SOURCE OFFER
+
+Componente / Component ........: FFmpeg
+Versao distribuida / Version ..: N-122744-ga2489b3ac6-20260214
+Licenca / License .............: GPL-3.0-or-later
+Texto integral / Full text ....: licenses/GPL-3.0.txt
+Flags relevantes / Flags ......: --enable-gpl --enable-version3
+Origem do build / Build origin : BtbN/FFmpeg-Builds
+
+------------------------------------------------------------------------------
+CODIGO-FONTE CORRESPONDENTE / CORRESPONDING SOURCE
+------------------------------------------------------------------------------
+Revisao exata do FFmpeg / Exact FFmpeg revision:
+    a2489b3ac6
+    https://github.com/FFmpeg/FFmpeg/commit/a2489b3ac6
+Arvore upstream / Upstream source tree:
+    https://github.com/FFmpeg/FFmpeg
+Scripts de build e patches / Build scripts and patches:
+    https://github.com/BtbN/FFmpeg-Builds
+    https://www.gyan.dev/ffmpeg/builds/
+Documentacao / Documentation:
+    https://ffmpeg.org/
+
+------------------------------------------------------------------------------
+OFERTA ESCRITA / WRITTEN OFFER (GPL-3.0, secao/section 6(b))
+------------------------------------------------------------------------------
+O codigo-fonte correspondente acima indicado, bem como os scripts de build,
+patches e configuracao usados para produzir este binario, sao/serao fornecidos
+a qualquer terceiro, a pedido, durante pelo menos tres (3) anos a contar da data
+de distribuicao, sem qualquer custo. Pedidos / Requests:
+    https://github.com/nunodacosta/MediaDesk
+
+The Corresponding Source identified above, together with the build scripts,
+patches and configuration used to produce this binary, will be provided to any
+third party, on request, for at least three (3) years from the date of
+distribution, at no charge. Requests:
+    https://github.com/nunodacosta/MediaDesk
+
+Nota / Note: o FFmpeg e distribuido como programa independente (agregado) com o
+YT-DLP Media Desk. O YT-DLP Media Desk e, por sua vez, software livre sob
+GPL-3.0; o respetivo codigo-fonte esta em:
+    https://github.com/nunodacosta/MediaDesk
+
+Ficheiro gerado automaticamente por tools/gen_licenses_notice.ps1 a partir do
+binario empacotado, para que a revisao indicada corresponda exatamente ao que e
+distribuido. Data / Date: 2026-10-14 23:23

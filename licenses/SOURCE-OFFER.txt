@@ -1,0 +1,47 @@
+YT-DLP Media Desk - CODIGO-FONTE E LICENCAS DOS COMPONENTES
+===========================================================
+YT-DLP Media Desk - SOURCE AND LICENSES OF THE COMPONENTS
+
+Este documento identifica, para cada componente de terceiros redistribuido,
+a licenca aplicavel, o texto integral (pasta licenses/) e onde obter o codigo-
+fonte correspondente. Gerado automaticamente a partir dos binarios empacotados.
+Data / Date: 2026-10-14 23:23
+
+1) Aplicacao (codigo proprio) / Application (own code)
+   Licenca .....: GNU GPL-3.0 (texto: licenses/GPL-3.0.txt; aviso: licenses/ALDACO-IP-NOTICE.txt)
+   Codigo-fonte : https://github.com/nunodacosta/MediaDesk
+
+2) FFmpeg
+   Versao ......: N-122744-ga2489b3ac6-20260214
+   Licenca .....: GPL-3.0-or-later (texto: licenses/GPL-3.0.txt)
+   Codigo-fonte : https://github.com/FFmpeg/FFmpeg/commit/a2489b3ac6
+                  https://github.com/BtbN/FFmpeg-Builds
+   Detalhe .....: licenses/FFmpeg-NOTICE.txt (inclui a oferta escrita)
+
+3) yt-dlp
+   Versao ......: 2026.08.19
+   Licenca .....: Unlicense (dominio publico) - texto: licenses/yt-dlp-UNLICENSE.txt
+   Codigo-fonte : https://github.com/yt-dlp/yt-dlp
+
+4) Python (embebido) / Embedded Python
+   Versao ......: Python 3.10.11
+   Licenca .....: PSF-2.0 - texto: licenses/Python-PSF-LICENSE.txt
+   Codigo-fonte : https://www.python.org/downloads/source/
+
+5) Deno
+   Versao ......: deno 2.6.9 (stable, release, x86_64-pc-windows-msvc)
+   Licenca .....: MIT - texto: licenses/Deno-MIT-LICENSE.txt
+   Codigo-fonte : https://github.com/denoland/deno
+
+6) .NET (runtime do launcher) / .NET runtime
+   Licenca .....: MIT - texto: licenses/.NET-MIT-LICENSE.txt
+   Codigo-fonte : https://github.com/dotnet/runtime
+
+7) Microsoft Edge WebView2 Runtime
+   Licenca .....: Microsoft (redistribuivel) - texto: licenses/WebView2-NOTICE.txt
+   Informacao ..: https://developer.microsoft.com/microsoft-edge/webview2/
+
+Componentes permissivos (Unlicense/MIT/PSF): basta a inclusao do aviso e do
+texto da licenca, que acompanham esta distribuicao. Componentes GPL (FFmpeg):
+adicionalmente, e disponibilizada a oferta do codigo-fonte correspondente
+(ver licenses/FFmpeg-NOTICE.txt).

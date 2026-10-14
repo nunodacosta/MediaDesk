@@ -43,9 +43,14 @@ compatível para redistribuir os componentes já incluídos:
 | .NET / WebView2 | MIT / proprietária (redistribuível) | ✅ |
 | Código próprio | passa a GPL-3.0 | — |
 
-> Nota sobre "kits" GPL vs permissivos: um .exe todo-num-ficheiro com código GPL
-> embutido deve acompanhar a oferta do código-fonte (a GPL-3.0 permite indicar
-> "no physical medium" até 84 meses). É um ponto a tratar na página de descarga.
+> Nota sobre "kits" GPL vs permissivos: um `.exe` todo-num-ficheiro com código
+> GPL embutido deve acompanhar a oferta do código-fonte. **Tratado** (2026-10-14):
+> cada distribuição passa a incluir `licenses/FFmpeg-NOTICE.txt` (revisão exata
+> do FFmpeg distribuída + **oferta escrita**, GPL-3.0 §6) e
+> `licenses/SOURCE-OFFER.txt` (mapa de fontes de todos os componentes), gerados
+> automaticamente a partir dos binários empacotados por
+> `tools/gen_licenses_notice.ps1` (invocado no `build_portable.ps1`). A oferta
+> acompanha também a página de descarga (notas da release).
 
 ## 3. O que muda na prática
 
@@ -86,8 +91,12 @@ compatível para redistribuir os componentes já incluídos:
 - [x] `LICENSE` (texto integral GPL-3.0) na raiz do projeto.
 - [x] Interface ("Termos e aviso legal") e `licenses/ALDACO-IP-NOTICE.txt`
       atualizados; README atualizado.
-- [ ] **Publicar o código-fonte num repositório público** (GitHub/GitLab) —
-      requisito da SignPath Foundation.
+- [x] **Publicar o código-fonte num repositório público** (GitHub/GitLab) —
+      requisito da SignPath Foundation. *(Repositório: `nunodacosta/MediaDesk`.)*
+- [x] **Oferta do código-fonte correspondente** dos componentes GPL (FFmpeg)
+      — `licenses/FFmpeg-NOTICE.txt` + `licenses/SOURCE-OFFER.txt`, gerados no
+      build (`tools/gen_licenses_notice.ps1`); `licenses/` viaja no `.zip`/`.exe`
+      e no Setup.
 - [ ] **Candidatar-se à SignPath Foundation** e integrar o fluxo de assinatura.
 
 > Antes de publicar, rever o texto final do aviso (`licenses/ALDACO-IP-NOTICE.txt`

@@ -77,3 +77,13 @@ licenses/                 licenças de terceiros
 ## Licença
 
 Software livre — **GNU GPL-3.0** (ver [`LICENSE`](LICENSE)). © 2026 Alexandre da Costa / ALDACO. Créditos: conceito, design e direção de Alexandre da Costa / ALDACO; implementação técnica assistida por IA, sob direção do autor. Ver [`licenses/ALDACO-IP-NOTICE.txt`](licenses/ALDACO-IP-NOTICE.txt) e [`licenses.json`](licenses.json).
+
+### Componentes de terceiros e código-fonte
+
+Cada distribuição inclui, na pasta [`licenses/`](licenses), os textos integrais das licenças e os avisos dos componentes de terceiros. Para os componentes sob **GPL** (FFmpeg), é disponibilizada a oferta do **código-fonte correspondente**:
+
+- [`licenses/FFmpeg-NOTICE.txt`](licenses/FFmpeg-NOTICE.txt) — revisão exata do FFmpeg distribuída, localização do código-fonte correspondente e **oferta escrita** (GPL-3.0, secção 6). Gerado automaticamente a partir do binário empacotado, para garantir que a revisão indicada corresponde ao que é distribuído.
+- [`licenses/SOURCE-OFFER.txt`](licenses/SOURCE-OFFER.txt) — mapa de **todos** os componentes redistribuídos (aplicação, FFmpeg, yt-dlp, Python, Deno, .NET, WebView2) com licença e localização do código-fonte.
+- [`licenses/THIRD-PARTY-NOTICES.txt`](licenses/THIRD-PARTY-NOTICES.txt) — avisos de terceiros.
+
+O gerador é [`tools/gen_licenses_notice.ps1`](tools/gen_licenses_notice.ps1) e corre automaticamente no `build_portable.ps1`.

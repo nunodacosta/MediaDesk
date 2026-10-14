@@ -55,9 +55,19 @@ movimentação e remoção a partir do painel lateral).
 ### Infraestrutura e segurança
 - **Launcher migrado para .NET 8** (o .NET 7 chegou ao fim de vida). Sem alteração
   para o utilizador; corrige alertas de runtime descontinuado.
-- **FFmpeg fixado a uma build imutável** (tag BtbN
-  `autobuild-2026-10-12-13-12`, asset `ffmpeg-N-127388-g615b07170e-win64-gpl.zip`)
-  em vez de `latest`, para builds reprodutíveis e verificáveis.
+- **FFmpeg: build GPL fixada** (variante `win64-gpl` do BtbN/FFmpeg-Builds,
+  `--enable-gpl --enable-version3`, logo GPL-3.0-or-later) em vez de `latest`,
+  para builds reprodutíveis e verificáveis. **Binário efetivamente distribuído
+  nesta versão:** `N-122744-ga2489b3ac6-20260214` (revisão FFmpeg
+  `a2489b3ac6`). O `tools/prepare_runtime.ps1` fixa a tag/asset para o *refresh*
+  do runtime no próximo build.
+- **Oferta do código-fonte correspondente (GPL).** Cada distribuição passa a
+  incluir `licenses/FFmpeg-NOTICE.txt` (revisão exata do FFmpeg distribuída +
+  **oferta escrita**, GPL-3.0 §6) e `licenses/SOURCE-OFFER.txt` (mapa de fontes
+  e licenças de todos os componentes). São gerados automaticamente a partir dos
+  binários empacotados por `tools/gen_licenses_notice.ps1`, invocado no
+  `build_portable.ps1` — evitando divergência entre o que é anunciado e o que é
+  distribuído.
 - **Preparação para assinatura de código** via SignPath Foundation (plano OSS):
   *artifact configuration* versionada e normalização dos metadados do instalador
   (`signpath/artifact-configuration.xml`, `tools/normalize_versioninfo.ps1`).
@@ -92,6 +102,14 @@ git push origin v3.7.0      # a tag 'v*' dispara build + (se configurado) assina
 ```
 
 Antes de publicar, confirmar:
-- [ ] `dist\` reconstruído com o build .NET 8 (o `dist\` atual é ainda .NET 7).
-- [ ] `index.html`/`server.py` commitados (Gavetas, cores, remoção, correção de datas).
-- [ ] Obrigação de fonte do FFmpeg (GPL) satisfeita — ver `LICENCA.md`.
+- [x] `dist\` reconstruído com o build .NET 8.
+- [x] `index.html`/`server.py` commitados (Gavetas, cores, remoção, correção de datas).
+- [x] Obrigação de fonte do FFmpeg (GPL) satisfeita — `licenses/FFmpeg-NOTICE.txt`
+      + `licenses/SOURCE-OFFER.txt` gerados no build; ver `LICENCA.md`.
+
+> **Nota (v3.7.0 já publicada):** os avisos de licença gerados passam a ser
+> embutidos **automaticamente** em cada build (`build_portable.ps1`). Para a
+> release **v3.7.0**, já publicada, a oferta de código-fonte acompanha a página
+> de descarga (corpo da release); o próximo build passa a tê-la também **dentro**
+> dos pacotes (`.zip`/`.exe`/`Setup.exe`) e a alinhar a revisão do FFmpeg com o
+> pin de `tools/prepare_runtime.ps1`.

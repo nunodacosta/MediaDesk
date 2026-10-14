@@ -12,9 +12,9 @@
     {
       "nome": "FFmpeg",
       "licenca": "GPL-3.0-or-later",
-      "descricao": "Junção e conversão de media. Binário de build GPL (BtbN/FFmpeg-Builds). É disponibilizado o código-fonte correspondente em github.com/BtbN/FFmpeg-Builds.",
-      "url": "https://github.com/BtbN/FFmpeg-Builds",
-      "ficheiro": "licenses/GPL-3.0.txt"
+      "descricao": "Junção e conversão de media. Binário de build GPL (BtbN/FFmpeg-Builds, --enable-gpl --enable-version3). A revisão exata distribuída e a oferta escrita do código-fonte correspondente constam de licenses/FFmpeg-NOTICE.txt; o mapa completo de fontes consta de licenses/SOURCE-OFFER.txt.",
+      "url": "https://github.com/FFmpeg/FFmpeg",
+      "ficheiro": "licenses/FFmpeg-NOTICE.txt"
     },
     {
       "nome": "Python",

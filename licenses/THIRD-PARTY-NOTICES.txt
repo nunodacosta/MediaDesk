@@ -9,9 +9,11 @@ licenças encontram-se na pasta "licenses" desta distribuição.
    Projeto:  https://github.com/yt-dlp/yt-dlp
 
 2. FFmpeg — GNU General Public License v3.0 (GPL-3.0-or-later)
-   Ficheiro: licenses/GPL-3.0.txt
-   Binário de build GPL (BtbN/FFmpeg-Builds). O código-fonte correspondente
-   é disponibilizado publicamente em https://github.com/BtbN/FFmpeg-Builds.
+   Ficheiros: licenses/GPL-3.0.txt e licenses/FFmpeg-NOTICE.txt
+   Binário de build GPL (BtbN/FFmpeg-Builds). A revisão exata distribuída e a
+   oferta escrita do código-fonte correspondente constam de
+   licenses/FFmpeg-NOTICE.txt; o mapa completo de fontes/licenças consta de
+   licenses/SOURCE-OFFER.txt.
 
 3. Python — Python Software Foundation License (PSF-2.0)
    Ficheiro: licenses/Python-PSF-LICENSE.txt

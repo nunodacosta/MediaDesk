@@ -187,6 +187,17 @@ if (Test-Path (Join-Path $root 'licenses')) {
     Copy-Tree (Join-Path $root 'licenses') (Join-Path $payloadDir 'licenses')
 }
 
+# Avisos de licenca + oferta de codigo-fonte (GPL), gerados a partir dos
+# binarios empacotados para que a revisao indicada corresponda ao que sai.
+$noticeScript = Join-Path $root 'tools\gen_licenses_notice.ps1'
+if (Test-Path $noticeScript) {
+    Info "A gerar avisos de licenca (FFmpeg/source offer)..."
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $noticeScript -OutDir (Join-Path $payloadDir 'licenses')
+    if ($LASTEXITCODE -ne 0) { Die "tools\gen_licenses_notice.ps1 falhou (avisos de licenca nao gerados)." }
+} else {
+    Warn "tools\gen_licenses_notice.ps1 em falta - avisos de licenca nao gerados."
+}
+
 $payloadBin = Join-Path $payloadDir 'bin'
 New-Item -ItemType Directory -Path $payloadBin -Force | Out-Null
 Copy-Tree (Join-Path $root 'bin\python') (Join-Path $payloadBin 'python')
