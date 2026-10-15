@@ -5,35 +5,42 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.7.3`
+## Versão: `v3.7.4`
 
-*Patch* (`3.7.2` → `3.7.3`): corrige dois problemas nos downloads — títulos com
-acentos/emoji e títulos muito longos. Sem alterações de interface.
+*Patch* (`3.7.3` → `3.7.4`): corrige «Mostrar na pasta» na Atividade e o bloqueio
+de novas descargas depois de um download falhar, e acrescenta «Escolher pasta
+externa…» ao menu de cada cartão.
 
 ---
 
-## YT-DLP Media Desk v3.7.3
+## YT-DLP Media Desk v3.7.4
 
 ### Corrigido
-- **Títulos com acentos ou emoji falhavam o download** com o erro
-  `'utf-8' codec can't decode byte 0xb7: invalid start byte`. O **yt-dlp** passa
-  a escrever a sua saída em **UTF-8** (`--encoding utf-8`), pelo que os títulos
-  chegam intactos; a leitura passou também a ser defensiva
-  (`encoding="utf-8", errors="replace"`), para que um byte solto (por exemplo da
-  saída do ffmpeg) nunca volte a interromper um download. Reproduzia-se, por
-  exemplo, em **partilhas de vídeo do Facebook**.
-- **Títulos muito longos** deixavam de conseguir criar a pasta/ficheiro no
-  Windows — `Unable to create directory` (`WinError 3`, limite `MAX_PATH` de
-  260 caracteres). Os nomes passam a ser **truncados** ao espaço disponível
-  (calculado a partir da pasta de downloads), mantendo o agrupamento por
-  pasta/canal. **Títulos curtos não são alterados.**
-- `tools/sync_version.ps1` passa a **preservar o BOM** do
-  `installer/mediadesk.iss`, necessário para os acentos das mensagens do
-  instalador em *Español*/*Français*/*Deutsch*.
+- **«Mostrar na pasta» (Atividade) não selecionava o ficheiro.** A opção
+  `/select,` era passada ao Explorador de forma que ele abria a pasta errada
+  (por exemplo, *Documentos*). Passa a abrir a **pasta correta** com o
+  **ficheiro realçado** — mesmo com **acentos**, **espaços** ou ficheiros dentro
+  de uma **gaveta**.
+- **Depois de um download falhar (ou ser cancelado) já não era possível iniciar
+  novos downloads** sem recarregar a aplicação: o botão «Iniciar download» ficava
+  desativado, porque o servidor só sinalizava o fim do pedido quando havia
+  sucesso. Passa a sinalizar **sempre** o fim do pedido (sucesso, falha ou
+  cancelamento), reativando o botão automaticamente. Válido também para lotes.
+
+### Melhorado
+- **Menu «mover para» de cada cartão:** passa a incluir
+  **«Escolher pasta externa…»**, permitindo mover um ficheiro para uma pasta
+  **fora da aplicação** diretamente a partir da carta (antes só existia no
+  diálogo «Mover ficheiros»).
+- **Diálogo «Mover ficheiros»** abre mesmo quando **não existem gavetas**,
+  deixando a opção de **pasta externa** disponível (com uma nota a indicar como
+  criar gavetas). O **seletor de pasta** passa a ter um **título próprio**
+  («Escolher pasta de destino»).
 
 ### Nota
-- Correção reportada ao testar uma ligação de partilha do Facebook
-  (`https://www.facebook.com/share/v/...`).
+- O `title` do diálogo nativo de escolha de pasta passa a ser configurável pelo
+  cliente (`/browse_folder`), com retrocompatibilidade (valor por omissão
+  mantido).
 
 ### Assinatura (quando ativa)
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
@@ -54,10 +61,10 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 
 # 3) fechar o código e criar a tag
 git add -A
-git commit -m "release: v3.7.3"
-git tag -a v3.7.3 -m "YT-DLP Media Desk v3.7.3"
+git commit -m "release: v3.7.4"
+git tag -a v3.7.4 -m "YT-DLP Media Desk v3.7.4"
 git push origin main
-git push origin v3.7.3      # a tag 'v*' dispara build + (se configurado) assinatura + release
+git push origin v3.7.4      # a tag 'v*' dispara build + (se configurado) assinatura + release
 
 # Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
 # com publish=true para publicar a release.

@@ -1,10 +1,24 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.7.3",
-  "date": "2026-10-15",
-  "build": 2026101503,
+  "version": "3.7.4",
+  "date": "2026-10-16",
+  "build": 2026101601,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.7.4",
+      "date": "2026-10-16",
+      "groups": {
+        "Corrigido": [
+          "«Mostrar na pasta» (na Atividade) não selecionava o ficheiro: a opção /select era passada ao Explorador de forma que ele abria a pasta errada. Passa a abrir a pasta correta com o ficheiro realçado, mesmo com acentos, espaços ou dentro de uma gaveta",
+          "Depois de um download falhar (ou ser cancelado) deixava de ser possível iniciar novos downloads sem recarregar a aplicação — o botão «Iniciar download» ficava desativado. O servidor passa a sinalizar sempre o fim do pedido (sucesso, falha ou cancelamento), reativando o botão automaticamente"
+        ],
+        "Melhorado": [
+          "O menu vertical de cada cartão («mover para») passa a incluir «Escolher pasta externa…», permitindo mover um ficheiro para uma pasta fora da aplicação diretamente a partir da carta",
+          "O diálogo «Mover ficheiros» abre mesmo quando não existem gavetas, deixando a opção de pasta externa disponível; o seletor de pasta passa a ter um título próprio («Escolher pasta de destino»)"
+        ]
+      }
+    },
     {
       "version": "3.7.3",
       "date": "2026-10-15",

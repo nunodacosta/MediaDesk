@@ -1,11 +1,11 @@
 {
-    "gerado":  "2026-10-15T22:30:12",
+    "gerado":  "2026-10-16T00:02:44",
     "algoritmo":  "SHA-256",
     "ficheiros":  {
-                      "server.py":  "8e5688c8c63607adcb4599800da125febdb34a80eb292452ad7fd5e0e338b145",
-                      "index.html":  "10ca4987320119dd6c7e76ffce26d1689432ecc4692f2ea4e14aa405cf5dcccf",
+                      "server.py":  "bcf5569e742c3473d8fcb2eedaf95f0ee24ca3c8fd1b830b1c36bdec5fcab05c",
+                      "index.html":  "a86dff5d1c19fcdde573a73530bc17e7347b243b00b09b362ea4c61025b75bef",
                       "sw.js":  "3166dc964032ae7b404500ce6bad594d6ab3b4a46a804d497c2e66f5629a9144",
-                      "version.json":  "1589b844731a546635bbf137e22dae758dff98e1a6995e85d7cbc82a000f6367",
+                      "version.json":  "43069b8e2cc8226abb068953e56481a7696cd266c4a2d9fa70c16f7cd7aab6a8",
                       "licenses.json":  "0214c99905ff20b27c405d8e0e9e2942512f09ac0b5104558696c05eeb4e6f4e",
                       "manifest.webmanifest":  "c347b65bb917d8b8f559daa9c81acb8b79d6a55f53b9ae4d884d73721e848584",
                       "favicon.svg":  "46f95481fe7248c09f2d61b6d1add294d47d4a557deb4117017989a846f4029c",

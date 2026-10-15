@@ -47,7 +47,7 @@ clients = []
 current_process = None
 server_instance = None
 download_paused = False
-APP_VERSION = "3.7.3"  # gerado por tools/sync_version.ps1
+APP_VERSION = "3.7.4"  # gerado por tools/sync_version.ps1
 
 os.makedirs(BIN_DIR, exist_ok=True)
 
@@ -526,7 +526,16 @@ def show_in_folder(path):
             return False, "not_found"
         is_dir = os.path.isdir(path)
         if os.name == "nt":
-            subprocess.Popen(["explorer", path if is_dir else ("/select," + path)])
+            # Atencao: "/select," e o caminho TEM de ser argumentos separados.
+            # Se forem um so argumento ("/select," + path), o Python coloca
+            # aspas em volta de tudo ("/select,C:\...") e o Explorador nao
+            # reconhece a opcao, abrindo a pasta errada (sem selecionar o
+            # ficheiro). Com dois argumentos o caminho fica devidamente
+            # entre aspas e o ficheiro e realçado.
+            if is_dir:
+                subprocess.Popen(["explorer", path])
+            else:
+                subprocess.Popen(["explorer", "/select,", path])
         elif sys.platform == "darwin":
             subprocess.Popen(["open", "-R", path])
         else:
@@ -1550,7 +1559,11 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_header("Content-type", "application/json")
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()
-                chosen = pick_folder_native()
+                req = json.loads(data) if data else {}
+                # O titulo do dialogo e escolhido pelo cliente (ex.: escolher a
+                # pasta de downloads ou uma pasta externa de destino).
+                title = str(req.get("title") or "").strip() or "Escolha a pasta de downloads"
+                chosen = pick_folder_native(title)
                 self.wfile.write(json.dumps({"path": chosen or ""}).encode("utf-8"))
             except Exception as e:
                 self.send_error(500, str(e))
@@ -1755,43 +1768,50 @@ class Handler(SimpleHTTPRequestHandler):
                     return
 
                 def worker():
-                    download_type = "lote" if len(urls) > 1 else "singular"
-                    for url in urls:
-                        if url.strip():
-                            success, file_path = run_download_with_fallback(
-                                url.strip(),
-                                mode,
-                                quality,
-                                vformat,
-                                subtitles,
-                                sub_mode,
-                                sub_langs,
-                                sub_auto,
-                            )
-                            
-                            rel_path = None
-                            if file_path and os.path.exists(file_path):
-                                try:
-                                    rel = os.path.relpath(file_path, get_downloads_dir()).replace("\\", "/")
-                                except ValueError:
-                                    rel = None
-                                if rel and not rel.startswith("..") and not os.path.isabs(rel):
-                                    rel_path = f"/downloads/{rel}"
-                                else:
-                                    rel_path = f"/downloads/{os.path.basename(file_path)}"
-                            
-                            save_history_entry(
-                                url.strip(),
-                                download_type,
-                                status="success" if success else "failed",
-                                file_path=rel_path,
-                                title=clean_media_title(file_path),
-                                platform=detect_platform(url.strip()),
-                                media_type=mode
-                            )
-                            if not success:
-                                broadcast_log(f"[ERRO] Falha permanente para {url}")
-                            time.sleep(2)
+                    try:
+                        download_type = "lote" if len(urls) > 1 else "singular"
+                        for url in urls:
+                            if url.strip():
+                                success, file_path = run_download_with_fallback(
+                                    url.strip(),
+                                    mode,
+                                    quality,
+                                    vformat,
+                                    subtitles,
+                                    sub_mode,
+                                    sub_langs,
+                                    sub_auto,
+                                )
+                                
+                                rel_path = None
+                                if file_path and os.path.exists(file_path):
+                                    try:
+                                        rel = os.path.relpath(file_path, get_downloads_dir()).replace("\\", "/")
+                                    except ValueError:
+                                        rel = None
+                                    if rel and not rel.startswith("..") and not os.path.isabs(rel):
+                                        rel_path = f"/downloads/{rel}"
+                                    else:
+                                        rel_path = f"/downloads/{os.path.basename(file_path)}"
+                                
+                                save_history_entry(
+                                    url.strip(),
+                                    download_type,
+                                    status="success" if success else "failed",
+                                    file_path=rel_path,
+                                    title=clean_media_title(file_path),
+                                    platform=detect_platform(url.strip()),
+                                    media_type=mode
+                                )
+                                if not success:
+                                    broadcast_log(f"[ERRO] Falha permanente para {url}")
+                                time.sleep(2)
+                    finally:
+                        # Sinal final e independente do idioma: reactiva o botao
+                        # "Iniciar" no cliente mesmo quando o download falha ou e
+                        # cancelado, evitando ter de recarregar a aplicacao para
+                        # permitir novas descargas.
+                        broadcast("DOWNLOAD_FINISHED: true")
 
                 threading.Thread(target=worker).start()
                 self.send_response(200)

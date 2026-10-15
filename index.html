@@ -1420,6 +1420,7 @@
                     "move.message": "Escolha o destino:",
                     "move.none": "Sem gaveta (pasta principal)",
                     "move.external": "Escolher pasta externa…",
+                    "move.pickExternalTitle": "Escolher pasta de destino",
                     "move.externalHint": "O ficheiro sai da aplicação e fica apenas na pasta escolhida.",
                     "move.confirm": "Mover",
                     "move.done": "{n} ficheiro(s) movido(s).",
@@ -1759,6 +1760,7 @@
                     "move.message": "Choose the destination:",
                     "move.none": "No drawer (main folder)",
                     "move.external": "Choose external folder…",
+                    "move.pickExternalTitle": "Choose destination folder",
                     "move.externalHint": "The file leaves the application and stays only in the chosen folder.",
                     "move.confirm": "Move",
                     "move.done": "{n} file(s) moved.",
@@ -2098,6 +2100,7 @@
                     "move.message": "Elija el destino:",
                     "move.none": "Sin cajón (carpeta principal)",
                     "move.external": "Elegir carpeta externa…",
+                    "move.pickExternalTitle": "Elegir carpeta de destino",
                     "move.externalHint": "El archivo sale de la aplicación y queda solo en la carpeta elegida.",
                     "move.confirm": "Mover",
                     "move.done": "{n} archivo(s) movido(s).",
@@ -2437,6 +2440,7 @@
                     "move.message": "Choisissez la destination :",
                     "move.none": "Sans tiroir (dossier principal)",
                     "move.external": "Choisir un dossier externe…",
+                    "move.pickExternalTitle": "Choisir le dossier de destination",
                     "move.externalHint": "Le fichier quitte l'application et reste uniquement dans le dossier choisi.",
                     "move.confirm": "Déplacer",
                     "move.done": "{n} fichier(s) déplacé(s).",
@@ -2776,6 +2780,7 @@
                     "move.message": "Ziel wählen:",
                     "move.none": "Ohne Schublade (Hauptordner)",
                     "move.external": "Externen Ordner wählen…",
+                    "move.pickExternalTitle": "Zielordner wählen",
                     "move.externalHint": "Die Datei verlässt die Anwendung und bleibt nur im gewählten Ordner.",
                     "move.confirm": "Verschieben",
                     "move.done": "{n} Datei(en) verschoben.",
@@ -3240,10 +3245,18 @@
             });
             // ==================== SISTEMA DE VERSÃO ====================
             // VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao.
-            const APP_VERSION = "3.7.3";
-            const APP_VERSION_DATE = "2026-10-15";
-            const APP_BUILD = 2026101503;
+            const APP_VERSION = "3.7.4";
+            const APP_VERSION_DATE = "2026-10-16";
+            const APP_BUILD = 2026101601;
             const VERSION_HISTORY = [
+                {
+                    version: "3.7.4",
+                    date: "2026-10-16",
+                    groups: {
+                        "Corrigido": ["«Mostrar na pasta» (na Atividade) não selecionava o ficheiro: a opção /select era passada ao Explorador de forma que ele abria a pasta errada. Passa a abrir a pasta correta com o ficheiro realçado, mesmo com acentos, espaços ou dentro de uma gaveta", "Depois de um download falhar (ou ser cancelado) deixava de ser possível iniciar novos downloads sem recarregar a aplicação — o botão «Iniciar download» ficava desativado. O servidor passa a sinalizar sempre o fim do pedido (sucesso, falha ou cancelamento), reativando o botão automaticamente"],
+                        "Melhorado": ["O menu vertical de cada cartão («mover para») passa a incluir «Escolher pasta externa…», permitindo mover um ficheiro para uma pasta fora da aplicação diretamente a partir da carta", "O diálogo «Mover ficheiros» abre mesmo quando não existem gavetas, deixando a opção de pasta externa disponível; o seletor de pasta passa a ter um título próprio («Escolher pasta de destino»)"],
+                    }
+                },
                 {
                     version: "3.7.3",
                     date: "2026-10-15",
@@ -4115,10 +4128,8 @@
                 if (!paths || !paths.length) return;
                 // So as gavetas da mesma area do ficheiro (video ou audio).
                 const available = categories.filter(c => !type || c.media === type);
-                if (!available.length) {
-                    showToast(t("move.noCategories"), { type: "warning" });
-                    return;
-                }
+                // Nota: mesmo sem gavetas o modal abre, porque o botao de pasta
+                // externa continua disponivel.
                 pendingMove = { paths: paths.slice(), type: type, destination: null };
                 document.getElementById("move-modal-title").innerHTML =
                     `${icon("move")} ${escapeHtml(paths.length > 1 ? t("move.titleBatch", { n: paths.length }) : t("move.title"))}`;
@@ -4143,6 +4154,13 @@
                 };
                 add({ kind: "category", name: null }, t("move.none"));
                 available.forEach(c => add({ kind: "category", name: c.name }, c.name));
+                if (!available.length) {
+                    const hint = document.createElement("div");
+                    hint.className = "item-menu-empty";
+                    hint.style.margin = "0.5rem 0 0";
+                    hint.textContent = t("move.noCategories");
+                    list.appendChild(hint);
+                }
                 document.getElementById("move-modal").style.display = "flex";
             }
 
@@ -4157,7 +4175,7 @@
                     const res = await fetch("/browse_folder", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: "{}"
+                        body: JSON.stringify({ title: t("move.pickExternalTitle") })
                     });
                     const data = await res.json();
                     if (data && data.path) {
@@ -4278,6 +4296,13 @@
                             () => moveFileTo(f.path, media, { kind: "category", name: c.name }));
                     });
                 }
+                // Mover para uma pasta fora da aplicacao: abre o seletor nativo
+                // e move o ficheiro para o destino escolhido.
+                const sepExt = document.createElement("div");
+                sepExt.className = "item-menu-sep";
+                menu.appendChild(sepExt);
+                addBtn(t("move.external"), "folder", null, false, false,
+                    () => moveFileToExternalFolder(f.path, media));
                 placeItemMenu(menu, btn);
                 itemMenuOwner = btn;
                 btn.classList.add("open");
@@ -4301,6 +4326,26 @@
                 if (type && selectedItems[type]) selectedItems[type].delete(path);
                 loadLibrary();
                 loadHistory();
+            }
+
+            // Abre o seletor nativo de pastas e move o ficheiro para fora da
+            // aplicacao (pasta externa escolhida pelo utilizador).
+            async function moveFileToExternalFolder(path, type) {
+                let dir = "";
+                try {
+                    const res = await fetch("/browse_folder", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: t("move.pickExternalTitle") })
+                    });
+                    const data = await res.json();
+                    dir = (data && data.path) ? data.path : "";
+                } catch (e) {
+                    showToast(t("toast.browseUnsupported"), { type: "warning" });
+                    return;
+                }
+                if (!dir) return;
+                await moveFileTo(path, type, { kind: "external", dir: dir });
             }
 
             // Posiciona o menu flutuante junto ao botao que o abriu.
@@ -4849,20 +4894,22 @@
                         const status = msg.replace("STATUS:", ""); 
                         document.getElementById("current-file").innerText = localizeStatus(status); 
                         const _sl = status.toLowerCase();
-                        if (_sl.includes("conclu") || _sl.includes("finaliz")) showToast(t("status.completed"), { type:"success", title: t("tab.download") });
+                        if (_sl.includes("conclu") || _sl.includes("finaliz") || _sl.includes("complet")) showToast(t("status.completed"), { type:"success", title: t("tab.download") });
                         else if (_sl.includes("cancel")) showToast(t("status.cancelled"), { type:"info", title: t("tab.download") });
-                        else if (_sl.includes("erro")) showToast(t("status.failed"), { type:"error", title: t("tab.download") });
-                        if (status.includes("concluído") || status.includes("finalizado") || 
-                            status.includes("cancelado") || status.includes("erro")) { 
-                            updateProgressPosition(0); 
-                            document.getElementById("start-btn").disabled = false; 
-                            document.getElementById("pause-btn").disabled = true; 
-                            document.getElementById("cancel-btn").disabled = true; 
-                            downloadActive = false; 
-                            loadLibrary();
-                            currentDownloadIndex = 0;
-                            currentTotalFiles = 0;
-                        }
+                        else if (_sl.includes("erro") || _sl.includes("falh") || _sl.includes("fail")) showToast(t("status.failed"), { type:"error", title: t("tab.download") });
+                    } 
+                    else if (msg.startsWith("DOWNLOAD_FINISHED:")) { 
+                        // Fim do pedido de download (sucesso, falha ou cancelamento).
+                        // Reactiva o botao "Iniciar" para permitir novas descargas
+                        // sem ser preciso recarregar a aplicacao.
+                        updateProgressPosition(0); 
+                        document.getElementById("start-btn").disabled = false; 
+                        document.getElementById("pause-btn").disabled = true; 
+                        document.getElementById("cancel-btn").disabled = true; 
+                        downloadActive = false; 
+                        loadLibrary(); 
+                        currentDownloadIndex = 0; 
+                        currentTotalFiles = 0; 
                     } 
                     else if (msg.startsWith("LOG:")) { 
                         const logMsg = msg.replace("LOG:", "");
