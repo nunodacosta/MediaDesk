@@ -5,26 +5,35 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.7.2`
+## Versão: `v3.7.3`
 
-*Patch* (`3.7.1` → `3.7.2`): o **instalador** passa a oferecer o assistente de
-instalação em **5 idiomas** (PT/EN/ES/FR/DE). Sem alterações funcionais na
-aplicação.
+*Patch* (`3.7.2` → `3.7.3`): corrige dois problemas nos downloads — títulos com
+acentos/emoji e títulos muito longos. Sem alterações de interface.
 
 ---
 
-## YT-DLP Media Desk v3.7.2
+## YT-DLP Media Desk v3.7.3
 
-### Melhorado
-- **Instalador (`Setup.exe`)**: seletor de idioma do assistente de instalação em
-  **Português, English, Español, Français e Deutsch** (traduções oficiais do
-  Inno Setup).
-- Mensagens personalizadas **traduzidas** nos 5 idiomas: criar atalho no
-  ambiente de trabalho, grupo «Atalhos», «Desinstalar …» e «Executar …».
+### Corrigido
+- **Títulos com acentos ou emoji falhavam o download** com o erro
+  `'utf-8' codec can't decode byte 0xb7: invalid start byte`. O **yt-dlp** passa
+  a escrever a sua saída em **UTF-8** (`--encoding utf-8`), pelo que os títulos
+  chegam intactos; a leitura passou também a ser defensiva
+  (`encoding="utf-8", errors="replace"`), para que um byte solto (por exemplo da
+  saída do ffmpeg) nunca volte a interromper um download. Reproduzia-se, por
+  exemplo, em **partilhas de vídeo do Facebook**.
+- **Títulos muito longos** deixavam de conseguir criar a pasta/ficheiro no
+  Windows — `Unable to create directory` (`WinError 3`, limite `MAX_PATH` de
+  260 caracteres). Os nomes passam a ser **truncados** ao espaço disponível
+  (calculado a partir da pasta de downloads), mantendo o agrupamento por
+  pasta/canal. **Títulos curtos não são alterados.**
+- `tools/sync_version.ps1` passa a **preservar o BOM** do
+  `installer/mediadesk.iss`, necessário para os acentos das mensagens do
+  instalador em *Español*/*Français*/*Deutsch*.
 
 ### Nota
-- A **aplicação** já tinha a interface nos 5 idiomas (seletor «Idioma» na
-  Configuração); esta versão corrige apenas os idiomas do **instalador**.
+- Correção reportada ao testar uma ligação de partilha do Facebook
+  (`https://www.facebook.com/share/v/...`).
 
 ### Assinatura (quando ativa)
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
@@ -45,10 +54,10 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 
 # 3) fechar o código e criar a tag
 git add -A
-git commit -m "release: v3.7.2"
-git tag -a v3.7.2 -m "YT-DLP Media Desk v3.7.2"
+git commit -m "release: v3.7.3"
+git tag -a v3.7.3 -m "YT-DLP Media Desk v3.7.3"
 git push origin main
-git push origin v3.7.2      # a tag 'v*' dispara build + (se configurado) assinatura + release
+git push origin v3.7.3      # a tag 'v*' dispara build + (se configurado) assinatura + release
 
 # Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
 # com publish=true para publicar a release.
@@ -64,6 +73,22 @@ Antes de publicar, confirmar:
       e `licenses/SOURCE-OFFER.txt`); ver `LICENCA.md`.
 - [x] `index.html` / `server.py` / `version.json` / `checksums.json`
       sincronizados (`tools/sync_version.ps1` + `tools/gen_checksums.ps1`).
+
+<details>
+<summary>Notas da <b>v3.7.2</b> (já publicada) — Instalador em 5 idiomas</summary>
+
+### Melhorado
+- **Instalador (`Setup.exe`)**: seletor de idioma do assistente de instalação em
+  **Português, English, Español, Français e Deutsch** (traduções oficiais do
+  Inno Setup).
+- Mensagens personalizadas **traduzidas** nos 5 idiomas: criar atalho no
+  ambiente de trabalho, grupo «Atalhos», «Desinstalar …» e «Executar …».
+
+### Nota
+- A **aplicação** já tinha a interface nos 5 idiomas (seletor «Idioma» na
+  Configuração); a `v3.7.2` corrigiu apenas os idiomas do **instalador**.
+
+</details>
 
 <details>
 <summary>Notas da <b>v3.7.1</b> (já publicada) — Avisos de licença (GPL) dentro dos pacotes</summary>
