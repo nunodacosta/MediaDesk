@@ -3240,10 +3240,17 @@
             });
             // ==================== SISTEMA DE VERSÃO ====================
             // VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao.
-            const APP_VERSION = "3.7.2";
+            const APP_VERSION = "3.7.3";
             const APP_VERSION_DATE = "2026-10-15";
-            const APP_BUILD = 2026101502;
+            const APP_BUILD = 2026101503;
             const VERSION_HISTORY = [
+                {
+                    version: "3.7.3",
+                    date: "2026-10-15",
+                    groups: {
+                        "Corrigido": ["Downloads de vídeos com títulos com acentos ou emoji (ex.: partilhas do Facebook) falhavam com «'utf-8' codec can't decode byte 0xb7». O yt-dlp passa a escrever a sua saída em UTF-8 (--encoding utf-8), pelo que os títulos chegam intactos", "Títulos muito longos deixavam de conseguir criar a pasta/ficheiro no Windows («Unable to create directory», WinError 3) — os nomes passam a ser truncados para não exceder o limite de caminho do Windows (MAX_PATH), mantendo o agrupamento por pasta/canal"],
+                    }
+                },
                 {
                     version: "3.7.2",
                     date: "2026-10-15",

@@ -47,7 +47,7 @@ clients = []
 current_process = None
 server_instance = None
 download_paused = False
-APP_VERSION = "3.7.2"  # gerado por tools/sync_version.ps1
+APP_VERSION = "3.7.3"  # gerado por tools/sync_version.ps1
 
 os.makedirs(BIN_DIR, exist_ok=True)
 
@@ -1113,6 +1113,12 @@ def execute_cmd_and_check(cmd):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            # Descodificacao defensiva: o grosso da saida e UTF-8 (--encoding
+            # utf-8), mas a saida do ffmpeg (que partilha o mesmo pipe) pode ter
+            # bytes fora de UTF-8; 'replace' evita rebentar o download por causa
+            # de um byte perdido num log.
+            encoding="utf-8",
+            errors="replace",
             cwd=get_downloads_dir(),
             env=my_env,
             creationflags=subprocess.CREATE_NO_WINDOW,
@@ -1189,6 +1195,22 @@ def execute_cmd_and_check(cmd):
         broadcast("PROGRESS: 0")
 
 
+# O Windows limita o caminho a MAX_PATH (260). Como o template usa o titulo duas
+# vezes (pasta + ficheiro), titulos muito longos (ex.: Facebook, ~600 caracteres)
+# fazem o yt-dlp falhar com "Unable to create directory" (WinError 3). Truncamos
+# cada campo de texto para manter o caminho final com margem segura. Titulos
+# curtos NAO sao alterados: em Python/yt-dlp '%.Ns' so trunca quando excede N.
+WIN_PATH_BUDGET = 240       # MAX_PATH (260) com margem
+WIN_PATH_RESERVED = 24      # separadores, extensao e sufixos temporarios (.fNNN/.part)
+MIN_FIELD_LEN = 48
+
+
+def _title_field_len(base_dir, fields=2):
+    """Comprimento maximo seguro (em caracteres) para cada campo de texto do -o."""
+    free = WIN_PATH_BUDGET - len(base_dir) - WIN_PATH_RESERVED
+    return max(MIN_FIELD_LEN, free // max(1, fields))
+
+
 def run_download_with_fallback(
     url, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto
 ):
@@ -1197,16 +1219,29 @@ def run_download_with_fallback(
     ytdlp = os.path.join(BIN_DIR, "yt-dlp.exe")
     # Agrupamento opcional por uploader/canal: downloads/<canal>/<titulo>.<ext>
     # Caso contrario: downloads/<titulo>/<titulo>.<ext>
+    # Os campos de texto sao truncados (_title_field_len) para o caminho final
+    # nao exceder o MAX_PATH do Windows mesmo com titulos muito longos.
     out_dir = get_downloads_dir()
+    tlen = _title_field_len(out_dir, 2)
+    title_fmt = f"%(title).{tlen}s"
     if config.get("group_by_uploader"):
-        output_template = os.path.join(out_dir, "%(uploader,channel)s", "%(title)s.%(ext)s")
+        output_template = os.path.join(
+            out_dir, f"%(uploader,channel).{tlen}s", f"{title_fmt}.%(ext)s"
+        )
     else:
-        output_template = os.path.join(out_dir, "%(title)s", "%(title)s.%(ext)s")
+        output_template = os.path.join(out_dir, title_fmt, f"{title_fmt}.%(ext)s")
 
     base_cmd = [ytdlp, "-o", output_template]
     base_cmd.extend(
         [
             "--no-mtime",
+            # Forca a saida do yt-dlp em UTF-8. Sem isto o yt-dlp escreve na
+            # codepage ANSI do Windows (cp1252/...): o server descodifica em
+            # UTF-8 (modo UTF-8 do launcher) e rebentava com
+            # "'utf-8' codec can't decode byte 0xb7"; alem disso os acentos e
+            # emoji dos titulos chegavam corrompidos ('?').
+            "--encoding",
+            "utf-8",
             "--extractor-retries",
             "3",
             "--force-ipv4",
@@ -1438,7 +1473,11 @@ class Handler(SimpleHTTPRequestHandler):
             if os.path.exists(ytdlp):
                 try:
                     res = subprocess.run(
-                        [ytdlp, "--version"], capture_output=True, text=True
+                        [ytdlp, "--version"],
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
                     )
                     info["ytdlp_version"] = res.stdout.strip()
                 except:

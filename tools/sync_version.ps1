@@ -102,10 +102,17 @@ if (Test-Path $csPath) {
 # ============================ installer .iss ================================
 $issPath = Join-Path $root 'installer\mediadesk.iss'
 if (Test-Path $issPath) {
-    $iss = [System.IO.File]::ReadAllText($issPath, [System.Text.Encoding]::UTF8)
+    # O .iss tem acentos nas mensagens personalizadas (Espanol/Francais/Deutsch),
+    # por isso e gravado em UTF-8. Detetamos se o ficheiro original tem BOM e
+    # preservamo-lo: o Inno Setup 6 so garante a leitura correta de UTF-8 quando
+    # existe BOM.
+    $issBytes = [System.IO.File]::ReadAllBytes($issPath)
+    $issHasBom = ($issBytes.Length -ge 3 -and $issBytes[0] -eq 0xEF -and $issBytes[1] -eq 0xBB -and $issBytes[2] -eq 0xBF)
+    $iss = [System.Text.Encoding]::UTF8.GetString($issBytes)
+    if ($issHasBom) { $iss = $iss.TrimStart([char]0xFEFF) }
     $newIss = [regex]::Replace($iss, '(?m)^(#define AppVersion\s*)"[^"]*"', "`$1`"$version`"")
     if ($newIss -ne $iss) {
-        [System.IO.File]::WriteAllText($issPath, $newIss, (New-Object System.Text.UTF8Encoding($false)))
+        [System.IO.File]::WriteAllText($issPath, $newIss, (New-Object System.Text.UTF8Encoding($issHasBom)))
         Write-Host '[sync_version] installer\mediadesk.iss atualizado' -ForegroundColor Green
     } else {
         Write-Host '[sync_version] installer\mediadesk.iss: AppVersion ja correta' -ForegroundColor Yellow
