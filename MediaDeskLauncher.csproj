@@ -10,9 +10,9 @@
     <AssemblyTitle>YT-DLP Media Desk</AssemblyTitle>
     <Company>ALDACO</Company>
     <Copyright>Design e interacao por ALDACO. Motor de downloads por YT-DLP. Software livre: GPL-3.0.</Copyright>
-    <Version>3.7.1</Version>
-    <FileVersion>3.7.1.0</FileVersion>
-    <InformationalVersion>3.7.1</InformationalVersion>
+    <Version>3.7.2</Version>
+    <FileVersion>3.7.2.0</FileVersion>
+    <InformationalVersion>3.7.2</InformationalVersion>
     <!-- .NET SDK 8+ anexa "+<commit>" ao InformationalVersion/ProductVersion por
          omissao; desligar para o ProductVersion ser exatamente "3.6.0" e bater
          certo com o instalador (restricao de metadados da SignPath). -->

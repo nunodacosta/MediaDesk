@@ -1,4 +1,4 @@
-; ---------------------------------------------------------------------------
+﻿; ---------------------------------------------------------------------------
 ;  installer\mediadesk.iss
 ;  Script do Inno Setup para gerar o instalador do YT-DLP Media Desk.
 ;
@@ -13,7 +13,7 @@
 ; ---------------------------------------------------------------------------
 
 #define AppName "YT-DLP Media Desk"
-#define AppVersion "3.7.1"
+#define AppVersion "3.7.2"
 #define AppPublisher "ALDACO"
 #define AppCopyright "Design e interacao por ALDACO. Motor de downloads por YT-DLP. Software livre: GPL-3.0."
 #define AppExeName "YT-DLP-Media-Desk.exe"
@@ -52,20 +52,48 @@ MinVersion=10.0
 [Languages]
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+
+[CustomMessages]
+portuguese.CreateDesktopIcon=Criar um atalho no ambiente de trabalho
+english.CreateDesktopIcon=Create a desktop shortcut
+spanish.CreateDesktopIcon=Crear un acceso directo en el escritorio
+french.CreateDesktopIcon=Créer un raccourci sur le Bureau
+german.CreateDesktopIcon=Eine Verknüpfung auf dem Desktop erstellen
+
+portuguese.Shortcuts=Atalhos:
+english.Shortcuts=Shortcuts:
+spanish.Shortcuts=Accesos directos:
+french.Shortcuts=Raccourcis :
+german.Shortcuts=Verknüpfungen:
+
+portuguese.UninstallApp=Desinstalar {#AppName}
+english.UninstallApp=Uninstall {#AppName}
+spanish.UninstallApp=Desinstalar {#AppName}
+french.UninstallApp=Désinstaller {#AppName}
+german.UninstallApp={#AppName} deinstallieren
+
+portuguese.RunApp=Executar {#AppName}
+english.RunApp=Run {#AppName}
+spanish.RunApp=Ejecutar {#AppName}
+french.RunApp=Exécuter {#AppName}
+german.RunApp={#AppName} ausführen
 
 [Tasks]
-Name: "desktopicon"; Description: "Criar um atalho no ambiente de trabalho"; GroupDescription: "Atalhos:"
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:Shortcuts}"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{group}\Desinstalar {#AppName}"; Filename: "{uninstallexe}"
+Name: "{group}\{cm:UninstallApp}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Executar {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "{cm:RunApp}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; Apenas artefactos gerados em execucao. Nunca remover "downloads" (dados do utilizador).

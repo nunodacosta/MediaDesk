@@ -47,7 +47,7 @@ clients = []
 current_process = None
 server_instance = None
 download_paused = False
-APP_VERSION = "3.7.1"  # gerado por tools/sync_version.ps1
+APP_VERSION = "3.7.2"  # gerado por tools/sync_version.ps1
 
 os.makedirs(BIN_DIR, exist_ok=True)
 

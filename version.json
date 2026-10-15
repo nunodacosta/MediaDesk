@@ -1,10 +1,19 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.7.1",
+  "version": "3.7.2",
   "date": "2026-10-15",
-  "build": 2026101501,
+  "build": 2026101502,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.7.2",
+      "date": "2026-10-15",
+      "groups": {
+        "Melhorado": [
+          "O instalador (Setup) passa a oferecer o assistente de instalação em 5 idiomas — Português, English, Español, Français e Deutsch — com as descrições das tarefas, atalhos e arranque traduzidas"
+        ]
+      }
+    },
     {
       "version": "3.7.1",
       "date": "2026-10-15",
