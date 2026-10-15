@@ -5,15 +5,75 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.7.0`
+## Versão: `v3.7.1`
 
-*Minor bump* (`3.6.0` → `3.7.0`): entra uma **funcionalidade** nova — os
-**Gavetas** (organização de vídeo/áudio em subpastas, com cor, filtro,
-movimentação e remoção a partir do painel lateral).
+*Patch* (`3.7.0` → `3.7.1`): a distribuição passa a incluir, **dentro** de cada
+pacote, os avisos de licença e a oferta do código-fonte correspondente (GPL).
+Sem alterações funcionais para o utilizador.
 
 ---
 
-## YT-DLP Media Desk v3.7.0
+## YT-DLP Media Desk v3.7.1
+
+### Adicionado
+- `licenses/FFmpeg-NOTICE.txt` — revisão exata do FFmpeg distribuída
+  (`N-122744-ga2489b3ac6-20260214`), a licença (**GPL-3.0-or-later**,
+  `--enable-gpl --enable-version3`) e a **oferta escrita** do código-fonte
+  correspondente (GPL-3.0 §6).
+- `licenses/SOURCE-OFFER.txt` — mapa de fontes e licenças de **todos** os
+  componentes redistribuídos (FFmpeg, yt-dlp, Python, Deno, .NET/WebView2).
+- Ambos são gerados **automaticamente** a partir dos binários empacotados por
+  `tools/gen_licenses_notice.ps1`, invocado no `build_portable.ps1` — o que é
+  anunciado corresponde sempre ao que é distribuído.
+
+### Melhorado
+- O «Acerca» passa a indicar que o código-fonte dos componentes e a oferta de
+  código-fonte (GPL) acompanham a distribuição (pasta `licenses/`).
+
+### Nota
+- Em `v3.7.0` a oferta de código-fonte acompanhava a **página de descarga**;
+  a partir de `v3.7.1` acompanha também **dentro** dos pacotes
+  (`.zip` / `Portable.exe` / `Setup.exe`).
+
+### Assinatura (quando ativa)
+- Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
+  `MediaDesk-Portable\YT-DLP-Media-Desk.exe`) assinados com Authenticode e
+  *timestamp* através do fluxo SignPath (ver `SIGNPATH.md`).
+
+---
+
+## Como publicar (dispara o workflow `.github/workflows/signpath.yml`)
+
+```bash
+# 1) decidir a versão: editar version.json (version/date/build + entrada em history)
+#    e depois propagar para index.html, server.py, .csproj e .iss:
+powershell -ExecutionPolicy Bypass -File tools\sync_version.ps1
+
+# 2) rebuild dos artefactos (dist\)
+powershell -ExecutionPolicy Bypass -File build_portable.ps1
+
+# 3) fechar o código e criar a tag
+git add -A
+git commit -m "release: v3.7.1"
+git tag -a v3.7.1 -m "YT-DLP Media Desk v3.7.1"
+git push origin main
+git push origin v3.7.1      # a tag 'v*' dispara build + (se configurado) assinatura + release
+
+# Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
+# com publish=true para publicar a release.
+```
+
+Antes de publicar, confirmar:
+- [x] `dist\` reconstruído: `MediaDesk-Portable\`, `MediaDesk-Portable.zip`,
+      `MediaDesk-Portable.exe` (SFX) e `MediaDesk-Setup.exe`; launcher
+      `YT-DLP-Media-Desk.exe` na raiz.
+- [x] Avisos de licença **dentro** dos pacotes (`licenses/FFmpeg-NOTICE.txt`
+      e `licenses/SOURCE-OFFER.txt`); ver `LICENCA.md`.
+- [x] `index.html` / `server.py` / `version.json` / `checksums.json`
+      sincronizados (`tools/sync_version.ps1` + `tools/gen_checksums.ps1`).
+
+<details>
+<summary>Notas da <b>v3.7.0</b> (já publicada) — Gavetas, cores, correção de datas</summary>
 
 ### Adicionado
 - **Gavetas** para separar filmes, séries ou outros grupos: criadas na
@@ -78,38 +138,4 @@ movimentação e remoção a partir do painel lateral).
   `MediaDesk-Portable\YT-DLP-Media-Desk.exe`) assinados com Authenticode e
   *timestamp* através do fluxo SignPath (ver `SIGNPATH.md`).
 
----
-
-## Como publicar (dispara o workflow `.github/workflows/signpath.yml`)
-
-```bash
-# 1) decidir a versão: editar version.json (version/date/build + entrada em history)
-#    e depois propagar para index.html, server.py, .csproj e .iss:
-powershell -ExecutionPolicy Bypass -File tools\sync_version.ps1
-
-# 2) rebuild dos artefactos (dist\) — o próximo build já sai em .NET 8
-powershell -ExecutionPolicy Bypass -File build_portable.ps1
-
-# 3) fechar o código e criar a tag
-git add -A
-git commit -m "release: v3.7.0"
-git tag -a v3.7.0 -m "YT-DLP Media Desk v3.7.0"
-git push origin main
-git push origin v3.7.0      # a tag 'v*' dispara build + (se configurado) assinatura + release
-
-# Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
-# com publish=true para publicar a release.
-```
-
-Antes de publicar, confirmar:
-- [x] `dist\` reconstruído com o build .NET 8.
-- [x] `index.html`/`server.py` commitados (Gavetas, cores, remoção, correção de datas).
-- [x] Obrigação de fonte do FFmpeg (GPL) satisfeita — `licenses/FFmpeg-NOTICE.txt`
-      + `licenses/SOURCE-OFFER.txt` gerados no build; ver `LICENCA.md`.
-
-> **Nota (v3.7.0 já publicada):** os avisos de licença gerados passam a ser
-> embutidos **automaticamente** em cada build (`build_portable.ps1`). Para a
-> release **v3.7.0**, já publicada, a oferta de código-fonte acompanha a página
-> de descarga (corpo da release); o próximo build passa a tê-la também **dentro**
-> dos pacotes (`.zip`/`.exe`/`Setup.exe`) e a alinhar a revisão do FFmpeg com o
-> pin de `tools/prepare_runtime.ps1`.
+</details>

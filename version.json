@@ -1,10 +1,22 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.7.0",
-  "date": "2026-10-14",
-  "build": 2026101402,
+  "version": "3.7.1",
+  "date": "2026-10-15",
+  "build": 2026101501,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.7.1",
+      "date": "2026-10-15",
+      "groups": {
+        "Adicionado": [
+          "Avisos de licenças de terceiros e oferta do código-fonte correspondente (GPL) incluídos na distribuição: licenses/FFmpeg-NOTICE.txt (revisão exata do FFmpeg distribuída e oferta escrita, GPL-3.0 secção 6) e licenses/SOURCE-OFFER.txt (fontes e licenças de todos os componentes), gerados automaticamente a partir dos binários empacotados"
+        ],
+        "Melhorado": [
+          "O «Acerca» passa a indicar que o código-fonte dos componentes e a oferta de código-fonte correspondente (GPL) acompanham a distribuição na pasta licenses"
+        ]
+      }
+    },
     {
       "version": "3.7.0",
       "date": "2026-10-14",
