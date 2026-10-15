@@ -5,35 +5,26 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.7.1`
+## Versão: `v3.7.2`
 
-*Patch* (`3.7.0` → `3.7.1`): a distribuição passa a incluir, **dentro** de cada
-pacote, os avisos de licença e a oferta do código-fonte correspondente (GPL).
-Sem alterações funcionais para o utilizador.
+*Patch* (`3.7.1` → `3.7.2`): o **instalador** passa a oferecer o assistente de
+instalação em **5 idiomas** (PT/EN/ES/FR/DE). Sem alterações funcionais na
+aplicação.
 
 ---
 
-## YT-DLP Media Desk v3.7.1
-
-### Adicionado
-- `licenses/FFmpeg-NOTICE.txt` — revisão exata do FFmpeg distribuída
-  (`N-122744-ga2489b3ac6-20260214`), a licença (**GPL-3.0-or-later**,
-  `--enable-gpl --enable-version3`) e a **oferta escrita** do código-fonte
-  correspondente (GPL-3.0 §6).
-- `licenses/SOURCE-OFFER.txt` — mapa de fontes e licenças de **todos** os
-  componentes redistribuídos (FFmpeg, yt-dlp, Python, Deno, .NET/WebView2).
-- Ambos são gerados **automaticamente** a partir dos binários empacotados por
-  `tools/gen_licenses_notice.ps1`, invocado no `build_portable.ps1` — o que é
-  anunciado corresponde sempre ao que é distribuído.
+## YT-DLP Media Desk v3.7.2
 
 ### Melhorado
-- O «Acerca» passa a indicar que o código-fonte dos componentes e a oferta de
-  código-fonte (GPL) acompanham a distribuição (pasta `licenses/`).
+- **Instalador (`Setup.exe`)**: seletor de idioma do assistente de instalação em
+  **Português, English, Español, Français e Deutsch** (traduções oficiais do
+  Inno Setup).
+- Mensagens personalizadas **traduzidas** nos 5 idiomas: criar atalho no
+  ambiente de trabalho, grupo «Atalhos», «Desinstalar …» e «Executar …».
 
 ### Nota
-- Em `v3.7.0` a oferta de código-fonte acompanhava a **página de descarga**;
-  a partir de `v3.7.1` acompanha também **dentro** dos pacotes
-  (`.zip` / `Portable.exe` / `Setup.exe`).
+- A **aplicação** já tinha a interface nos 5 idiomas (seletor «Idioma» na
+  Configuração); esta versão corrige apenas os idiomas do **instalador**.
 
 ### Assinatura (quando ativa)
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
@@ -54,10 +45,10 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 
 # 3) fechar o código e criar a tag
 git add -A
-git commit -m "release: v3.7.1"
-git tag -a v3.7.1 -m "YT-DLP Media Desk v3.7.1"
+git commit -m "release: v3.7.2"
+git tag -a v3.7.2 -m "YT-DLP Media Desk v3.7.2"
 git push origin main
-git push origin v3.7.1      # a tag 'v*' dispara build + (se configurado) assinatura + release
+git push origin v3.7.2      # a tag 'v*' dispara build + (se configurado) assinatura + release
 
 # Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
 # com publish=true para publicar a release.
@@ -67,10 +58,36 @@ Antes de publicar, confirmar:
 - [x] `dist\` reconstruído: `MediaDesk-Portable\`, `MediaDesk-Portable.zip`,
       `MediaDesk-Portable.exe` (SFX) e `MediaDesk-Setup.exe`; launcher
       `YT-DLP-Media-Desk.exe` na raiz.
+- [x] Instalador com os 5 idiomas (`installer/mediadesk.iss`, ficheiro UTF-8 com
+      BOM para os acentos de `Español`/`Français`/`Deutsch`).
 - [x] Avisos de licença **dentro** dos pacotes (`licenses/FFmpeg-NOTICE.txt`
       e `licenses/SOURCE-OFFER.txt`); ver `LICENCA.md`.
 - [x] `index.html` / `server.py` / `version.json` / `checksums.json`
       sincronizados (`tools/sync_version.ps1` + `tools/gen_checksums.ps1`).
+
+<details>
+<summary>Notas da <b>v3.7.1</b> (já publicada) — Avisos de licença (GPL) dentro dos pacotes</summary>
+
+### Adicionado
+- `licenses/FFmpeg-NOTICE.txt` — revisão exata do FFmpeg distribuída, a licença
+  (**GPL-3.0-or-later**, `--enable-gpl --enable-version3`) e a **oferta escrita**
+  do código-fonte correspondente (GPL-3.0 §6).
+- `licenses/SOURCE-OFFER.txt` — mapa de fontes e licenças de **todos** os
+  componentes redistribuídos (FFmpeg, yt-dlp, Python, Deno, .NET/WebView2).
+- Ambos são gerados **automaticamente** a partir dos binários empacotados por
+  `tools/gen_licenses_notice.ps1`, invocado no `build_portable.ps1` — o que é
+  anunciado corresponde sempre ao que é distribuído.
+
+### Melhorado
+- O «Acerca» passa a indicar que o código-fonte dos componentes e a oferta de
+  código-fonte (GPL) acompanham a distribuição (pasta `licenses/`).
+
+### Nota
+- Em `v3.7.0` a oferta de código-fonte acompanhava a **página de descarga**;
+  a partir de `v3.7.1` acompanha também **dentro** dos pacotes
+  (`.zip` / `Portable.exe` / `Setup.exe`).
+
+</details>
 
 <details>
 <summary>Notas da <b>v3.7.0</b> (já publicada) — Gavetas, cores, correção de datas</summary>
@@ -117,10 +134,8 @@ Antes de publicar, confirmar:
   para o utilizador; corrige alertas de runtime descontinuado.
 - **FFmpeg: build GPL fixada** (variante `win64-gpl` do BtbN/FFmpeg-Builds,
   `--enable-gpl --enable-version3`, logo GPL-3.0-or-later) em vez de `latest`,
-  para builds reprodutíveis e verificáveis. **Binário efetivamente distribuído
-  nesta versão:** `N-122744-ga2489b3ac6-20260214` (revisão FFmpeg
-  `a2489b3ac6`). O `tools/prepare_runtime.ps1` fixa a tag/asset para o *refresh*
-  do runtime no próximo build.
+  para builds reprodutíveis e verificáveis. O `tools/prepare_runtime.ps1` fixa a
+  tag/asset para o *refresh* do runtime no próximo build.
 - **Oferta do código-fonte correspondente (GPL).** Cada distribuição passa a
   incluir `licenses/FFmpeg-NOTICE.txt` (revisão exata do FFmpeg distribuída +
   **oferta escrita**, GPL-3.0 §6) e `licenses/SOURCE-OFFER.txt` (mapa de fontes
