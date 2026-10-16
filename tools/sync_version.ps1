@@ -119,4 +119,27 @@ if (Test-Path $issPath) {
     }
 }
 
+# ============================ README.md =====================================
+# Mantem a versao visivel na pagina inicial do repositorio (os termos da
+# SignPath Foundation exigem que a home page / pagina de download corresponda
+# a release publicada). Preserva o BOM se existir.
+$readmePath = Join-Path $root 'README.md'
+if (Test-Path $readmePath) {
+    $rmBytes = [System.IO.File]::ReadAllBytes($readmePath)
+    $rmHasBom = ($rmBytes.Length -ge 3 -and $rmBytes[0] -eq 0xEF -and $rmBytes[1] -eq 0xBB -and $rmBytes[2] -eq 0xBF)
+    $rm = [System.Text.Encoding]::UTF8.GetString($rmBytes)
+    if ($rmHasBom) { $rm = $rm.TrimStart([char]0xFEFF) }
+    # \u00e3 evita depender da codificacao do proprio script (Windows PowerShell
+    # le .ps1 sem BOM como ANSI); casa tanto "Versao" como "Versao" com til.
+    # Usa ${1} (e nao $1) porque a versao comeca por digito: "$1$version"
+    # seria lido pelo .NET como o grupo inexistente "$13" e ficaria literal.
+    $newRm = [regex]::Replace($rm, '(?m)^(- \*\*Vers\u00e3o:\*\* ).*$', "`${1}$version")
+    if ($newRm -ne $rm) {
+        [System.IO.File]::WriteAllText($readmePath, $newRm, (New-Object System.Text.UTF8Encoding($rmHasBom)))
+        Write-Host '[sync_version] README.md atualizado' -ForegroundColor Green
+    } else {
+        Write-Host '[sync_version] README.md: versao ja correta' -ForegroundColor Yellow
+    }
+}
+
 Write-Host "[sync_version] concluido: $version" -ForegroundColor Cyan

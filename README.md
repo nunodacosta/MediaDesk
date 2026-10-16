@@ -4,9 +4,9 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
-- **Versão:** 3.7.0
+- **Versão:** 3.7.4
 
-> Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[política de assinatura de código e privacidade](CODE_SIGNING_POLICY.md)**.
+> Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[Code signing policy](CODE_SIGNING_POLICY.md)** (política de assinatura de código e privacidade).
 
 ## Principais funcionalidades
 
@@ -31,6 +31,8 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 | `MediaDesk-Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
 
+> **Code signing policy:** os executáveis desta página são assinados pela **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+
 ### Verificar a integridade
 
 ```powershell
@@ -43,9 +45,9 @@ Get-FileHash .\MediaDesk-Portable.zip -Algorithm SHA256   # comparar com SHA256S
 sha256sum -c SHA256SUMS.txt
 ```
 
-## Assinatura de código
+## Assinatura de código (Code signing policy)
 
-Os executáveis de release são assinados através da **SignPath Foundation** (serviço de assinatura gratuita para projetos open source). Quem assina, como verificar a assinatura e a política de privacidade estão em **[`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md)**.
+Os executáveis de release são assinados através da **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Quem assina, como verificar a assinatura e a política de privacidade estão em **[`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md)**.
 
 ## Compilar a partir do código
 

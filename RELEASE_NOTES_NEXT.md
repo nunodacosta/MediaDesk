@@ -42,10 +42,14 @@ externa…» ao menu de cada cartão.
   cliente (`/browse_folder`), com retrocompatibilidade (valor por omissão
   mantido).
 
-### Assinatura (quando ativa)
+### Code signing policy
+- **Free code signing provided by [SignPath.io](https://about.signpath.io),
+  certificate by [SignPath Foundation](https://signpath.org).**
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
   `MediaDesk-Portable\YT-DLP-Media-Desk.exe`) assinados com Authenticode e
-  *timestamp* através do fluxo SignPath (ver `SIGNPATH.md`).
+  *timestamp* através do fluxo SignPath quando ativo (ver `SIGNPATH.md`).
+- Política completa, política de privacidade e verificação da assinatura:
+  [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ---
 

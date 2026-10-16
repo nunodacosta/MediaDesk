@@ -2,6 +2,8 @@
 
 > **Summary (EN):** Release executables of **YT-DLP Media Desk** are signed via
 > the **SignPath Foundation** (free code-signing for open-source projects).
+> **Free code signing provided by [SignPath.io](https://about.signpath.io),
+> certificate by [SignPath Foundation](https://signpath.org).**
 > The project is licensed under **GPL-3.0** and its source is public. Integrity
 > can always be verified with the published SHA-256 sums. This program does not
 > transfer any information to other networked systems unless specifically
@@ -13,6 +15,9 @@ Os executáveis de release do **YT-DLP Media Desk** são assinados através da
 **SignPath Foundation** — serviço de assinatura de código gratuito para
 projetos open source (plano OSS) — usando um certificado de assinatura de
 código OV.
+
+> **Free code signing provided by [SignPath.io](https://about.signpath.io),
+> certificate by [SignPath Foundation](https://signpath.org).**
 
 | | |
 |---|---|
@@ -35,9 +40,17 @@ O processo de build é reproduzível a partir do código público
 
 | Papel | Quem | Responsabilidade |
 |---|---|---|
-| **Autor (Author)** | Mantenedor (ALDACO) | Mantém o código-fonte, o build e a metadata de release |
-| **Revisor (Reviewer)** | Mantenedor (ALDACO) | Revê o diff da release, dependências e resultados do CI antes de se criar o pedido de assinatura |
-| **Aprovador (Approver)** | Mantenedor (ALDACO) | Confirma a proveniência do artefacto e aprova/rejeita explicitamente cada pedido de assinatura |
+| **Autor (Author)** | [@nunodacosta](https://github.com/nunodacosta) | Mantém o código-fonte, o build e a metadata de release |
+| **Revisor (Reviewer)** | [@nunodacosta](https://github.com/nunodacosta) | Revê o diff da release, dependências e resultados do CI antes de se criar o pedido de assinatura |
+| **Aprovador (Approver)** | [@nunodacosta](https://github.com/nunodacosta) | Confirma a proveniência do artefacto e aprova/rejeita explicitamente cada pedido de assinatura |
+
+Membros dos papéis, conforme os termos da SignPath Foundation:
+
+- **Committers and reviewers:** [@nunodacosta](https://github.com/nunodacosta)
+- **Approvers:** [@nunodacosta](https://github.com/nunodacosta)
+
+Todos os membros usam **autenticação multifator (MFA)** no acesso ao GitHub e à
+SignPath.
 
 A assinatura de release **nunca é automática** num *tag*: cada pedido passa por
 uma ação deliberada (aprovação manual). Sendo um projeto de um único
