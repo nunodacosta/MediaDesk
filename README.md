@@ -1,6 +1,13 @@
 # YT-DLP Media Desk
 
+[![Licença: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![Última versão](https://img.shields.io/github/v/release/nunodacosta/MediaDesk)](https://github.com/nunodacosta/MediaDesk/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/nunodacosta/MediaDesk/total)](https://github.com/nunodacosta/MediaDesk/releases)
+[![Plataforma](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4)](https://github.com/nunodacosta/MediaDesk/releases/latest)
+
 Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — transferir e organizar vídeo/áudio de forma simples, sem conta e sem telemetria.
+
+![Demonstração da interface do YT-DLP Media Desk](docs/screenshots/demo.gif)
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
@@ -19,6 +26,24 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
   mantendo os ficheiros (movidos para «Sem gaveta») ou apagando-os.
 - **Atividade** com o histórico dos downloads e a gaveta de cada ficheiro.
 - **Interface em 5 idiomas** (PT/EN/ES/FR/DE), temas claro/escuro e paletas de cor.
+
+## Capturas de ecrã
+
+**Mediateca** — os ficheiros organizados por tipo, cada um com a sua gaveta, e a grelha de gavetas no painel lateral.
+
+![Mediateca](docs/screenshots/mediateca.png)
+
+**Gavetas** — mover um ficheiro entre gavetas (ou para uma pasta externa) pelo menu da carta.
+
+![Menu de gavetas](docs/screenshots/gavetas.png)
+
+**Atividade** — histórico dos downloads com o estado e a gaveta de cada ficheiro.
+
+![Atividade](docs/screenshots/atividade.png)
+
+**Configuração** — temas, idioma, gavetas e opções do yt-dlp.
+
+![Configuração](docs/screenshots/configuracao.png)
 
 ## Descarga
 
