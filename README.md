@@ -5,9 +5,27 @@
 [![Downloads](https://img.shields.io/github/downloads/nunodacosta/MediaDesk/total)](https://github.com/nunodacosta/MediaDesk/releases)
 [![Plataforma](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4)](https://github.com/nunodacosta/MediaDesk/releases/latest)
 
-Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — transferir e organizar vídeo/áudio de forma simples, sem conta e sem telemetria.
+**English** · [Português](#português)
 
-![Demonstração da interface do YT-DLP Media Desk](docs/screenshots/demo.gif)
+A **local** desktop interface for **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — download and organise video/audio, with no account and no telemetry.
+
+![YT-DLP Media Desk interface demo](docs/screenshots/demo.gif)
+
+- **Download** video and audio with yt-dlp, choosing format and quality.
+- **Media library** that scans and organises your downloads folder automatically.
+- **Drawers:** real subfolders (Video or Audio), each with **its own colour**, shown as a grid in the sidebar with a per-type filter. Every file shows its drawer and can be moved between drawers of the same type — or to an external folder — from the file's own menu.
+- **Activity** with the download history and the drawer each file went to.
+- **5 languages** (PT/EN/ES/FR/DE), light/dark themes and colour palettes.
+
+**Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `MediaDesk-Portable.zip` (recommended), self-extracting `.exe`, or `MediaDesk-Setup.exe`, all with SHA-256 hashes.
+
+> **Code signing policy:** the executables on that page are signed by the **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+
+---
+
+## Português
+
+Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — transferir e organizar vídeo/áudio de forma simples, sem conta e sem telemetria.
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
