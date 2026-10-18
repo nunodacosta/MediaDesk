@@ -71,7 +71,7 @@ The difference is what happens after the download. A media library scans the dow
 
 The interface is available in five languages (Portuguese, English, Spanish, French and German), with light and dark themes and several colour palettes.
 
-It is distributed as a portable zip, a self-extracting executable and a standard installer, each published with SHA-256 hashes so downloads can be verified. Free and open source software, licensed under the GNU GPL v3.0. The executables are code-signed by the SignPath Foundation.
+It is distributed as a portable zip, a self-extracting executable and a standard installer, each published with SHA-256 hashes so downloads can be verified. Free and open source software, licensed under the GNU GPL v3.0.
 '@
 
 # --- validacao dos limites de caracteres dos descritores ---------------------
