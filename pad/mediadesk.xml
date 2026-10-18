@@ -81,7 +81,7 @@ It is distributed as a portable zip, a self-extracting executable and a standard
       <Application_Order_URL />
       <Application_Screenshot_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/docs/screenshots/mediateca.png</Application_Screenshot_URL>
       <Application_Icon_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/icons/icon-32.png</Application_Icon_URL>
-      <Application_XML_File_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/pad/mediadesk.xml</Application_XML_File_URL>
+      <Application_XML_File_URL>https://github.com/nunodacosta/MediaDesk/releases/latest/download/mediadesk.xml</Application_XML_File_URL>
     </Application_URLs>
     <Download_URLs>
       <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.7.4/MediaDesk-Setup.exe</Primary_Download_URL>

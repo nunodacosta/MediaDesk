@@ -91,6 +91,10 @@ if (Test-Path $outFolder) {
 Info "A regenerar os hashes de release (SHA256SUMS.txt)..."
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\gen_release_hashes.ps1')
 
+# Regenera o PAD: o instalador assinado tem outro tamanho, e o PAD publica esse valor
+Info "A regenerar o ficheiro PAD (pad\mediadesk.xml)..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\gen_pad.ps1')
+
 Write-Host ""
 Write-Host "Verificar as assinaturas:" -ForegroundColor Cyan
 Write-Host "  Get-AuthenticodeSignature dist\MediaDesk-Portable.exe | Format-List"

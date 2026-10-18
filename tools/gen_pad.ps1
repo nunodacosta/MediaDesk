@@ -9,19 +9,27 @@
 
     Fonte unica de verdade: version.json (versao e data).
     Saida por omissao: pad\mediadesk.xml
-    URL publico:
-      https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/pad/mediadesk.xml
+
+    IMPORTANTE (qual e o PAD "verdadeiro"):
+      Os ficheiros publicados sao construidos pela CI (GitHub Actions), e nao
+      pela build local - sao parecidos mas nao identicos. Por isso o PAD que
+      interessa e o que a CI gera no fim da build e que viaja DENTRO da release
+      (asset "mediadesk.xml"). O URL estavel a submeter ao Softpedia UMA vez e:
+        https://github.com/nunodacosta/MediaDesk/releases/latest/download/mediadesk.xml
+      A copia em pad\mediadesk.xml no repositorio serve apenas para consulta e
+      como reserva (o seu tamanho pode diferir do asset publicado).
 
     O tamanho indicado no PAD e o do instalador (dist\MediaDesk-Setup.exe), lido
-    no fim da build. Se o ficheiro nao existir, pode indicar-se -FallbackSizeBytes.
+    no fim da build. Prioridade: -SizeBytes > dist\... > -FallbackSizeBytes.
 
     Uso:
       powershell -ExecutionPolicy Bypass -File tools\gen_pad.ps1
-      powershell -ExecutionPolicy Bypass -File tools\gen_pad.ps1 -FallbackSizeBytes 154032663
+      powershell -ExecutionPolicy Bypass -File tools\gen_pad.ps1 -SizeBytes 154032663
 #>
 [CmdletBinding()]
 param(
     [string]$OutPath,
+    [long]$SizeBytes = 0,
     [long]$FallbackSizeBytes = 0
 )
 $ErrorActionPreference = 'Stop'
@@ -42,15 +50,19 @@ $month = ([int]$parts[1]).ToString()
 $day = ([int]$parts[2]).ToString()
 
 # --- tamanho do instalador ---------------------------------------------------
-$sizeBytes = 0
+# Prioridade: -SizeBytes (explicito) > dist\MediaDesk-Setup.exe > -FallbackSizeBytes
+# Nota: em PowerShell os nomes nao distinguem maiusculas, por isso a variavel
+# local NAO pode chamar-se $sizeBytes (colidiria com o parametro $SizeBytes).
+$instSizeBytes = 0
 $setup = Join-Path $root 'dist\MediaDesk-Setup.exe'
-if (Test-Path $setup) { $sizeBytes = (Get-Item $setup).Length }
-elseif ($FallbackSizeBytes -gt 0) { $sizeBytes = $FallbackSizeBytes }
+if ($SizeBytes -gt 0) { $instSizeBytes = $SizeBytes }
+elseif (Test-Path $setup) { $instSizeBytes = (Get-Item $setup).Length }
+elseif ($FallbackSizeBytes -gt 0) { $instSizeBytes = $FallbackSizeBytes }
 $sizeK = 0
 $sizeMB = '0'
-if ($sizeBytes -gt 0) {
-    $sizeK = [int][math]::Round($sizeBytes / 1024)
-    $sizeMB = ([math]::Round($sizeBytes / 1048576, 2)).ToString([System.Globalization.CultureInfo]::InvariantCulture)
+if ($instSizeBytes -gt 0) {
+    $sizeK = [int][math]::Round($instSizeBytes / 1024)
+    $sizeMB = ([math]::Round($instSizeBytes / 1048576, 2)).ToString([System.Globalization.CultureInfo]::InvariantCulture)
 }
 
 $base = 'https://github.com/nunodacosta/MediaDesk'
@@ -165,7 +177,7 @@ $template = @'
       <Application_Order_URL />
       <Application_Screenshot_URL>__RAW__/docs/screenshots/mediateca.png</Application_Screenshot_URL>
       <Application_Icon_URL>__RAW__/icons/icon-32.png</Application_Icon_URL>
-      <Application_XML_File_URL>__RAW__/pad/mediadesk.xml</Application_XML_File_URL>
+      <Application_XML_File_URL>__BASE__/releases/latest/download/mediadesk.xml</Application_XML_File_URL>
     </Application_URLs>
     <Download_URLs>
       <Primary_Download_URL>__DL__/MediaDesk-Setup.exe</Primary_Download_URL>
@@ -189,7 +201,7 @@ $xml = $xml.Replace('__DATE__', $date)
 $xml = $xml.Replace('__MONTH__', $month)
 $xml = $xml.Replace('__DAY__', $day)
 $xml = $xml.Replace('__YEAR__', $year)
-$xml = $xml.Replace('__SIZEBYTES__', $sizeBytes.ToString())
+$xml = $xml.Replace('__SIZEBYTES__', $instSizeBytes.ToString())
 $xml = $xml.Replace('__SIZEK__', $sizeK.ToString())
 $xml = $xml.Replace('__SIZEMB__', $sizeMB)
 $xml = $xml.Replace('__DESC45__', $desc45)
@@ -205,4 +217,4 @@ if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Forc
 [System.IO.File]::WriteAllText($OutPath, $xml, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host "[gen_pad] escrito: $OutPath" -ForegroundColor Green
-Write-Host "[gen_pad] versao $version, instalador $sizeBytes bytes ($sizeMB MB)" -ForegroundColor Cyan
+Write-Host "[gen_pad] versao $version, instalador $instSizeBytes bytes ($sizeMB MB)" -ForegroundColor Cyan

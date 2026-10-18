@@ -153,6 +153,15 @@ jobs:
       # Publicar release (em tags v* ou via workflow_dispatch com publish).
       # Sem token SignPath, publica os artefactos NAO assinados com os hashes.
       # ---------------------------------------------------------------------
+
+      # O PAD e regenerado aqui, no fim de tudo: a assinatura substitui o
+      # instalador e altera o seu tamanho, por isso o PAD tem de ser escrito
+      # depois de apply_signed.ps1. O pad\mediadesk.xml viaja na release e e
+      # servido em /releases/latest/download/mediadesk.xml (URL do Softpedia).
+      - name: Regenerar o PAD (mediadesk.xml)
+        shell: pwsh
+        run: ./tools/gen_pad.ps1
+
       - name: Publicar release
         if: startsWith(github.ref, 'refs/tags/') || inputs.publish
         uses: softprops/action-gh-release@v2
@@ -162,4 +171,5 @@ jobs:
             dist/MediaDesk-Portable.exe
             dist/MediaDesk-Setup.exe
             dist/SHA256SUMS.txt
+            pad/mediadesk.xml
           generate_release_notes: true
