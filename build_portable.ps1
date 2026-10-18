@@ -336,6 +336,10 @@ Info "A gerar SHA256SUMS.txt (hashes de release)..."
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\gen_release_hashes.ps1')
 if ($LASTEXITCODE -ne 0) { Warn "gen_release_hashes.ps1 falhou; verifica os hashes manualmente." }
 Copy-Item (Join-Path $root 'verificar-integridade.ps1') (Join-Path $dist 'verificar-integridade.ps1') -Force
+# --- 7.e Ficheiro PAD (Softpedia e outros diretorios) ------------------------
+Info "A gerar o ficheiro PAD (pad\mediadesk.xml)..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\gen_pad.ps1')
+if ($LASTEXITCODE -ne 0) { Warn "gen_pad.ps1 falhou; o PAD nao foi atualizado." }
 
 # --- 8. Limpeza --------------------------------------------------------------
 if (-not $KeepBuild) {

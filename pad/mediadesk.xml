@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<XML_DIZ_INFO>
+  <MASTER_PAD_VERSION_INFO>
+    <MASTER_PAD_VERSION>3.11</MASTER_PAD_VERSION>
+    <MASTER_PAD_EDITOR>tools/gen_pad.ps1 (MediaDesk)</MASTER_PAD_EDITOR>
+    <MASTER_PAD_INFO>Portable Application Description, or PAD for short, is a data set that is used by software authors to disseminate information to anyone interested in their software products.</MASTER_PAD_INFO>
+  </MASTER_PAD_VERSION_INFO>
+  <Company_Info>
+    <Company_Name>ALDACO</Company_Name>
+    <Company_WebSite_URL>https://github.com/nunodacosta/MediaDesk</Company_WebSite_URL>
+    <Contact_Info>
+      <Author_First_Name>Nuno</Author_First_Name>
+      <Author_Last_Name>Duraes</Author_Last_Name>
+      <Author_Email>nuno.costaduraes@outlook.pt</Author_Email>
+      <Contact_First_Name>Nuno</Contact_First_Name>
+      <Contact_Last_Name>Duraes</Contact_Last_Name>
+      <Contact_Email>nuno.costaduraes@outlook.pt</Contact_Email>
+    </Contact_Info>
+    <Support_Info>
+      <General_Email>nuno.costaduraes@outlook.pt</General_Email>
+      <Support_Email>nuno.costaduraes@outlook.pt</Support_Email>
+      <Sales_Email>nuno.costaduraes@outlook.pt</Sales_Email>
+      <Fax_Phone>NA</Fax_Phone>
+    </Support_Info>
+  </Company_Info>
+  <Program_Info>
+    <Program_Name>YT-DLP Media Desk</Program_Name>
+    <Program_Version>3.7.4</Program_Version>
+    <Program_Release_Month>10</Program_Release_Month>
+    <Program_Release_Day>16</Program_Release_Day>
+    <Program_Release_Year>2026</Program_Release_Year>
+    <Program_Cost_Dollars>0</Program_Cost_Dollars>
+    <Program_Cost_Other_Code />
+    <Program_Cost_Other>0</Program_Cost_Other>
+    <Program_Type>Freeware</Program_Type>
+    <Program_Release_Status>New Release</Program_Release_Status>
+    <Program_Install_Support>Install and Uninstall</Program_Install_Support>
+    <Program_OS_Support>Windows 11, Windows 10</Program_OS_Support>
+    <Program_Language>English, Portuguese, Spanish, French, German</Program_Language>
+    <File_Info>
+      <Filename_Versioned>MediaDesk-Setup.exe</Filename_Versioned>
+      <Filename_Generic>MediaDesk-Setup.exe</Filename_Generic>
+      <Filename_Long>MediaDesk-Setup.exe</Filename_Long>
+      <File_Size_Bytes>154032663</File_Size_Bytes>
+      <File_Size_K>150423</File_Size_K>
+      <File_Size_MB>146.9</File_Size_MB>
+    </File_Info>
+    <Expire_Info>
+      <Has_Expire_Info>N</Has_Expire_Info>
+      <Expire_Based_On>Days</Expire_Based_On>
+    </Expire_Info>
+    <Program_Change_Info>Version 3.7.4 (2026-10-16). See the release page for the full changelog.</Program_Change_Info>
+    <Program_Specific_Category>Video Downloaders</Program_Specific_Category>
+    <Program_Categories>Multimedia, Internet</Program_Categories>
+    <Program_System_Requirements>Windows 10 or Windows 11 (64-bit). No external dependencies: everything needed is bundled.</Program_System_Requirements>
+    <Includes_JAVA_VM>N</Includes_JAVA_VM>
+    <Includes_VB_Runtime>N</Includes_VB_Runtime>
+    <Includes_DirectX>N</Includes_DirectX>
+  </Program_Info>
+  <Program_Descriptions>
+    <English>
+      <Keywords>yt-dlp, video downloader, youtube downloader, media library, download manager, portable, open source, windows</Keywords>
+      <Char_Desc_45>Download and organise video and audio</Char_Desc_45>
+      <Char_Desc_80>Local Windows interface for yt-dlp that organises downloads into drawers</Char_Desc_80>
+      <Char_Desc_250>YT-DLP Media Desk is a local desktop interface for yt-dlp on Windows. It downloads video or audio, then organises everything: the media library indexes your downloads folder, and files go into colour-coded drawers that are real subfolders.</Char_Desc_250>
+      <Char_Desc_450>YT-DLP Media Desk is a local desktop interface for yt-dlp on Windows. Paste a link, choose the format and quality, and download video or audio. What sets it apart is what happens next: a media library scans and indexes your downloads folder so it can be browsed and searched inside the app, and files are organised into drawers - real subfolders on disk, each with its own colour, that a file can be moved between from its own menu.</Char_Desc_450>
+      <Char_Desc_2000>YT-DLP Media Desk is a local desktop interface for yt-dlp, for Windows 10 and 11. Everything runs on the user's machine: no account, no telemetry, no paid tier.
+
+Downloading is straightforward: paste a link, choose the format and quality, and the file lands in your downloads folder.
+
+The difference is what happens after the download. A media library scans the downloads folder and indexes what it finds, so your media can be browsed, searched and filtered from inside the app - no need to open Explorer and hunt through folders. Files are then organised into drawers: real subfolders on disk, each with its own colour, shown as a grid in the sidebar with a per-type filter. Every file shows which drawer it belongs to, and can be moved between drawers of the same type - or out to an external folder - from the file's own menu. The activity view keeps the complete download history and shows which drawer each file went to.
+
+The interface is available in five languages (Portuguese, English, Spanish, French and German), with light and dark themes and several colour palettes.
+
+It is distributed as a portable zip, a self-extracting executable and a standard installer, each published with SHA-256 hashes so downloads can be verified. Free and open source software, licensed under the GNU GPL v3.0. The executables are code-signed by the SignPath Foundation.</Char_Desc_2000>
+    </English>
+  </Program_Descriptions>
+  <Web_Info>
+    <Application_URLs>
+      <Application_Info_URL>https://github.com/nunodacosta/MediaDesk</Application_Info_URL>
+      <Application_Order_URL />
+      <Application_Screenshot_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/docs/screenshots/mediateca.png</Application_Screenshot_URL>
+      <Application_Icon_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/icons/icon-32.png</Application_Icon_URL>
+      <Application_XML_File_URL>https://raw.githubusercontent.com/nunodacosta/MediaDesk/main/pad/mediadesk.xml</Application_XML_File_URL>
+    </Application_URLs>
+    <Download_URLs>
+      <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.7.4/MediaDesk-Setup.exe</Primary_Download_URL>
+      <Secondary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.7.4/MediaDesk-Portable.zip</Secondary_Download_URL>
+      <Additional_Download_URL_1>https://github.com/nunodacosta/MediaDesk/releases/latest</Additional_Download_URL_1>
+    </Download_URLs>
+  </Web_Info>
+  <Permissions>
+    <Distribution_Permissions>Free and open source software, licensed under the GNU General Public License v3.0. You may copy and distribute verbatim copies of the binaries exactly as published on the project repository, in their unmodified form. The complete corresponding source code is available at https://github.com/nunodacosta/MediaDesk</Distribution_Permissions>
+    <EULA>YT-DLP Media Desk is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License v3.0 for more details: https://www.gnu.org/licenses/gpl-3.0.html</EULA>
+  </Permissions>
+</XML_DIZ_INFO>
