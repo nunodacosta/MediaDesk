@@ -5,13 +5,109 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.7.4`
+## Versão: `v3.9.0`
 
-*Patch* (`3.7.3` → `3.7.4`): corrige «Mostrar na pasta» na Atividade e o bloqueio
-de novas descargas depois de um download falhar, e acrescenta «Escolher pasta
-externa…» ao menu de cada cartão.
+*Minor* (`3.8.3` → `3.9.0`): a fila de downloads passa para o painel lateral e a
+barra de progresso fica sincronizada com o trabalho real.
 
 ---
+
+## YT-DLP Media Desk v3.9.0
+
+### Adicionado
+- **Fila de downloads no painel lateral:** a «Fila de downloads» passa para o
+  painel lateral (junto à mediateca), ficando visível em qualquer aba — já não é
+  preciso ir à aba «Novo download» para acompanhar os trabalhos.
+
+### Corrigido
+- **Barra de progresso sincronizada:** a barra volta a avançar de forma
+  contínua e deixa de encher logo na primeira transferência. Quando um vídeo
+  precisa de várias transferências (vídeo + áudio), o progresso é repartido por
+  todas e a barra **só chega ao fim quando o trabalho conclui**; volta ao início
+  quando o download termina.
+- **Ordenação da mediateca (por grupo):** os menus de cada grupo (nome, data,
+  tamanho e direção ascendente/descendente) voltam a funcionar e o seletor
+  «Ordenar por data» mantém-se sincronizado com a lista.
+- **Endereços concluídos:** os endereços cujo download já terminou são retirados
+  automaticamente da caixa de entrada (os falhados permanecem, para repetir).
+- **Painel lateral com barra de deslocamento:** a mediateca e a fila passam a
+  poder ser deslocadas quando o conteúdo não cabe no ecrã.
+
+### Melhorado
+- **Fases do download:** uma linha de estado indica o que está a acontecer — a
+  obter informações, a aguardar entre descargas, a descarregar, a juntar áudio e
+  vídeo, a extrair áudio, a incorporar a capa/metadados e a finalizar.
+- **Capas:** as miniaturas são convertidas para um formato compatível com o
+  contentor (JPG/WebP) antes de serem incorporadas.
+- **Repetição de downloads:** o número de tentativas é lido de forma tolerante,
+  evitando falhas em trabalhos antigos.
+- **Ajuda** atualizada (fila no painel lateral, progresso por fases e opções
+  avançadas) nos 5 idiomas (PT/EN/ES/FR/DE).
+
+---
+
+## YT-DLP Media Desk v3.8.3
+
+### Melhorado
+- **Layout das opções avançadas:** controlos agrupados em subsecções de
+  metadados, listas, recortes, fila e rede, com grelha responsiva e melhor
+  aproveitamento do espaço.
+- **Switches consistentes:** as opções avançadas e a recomendação automática
+  de qualidade usam o mesmo controlo visual das restantes definições.
+
+---
+
+## YT-DLP Media Desk v3.8.2
+
+### Adicionado
+- **Filtro temporal da mediateca:** filtra os downloads por data e hora inicial
+  e final, incluindo segundos, e ordena do mais recente para o mais antigo ou
+  vice-versa. A preferência fica guardada localmente.
+
+### Melhorado
+- O **modal de ajuda** explica o filtro temporal e indica que as opções
+  avançadas de transferência estão em Configuração.
+
+### Corrigido
+- A ordenação cronológica da mediateca passa a respeitar corretamente a direção
+  escolhida (mais antigos ou mais recentes primeiro).
+
+---
+
+## YT-DLP Media Desk v3.8.1
+
+### Melhorado
+- **Qualidade automática opcional:** a recomendação de resolução pode ser
+  ativada/desativada nas Definições, fica guardada e pode ser exportada/importada
+  com as definições seguras. A escolha manual continua disponível.
+- **Opções avançadas na Configuração:** metadados, capas, capítulos, seleção e
+  ordenação de listas, recortes, proxy, agendamento, prioridade e novas
+  tentativas passam a estar agrupados na página de Definições.
+
+---
+
+## YT-DLP Media Desk v3.8.0
+
+### Adicionado
+- **Ordenação de listas:** ordena os itens selecionados por duração ou qualidade,
+  de forma ascendente ou descendente. O MediaDesk lê os metadados e descarrega
+  cada item na ordem pedida; itens sem metadados ficam no fim.
+- **Qualidade automática:** recomenda uma resolução de vídeo até à altura física
+  detetada do ecrã, com seleção manual disponível.
+
+### Melhorado
+- O **modal de ajuda** explica a fila persistente, prioridades, agendamento,
+  novas tentativas, ordenação de listas e qualidade automática.
+- O **motor de versões** passa também a sincronizar a versão estática do
+  cabeçalho e a gerar o histórico com escaping seguro para JavaScript.
+
+### Corrigido
+- Os campos da fila validam o modo de ordenação e mantêm a seleção dos itens da
+  lista antes da ordenação.
+
+---
+
+## Histórico de versões publicadas
 
 ## YT-DLP Media Desk v3.7.4
 
@@ -65,10 +161,10 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 
 # 3) fechar o código e criar a tag
 git add -A
-git commit -m "release: v3.7.4"
-git tag -a v3.7.4 -m "YT-DLP Media Desk v3.7.4"
+git commit -m "release: v3.9.0"
+git tag -a v3.9.0 -m "YT-DLP Media Desk v3.9.0"
 git push origin main
-git push origin v3.7.4      # a tag 'v*' dispara build + (se configurado) assinatura + release
+git push origin v3.9.0      # a tag 'v*' dispara build + (se configurado) assinatura + release
 
 # Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
 # com publish=true para publicar a release.

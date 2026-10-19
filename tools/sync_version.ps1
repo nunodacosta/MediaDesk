@@ -32,18 +32,21 @@ $entries = New-Object System.Collections.Generic.List[string]
 foreach ($h in $vj.history) {
     $e = New-Object System.Collections.Generic.List[string]
     $e.Add('                {')
-    $e.Add("                    version: `"$($h.version)`",")
-    $e.Add("                    date: `"$($h.date)`",")
+    $versionJs = ConvertTo-Json -InputObject ([string]$h.version) -Compress
+    $dateJs = ConvertTo-Json -InputObject ([string]$h.date) -Compress
+    $e.Add("                    version: $versionJs,")
+    $e.Add("                    date: $dateJs,")
     $hasGroups = ($h.PSObject.Properties.Name -contains 'groups') -and ($null -ne $h.groups)
     if ($hasGroups) {
         $e.Add('                    groups: {')
         foreach ($g in $h.groups.PSObject.Properties) {
-            $items = ($g.Value | ForEach-Object { "`"$_`"" }) -join ', '
-            $e.Add("                        `"$($g.Name)`": [$items],")
+            $groupNameJs = ConvertTo-Json -InputObject ([string]$g.Name) -Compress
+            $items = ($g.Value | ForEach-Object { ConvertTo-Json -InputObject ([string]$_) -Compress }) -join ', '
+            $e.Add("                        ${groupNameJs}: [$items],")
         }
         $e.Add('                    }')
     } else {
-        $items = ($h.changes | ForEach-Object { "`"$_`"" }) -join ', '
+        $items = ($h.changes | ForEach-Object { ConvertTo-Json -InputObject ([string]$_) -Compress }) -join ', '
         $e.Add("                    changes: [$items]")
     }
     $e.Add('                }')
@@ -61,7 +64,7 @@ $lines.Add($historyJs)
 $lines.Add('            ];')
 $lines.Add('            const CURRENT_VERSION_CHANGES = VERSION_HISTORY[0].groups')
 $lines.Add('                ? Object.values(VERSION_HISTORY[0].groups).flat()')
-$lines.Add('                : VERSION_HISTORY[0].changes;')
+$lines.Add('                : (VERSION_HISTORY[0].changes || []);')
 $lines.Add('            // VERSION:END')
 $block = ($lines -join "`r`n")
 
@@ -74,6 +77,14 @@ $eiEnd = $ei + $end.Length
 $html = $html.Substring(0, $bi) + $block + $html.Substring($eiEnd)
 [System.IO.File]::WriteAllText($idxPath, $html, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host '[sync_version] index.html atualizado' -ForegroundColor Green
+
+$badgePattern = '(<span class="brand-version" id="app-version"[^>]*>)v[^<]*(</span>)'
+$badgeReplacement = "`${1}v$version`${2}"
+$updatedBadge = [regex]::Replace($html, $badgePattern, $badgeReplacement)
+if ($updatedBadge -ne $html) {
+    [System.IO.File]::WriteAllText($idxPath, $updatedBadge, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host '[sync_version] versao visivel no cabecalho atualizada' -ForegroundColor Green
+}
 
 # ============================ server.py =====================================
 $srvPath = Join-Path $root 'server.py'

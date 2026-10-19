@@ -25,9 +25,9 @@
   </Company_Info>
   <Program_Info>
     <Program_Name>YT-DLP Media Desk</Program_Name>
-    <Program_Version>3.7.4</Program_Version>
+    <Program_Version>3.9.0</Program_Version>
     <Program_Release_Month>10</Program_Release_Month>
-    <Program_Release_Day>16</Program_Release_Day>
+    <Program_Release_Day>19</Program_Release_Day>
     <Program_Release_Year>2026</Program_Release_Year>
     <Program_Cost_Dollars>0</Program_Cost_Dollars>
     <Program_Cost_Other_Code />
@@ -41,15 +41,15 @@
       <Filename_Versioned>MediaDesk-Setup.exe</Filename_Versioned>
       <Filename_Generic>MediaDesk-Setup.exe</Filename_Generic>
       <Filename_Long>MediaDesk-Setup.exe</Filename_Long>
-      <File_Size_Bytes>154032663</File_Size_Bytes>
-      <File_Size_K>150423</File_Size_K>
-      <File_Size_MB>146.9</File_Size_MB>
+      <File_Size_Bytes>153066554</File_Size_Bytes>
+      <File_Size_K>149479</File_Size_K>
+      <File_Size_MB>145.98</File_Size_MB>
     </File_Info>
     <Expire_Info>
       <Has_Expire_Info>N</Has_Expire_Info>
       <Expire_Based_On>Days</Expire_Based_On>
     </Expire_Info>
-    <Program_Change_Info>Version 3.7.4 (2026-10-16). See the release page for the full changelog.</Program_Change_Info>
+    <Program_Change_Info>Version 3.9.0 (2026-10-19). See the release page for the full changelog.</Program_Change_Info>
     <Program_Specific_Category>Video Downloaders</Program_Specific_Category>
     <Program_Categories>Multimedia, Internet</Program_Categories>
     <Program_System_Requirements>Windows 10 or Windows 11 (64-bit). No external dependencies: everything needed is bundled.</Program_System_Requirements>
@@ -84,8 +84,8 @@ It is distributed as a portable zip, a self-extracting executable and a standard
       <Application_XML_File_URL>https://github.com/nunodacosta/MediaDesk/releases/latest/download/mediadesk.xml</Application_XML_File_URL>
     </Application_URLs>
     <Download_URLs>
-      <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.7.4/MediaDesk-Setup.exe</Primary_Download_URL>
-      <Secondary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.7.4/MediaDesk-Portable.zip</Secondary_Download_URL>
+      <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.9.0/MediaDesk-Setup.exe</Primary_Download_URL>
+      <Secondary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.9.0/MediaDesk-Portable.zip</Secondary_Download_URL>
       <Additional_Download_URL_1>https://github.com/nunodacosta/MediaDesk/releases/latest</Additional_Download_URL_1>
     </Download_URLs>
   </Web_Info>

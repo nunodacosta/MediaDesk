@@ -6,6 +6,7 @@ import json
 import mimetypes
 import os
 import platform
+import queue
 import re
 import shutil
 import subprocess
@@ -13,6 +14,7 @@ import sys
 import threading
 import time
 import unicodedata
+import uuid
 import webbrowser
 import zipfile
 from datetime import datetime
@@ -33,6 +35,7 @@ HISTORY_FILE = os.path.join(APP_DIR, "history.json")
 DEFAULT_DOWNLOADS_DIR = os.path.join(APP_DIR, "downloads")
 PAUSE_FILE = os.path.join(APP_DIR, ".pause")
 CANCEL_FILE = os.path.join(APP_DIR, ".cancel")
+QUEUE_FILE = os.path.join(APP_DIR, "download_queue.json")
 COOKIES_FILE = os.path.join(APP_DIR, "cookies.txt")
 PYTHON_PREF_FILE = os.path.join(APP_DIR, "python_pref.txt")
 VERSION_FILE = os.path.join(APP_DIR, "version.json")
@@ -47,7 +50,13 @@ clients = []
 current_process = None
 server_instance = None
 download_paused = False
-APP_VERSION = "3.7.4"  # gerado por tools/sync_version.ps1
+download_cancel_requested = False
+_queue_lock = threading.RLock()
+_queue_wakeup = threading.Event()
+_queue_jobs = []
+_queue_worker_running = False
+_active_download_id = None
+APP_VERSION = "3.9.0"  # gerado por tools/sync_version.ps1
 
 os.makedirs(BIN_DIR, exist_ok=True)
 
@@ -197,6 +206,8 @@ default_config = {
     "downloads_custom_dir": "",
     "group_by_uploader": False,
     "download_delay": 8,
+    "download_retries": 2,
+    "auto_quality_recommendation": True,
     "sub_mode": "none",
     "sub_langs": "pt,en",
     "sub_auto": True,
@@ -1096,14 +1107,12 @@ def execute_cmd_and_check(cmd):
     global current_process, download_paused
     broadcast("STATUS: A processar...")
     broadcast("LOG_CLEAR: true")
-    broadcast("DOWNLOAD_STARTED: true")
-
-    for f in [PAUSE_FILE, CANCEL_FILE]:
-        if os.path.exists(f):
-            try:
-                os.remove(f)
-            except:
-                pass
+    # Cada tentativa/estratégia recomeça a barra do zero. O reset NO FIM deste
+    # processo (que existia no finally) apagava o progresso logo a seguir a
+    # terminar e, em downloads com várias estratégias de fallback, repunha a
+    # barra a 0% entre tentativas — parecia que a barra "não avançava".
+    broadcast("PROGRESS: 0")
+    broadcast("PHASE: info")
 
     my_env = os.environ.copy()
     ffmpeg_locs = []
@@ -1116,6 +1125,7 @@ def execute_cmd_and_check(cmd):
         my_env["PATH"] = os.pathsep.join(ffmpeg_locs) + os.pathsep + my_env["PATH"]
         cmd.extend(["--ffmpeg-location", ffmpeg_locs[0]])
 
+    process = None
     try:
         process = subprocess.Popen(
             cmd,
@@ -1138,6 +1148,13 @@ def execute_cmd_and_check(cmd):
         regex_audio = re.compile(r"\[ExtractAudio\] Destination: (.*)")
         regex_dest = re.compile(r"\[download\] Destination: (.*)")
         regex_exists = re.compile(r"\[download\] (.*) has already been downloaded")
+        # O yt-dlp junta video e audio na mesma linha de formatos ("...: 137+140").
+        # Dividimos a barra pelo numero de transferencias para nao a encher logo
+        # na primeira (video) e recomecar na segunda (audio).
+        regex_formats = re.compile(r"Downloading \d+ format\(s\): (.+)")
+        n_formats = 1
+        format_index = 0
+        progress_floor = 0.0
         error_detected = False
         downloaded_file_path = None
 
@@ -1148,44 +1165,131 @@ def execute_cmd_and_check(cmd):
                 downloaded_file_path = path
                 broadcast(f"FILENAME: {os.path.basename(path)}")
 
-        for line in iter(process.stdout.readline, ""):
-            if not line:
-                continue
-            if os.path.exists(CANCEL_FILE):
+        output_lines = queue.Queue(maxsize=1)
+        stop_reader = threading.Event()
+
+        def read_output():
+            try:
+                for output_line in process.stdout:
+                    while not stop_reader.is_set():
+                        try:
+                            output_lines.put(output_line, timeout=0.1)
+                            break
+                        except queue.Full:
+                            continue
+                    if stop_reader.is_set():
+                        break
+            finally:
+                try:
+                    output_lines.put_nowait(None)
+                except queue.Full:
+                    pass
+
+        output_reader = threading.Thread(target=read_output, daemon=True)
+        output_reader.start()
+        while True:
+            if download_cancel_requested or os.path.exists(CANCEL_FILE):
                 broadcast_log("Cancelado pelo utilizador")
-                process.terminate()
+                stop_reader.set()
+                if process.poll() is None:
+                    process.terminate()
+                while True:
+                    try:
+                        output_lines.get_nowait()
+                    except queue.Empty:
+                        break
                 break
-            while os.path.exists(PAUSE_FILE):
+            if os.path.exists(PAUSE_FILE):
                 download_paused = True
-                time.sleep(1)
+                time.sleep(0.1)
+                continue
             download_paused = False
+
+            try:
+                line = output_lines.get(timeout=0.1)
+            except queue.Empty:
+                if process.poll() is not None:
+                    break
+                continue
+            if line is None:
+                break
 
             if "Sign in to confirm" in line or "HTTP Error 403" in line:
                 error_detected = True
                 broadcast_log("[AVISO] Erro de autenticação detectado")
-                process.terminate()
+                stop_reader.set()
+                if process.poll() is None:
+                    process.terminate()
+                while True:
+                    try:
+                        output_lines.get_nowait()
+                    except queue.Empty:
+                        break
                 break
 
             fm = regex_final.search(line) or regex_audio.search(line)
             if fm:
                 remember(fm.group(1))
 
+            fmts = regex_formats.search(line)
+            if fmts:
+                n_formats = max(1, fmts.group(1).count("+") + 1)
+                format_index = 0
+                progress_floor = 0.0
+
             fd = regex_dest.search(line) or regex_exists.search(line)
             if fd:
+                if regex_dest.search(line):
+                    format_index += 1
                 remember(fd.group(1))
+
+            # Estados de fase: explicam a barra quando nao ha progresso de bytes
+            # (a aguardar entre descargas, a juntar audio/video, a incorporar...).
+            if "Sleeping" in line and "[download]" in line:
+                broadcast("PHASE: wait")
+            elif "[download] Destination:" in line:
+                broadcast("PHASE: download")
+            elif "[Merger]" in line:
+                broadcast("PHASE: merge")
+            elif "[ExtractAudio]" in line:
+                broadcast("PHASE: extract")
+            elif "EmbedThumbnail" in line:
+                broadcast("PHASE: thumbnail")
+            elif "[Metadata]" in line:
+                broadcast("PHASE: metadata")
+            elif "[FixupM3u8]" in line or "[VideoConvertor]" in line or "[Fixup" in line:
+                broadcast("PHASE: finalize")
 
             p = regex_progress.search(line)
             if p:
-                broadcast(f"PROGRESS: {p.group(1)}")
+                # Progresso agregado: cada transferencia (video/audio) ocupa uma
+                # fatia da barra e nunca recua. A faixa 95-100% fica reservada
+                # para o fim real do trabalho, para a barra nao mostrar
+                # "concluido" enquanto o download ainda decorre.
+                value = float(p.group(1))
+                if n_formats > 1:
+                    idx = min(max(format_index, 1), n_formats)
+                    value = ((idx - 1) + value / 100.0) / n_formats * 100.0
+                progress_floor = max(progress_floor, value)
+                broadcast(f"PROGRESS: {min(progress_floor, 95):.1f}")
             else:
                 clean = line.strip()
                 if clean:
                     broadcast(f"LOG: {clean}")
 
-        process.wait()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        output_reader.join(timeout=1)
         if error_detected or process.returncode != 0:
             return False, None
         final_path = pick_final_file(downloaded_file_path)
+        # Garante que a barra fica cheia quando o download termina com sucesso
+        # (mesmo em casos em que o yt-dlp não emite a última linha de progresso,
+        # como ficheiros já descarregados, junções ou extração de áudio).
+        broadcast("PROGRESS: 100")
         broadcast("STATUS: Download concluído")
         broadcast("UPDATE_LIBRARY: true")
         return True, final_path
@@ -1200,8 +1304,12 @@ def execute_cmd_and_check(cmd):
                     os.remove(f)
                 except:
                     pass
+        if process is not None and process.stdout is not None:
+            try:
+                process.stdout.close()
+            except OSError as e:
+                broadcast_log(f"[AVISO] Não foi possível fechar a saída do processo: {e}")
         current_process = None
-        broadcast("PROGRESS: 0")
 
 
 # O Windows limita o caminho a MAX_PATH (260). Como o template usa o titulo duas
@@ -1221,8 +1329,9 @@ def _title_field_len(base_dir, fields=2):
 
 
 def run_download_with_fallback(
-    url, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto
+    url, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto, options=None
 ):
+    options = options or {}
     broadcast_log(f"[INFO] Iniciando download: {url}")
     broadcast(f"PLATFORM: {detect_platform(url)}")
     ytdlp = os.path.join(BIN_DIR, "yt-dlp.exe")
@@ -1244,6 +1353,7 @@ def run_download_with_fallback(
     base_cmd.extend(
         [
             "--no-mtime",
+            "--newline",
             # Forca a saida do yt-dlp em UTF-8. Sem isto o yt-dlp escreve na
             # codepage ANSI do Windows (cp1252/...): o server descodifica em
             # UTF-8 (modo UTF-8 do launcher) e rebentava com
@@ -1253,6 +1363,10 @@ def run_download_with_fallback(
             "utf-8",
             "--extractor-retries",
             "3",
+            "--retries",
+            "0",
+            "--fragment-retries",
+            "0",
             "--force-ipv4",
             "--geo-bypass",
             "--user-agent",
@@ -1267,7 +1381,13 @@ def run_download_with_fallback(
 
     if mode == "audio":
         base_cmd.extend(
-            ["-x", "--audio-format", "mp3", "--audio-quality", str(quality)]
+            [
+                "-x",
+                "--audio-format",
+                options.get("audio_format", "mp3"),
+                "--audio-quality",
+                str(quality),
+            ]
         )
     else:
         if quality == "best" or quality == "0":
@@ -1275,6 +1395,31 @@ def run_download_with_fallback(
         else:
             fmt = f"bestvideo[height<={quality}][ext={vformat}]+bestaudio[ext=m4a]/best[height<={quality}][ext={vformat}]/best"
         base_cmd.extend(["-f", fmt, "--merge-output-format", vformat])
+
+    if options.get("proxy"):
+        base_cmd.extend(["--proxy", options["proxy"]])
+    if options.get("embed_metadata"):
+        base_cmd.append("--embed-metadata")
+    if options.get("embed_thumbnail"):
+        base_cmd.append("--embed-thumbnail")
+        # O contentor decide o formato de imagem aceite: webm quer webp; mp4/mkv
+        # e o áudio aceitam jpg/png. Sem esta conversão, capas em webp não
+        # conseguiam ser incorporadas (ex.: em mp4) e a opção falhava em silêncio.
+        thumb_fmt = "webp" if (mode != "audio" and vformat == "webm") else "jpg"
+        base_cmd.extend(["--convert-thumbnails", thumb_fmt])
+    if options.get("embed_chapters"):
+        base_cmd.append("--embed-chapters")
+    if options.get("write_info_json"):
+        base_cmd.append("--write-info-json")
+    if options.get("playlist_items"):
+        base_cmd.extend(["--playlist-items", options["playlist_items"]])
+    if options.get("playlist_reverse"):
+        base_cmd.append("--playlist-reverse")
+    clip_start = options.get("clip_start", "")
+    clip_end = options.get("clip_end", "")
+    if clip_start or clip_end:
+        base_cmd.extend(["--download-sections", f"*{clip_start}-{clip_end}"])
+        base_cmd.append("--force-keyframes-at-cuts")
 
     if subtitles and sub_mode != "none":
         base_cmd.extend(["--sub-langs", sub_langs])
@@ -1294,6 +1439,8 @@ def run_download_with_fallback(
     )
     
     for name, cmd in strategies:
+        if download_cancel_requested:
+            return False, None
         broadcast_log(f"[INFO] A tentar: {name}")
         success, file_path = execute_cmd_and_check(cmd)
         if success:
@@ -1304,6 +1451,711 @@ def run_download_with_fallback(
 
     broadcast_log("[ERRO] Todas as estratégias falharam.")
     return False, None
+
+
+_QUEUE_TERMINAL_STATES = {"completed", "failed", "cancelled"}
+_QUEUE_MAX_JOBS = 200
+_QUEUE_MAX_URLS = 100
+_TIME_VALUE = re.compile(r"^\d{1,6}(?::[0-5]?\d)?(?::[0-5]?\d(?:\.\d{1,3})?)?$")
+
+
+def _valid_time_value(value):
+    return not value or bool(_TIME_VALUE.fullmatch(value))
+
+
+def _time_value_seconds(value):
+    parts = value.split(":")
+    if len(parts) == 1:
+        return float(parts[0])
+    if len(parts) == 2:
+        return int(parts[0]) * 60 + float(parts[1])
+    return int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+
+
+def _parse_playlist_item_indexes(value, entry_count):
+    if not value:
+        return None
+    indexes = set()
+    for item in value.split(","):
+        separator = "-" if "-" in item else ":" if ":" in item else None
+        if separator:
+            start, end = (int(part) for part in item.split(separator, 1))
+            indexes.update(range(max(1, start), min(entry_count, end) + 1))
+        else:
+            index = int(item)
+            if 1 <= index <= entry_count:
+                indexes.add(index)
+    return indexes
+
+
+def _playlist_entry_quality(entry):
+    heights = [entry.get("height")]
+    bitrates = [entry.get("abr"), entry.get("tbr")]
+    for media_format in entry.get("formats", []):
+        if isinstance(media_format, dict):
+            heights.append(media_format.get("height"))
+            bitrates.extend((media_format.get("abr"), media_format.get("tbr")))
+    valid_heights = [value for value in heights if isinstance(value, (int, float)) and value > 0]
+    if valid_heights:
+        return max(valid_heights)
+    valid_bitrates = [value for value in bitrates if isinstance(value, (int, float)) and value > 0]
+    return max(valid_bitrates) if valid_bitrates else None
+
+
+def _playlist_entry_duration(entry):
+    duration = entry.get("duration")
+    return duration if isinstance(duration, (int, float)) and duration >= 0 else None
+
+
+def _sort_playlist_entries(entries, sort_mode, playlist_items="", reverse=False):
+    selected_indexes = _parse_playlist_item_indexes(playlist_items, len(entries))
+    selected = [
+        (index, entry)
+        for index, entry in enumerate(entries, start=1)
+        if isinstance(entry, dict) and (selected_indexes is None or index in selected_indexes)
+    ]
+    if sort_mode.startswith("duration-"):
+        selected.sort(
+            key=lambda item: (
+                _playlist_entry_duration(item[1]) is None,
+                _playlist_entry_duration(item[1]) or 0,
+            ),
+            reverse=sort_mode == "duration-longest",
+        )
+        known = [item for item in selected if _playlist_entry_duration(item[1]) is not None]
+        missing = [item for item in selected if _playlist_entry_duration(item[1]) is None]
+        selected = known + missing
+    elif sort_mode.startswith("quality-"):
+        selected.sort(
+            key=lambda item: (
+                _playlist_entry_quality(item[1]) is None,
+                _playlist_entry_quality(item[1]) or 0,
+            ),
+            reverse=sort_mode == "quality-highest",
+        )
+        known = [item for item in selected if _playlist_entry_quality(item[1]) is not None]
+        missing = [item for item in selected if _playlist_entry_quality(item[1]) is None]
+        selected = known + missing
+    if reverse:
+        if sort_mode.startswith("duration-"):
+            known = [item for item in selected if _playlist_entry_duration(item[1]) is not None]
+            missing = [item for item in selected if _playlist_entry_duration(item[1]) is None]
+            known.reverse()
+            selected = known + missing
+        elif sort_mode.startswith("quality-"):
+            known = [item for item in selected if _playlist_entry_quality(item[1]) is not None]
+            missing = [item for item in selected if _playlist_entry_quality(item[1]) is None]
+            known.reverse()
+            selected = known + missing
+        else:
+            selected.reverse()
+    return selected
+
+
+def _extract_sorted_playlist_urls(url, options):
+    global current_process
+    ytdlp = os.path.join(BIN_DIR, "yt-dlp.exe")
+    base_cmd = [
+        ytdlp,
+        "--dump-single-json",
+        "--skip-download",
+        "--ignore-errors",
+        "--no-warnings",
+        "--encoding",
+        "utf-8",
+    ]
+    if options.get("proxy"):
+        base_cmd.extend(["--proxy", options["proxy"]])
+
+    auth_commands = []
+    if config.get("use_cookies") and os.path.exists(COOKIES_FILE):
+        auth_commands.append(base_cmd + ["--cookies", COOKIES_FILE])
+    if config.get("use_po_token") and config.get("po_token", "").strip():
+        token_args = config["po_token"].strip()
+        visitor_data = config.get("visitor_data", "").strip()
+        if visitor_data:
+            token_args += f"+visitor_data={visitor_data}"
+        auth_commands.append(base_cmd + ["--extractor-args", f"youtube:po_token={token_args}"])
+    if config.get("use_cookies"):
+        auth_commands.append(
+            base_cmd + ["--cookies-from-browser", config.get("cookies_browser", "chrome")]
+        )
+    auth_commands.append(base_cmd)
+
+    last_error = ""
+    for command in auth_commands:
+        process = None
+        try:
+            env = os.environ.copy()
+            env["PATH"] = os.pathsep.join([BIN_DIR, env.get("PATH", "")])
+            process = subprocess.Popen(
+                command + [url],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=get_downloads_dir(),
+                env=env,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            current_process = process
+            deadline = time.monotonic() + 180
+            while True:
+                if download_cancel_requested or os.path.exists(CANCEL_FILE):
+                    process.terminate()
+                    try:
+                        process.communicate(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.communicate()
+                    raise RuntimeError("Cancelado pelo utilizador.")
+                if time.monotonic() >= deadline:
+                    process.kill()
+                    _, stderr = process.communicate()
+                    last_error = stderr.strip() or "A leitura da lista excedeu o limite de 3 minutos."
+                    break
+                try:
+                    stdout, stderr = process.communicate(timeout=0.2)
+                    if process.returncode == 0 or stdout.strip():
+                        try:
+                            info = json.loads(stdout)
+                        except json.JSONDecodeError:
+                            info = None
+                        if isinstance(info, dict):
+                            entries = info.get("entries")
+                            if not isinstance(entries, list):
+                                return None
+                            unavailable = sum(not isinstance(entry, dict) for entry in entries)
+                            if unavailable:
+                                raise RuntimeError(
+                                    f"Não foi possível ler os metadados de {unavailable} item(ns); "
+                                    "a ordenação foi interrompida para não omitir conteúdo."
+                                )
+                            indexed_entries = _sort_playlist_entries(
+                                entries,
+                                options["playlist_sort"],
+                                options.get("playlist_items", ""),
+                                options.get("playlist_reverse", False),
+                            )
+                            if not indexed_entries:
+                                raise RuntimeError("A seleção não contém itens disponíveis na lista.")
+                            ordered_urls = []
+                            for original_index, entry in indexed_entries:
+                                item_url = entry.get("webpage_url") or entry.get("original_url") or entry.get("url")
+                                if not isinstance(item_url, str) or not item_url.startswith(("http://", "https://")):
+                                    raise RuntimeError(
+                                        f"Não foi possível obter o endereço do item {original_index} da lista."
+                                    )
+                                ordered_urls.append(item_url)
+                            broadcast_log(
+                                f"[INFO] Lista ordenada; {len(ordered_urls)} item(ns) segundo "
+                                f"{options['playlist_sort']}."
+                            )
+                            return ordered_urls
+                        last_error = stderr.strip() or "O yt-dlp devolveu metadados da lista inválidos."
+                    else:
+                        last_error = stderr.strip() or f"yt-dlp terminou com código {process.returncode}."
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
+        except RuntimeError:
+            raise
+        except OSError as e:
+            last_error = str(e)
+        finally:
+            current_process = None
+            if process is not None:
+                for stream in (process.stdout, process.stderr):
+                    if stream is not None:
+                        stream.close()
+    raise RuntimeError(f"Não foi possível ordenar a lista: {last_error}")
+
+
+def _queue_persisted_copy(job):
+    saved = dict(job)
+    saved["options"] = dict(job.get("options", {}))
+    proxy = saved["options"].pop("proxy", "")
+    if proxy:
+        saved["proxy_requires_reentry"] = True
+    return saved
+
+
+def _persist_queue_locked():
+    temp_path = QUEUE_FILE + ".tmp"
+    with open(temp_path, "w", encoding="utf-8") as f:
+        json.dump(
+            [_queue_persisted_copy(job) for job in _queue_jobs[-_QUEUE_MAX_JOBS:]],
+            f,
+            indent=2,
+            ensure_ascii=False,
+        )
+    os.replace(temp_path, QUEUE_FILE)
+
+
+def _load_queue():
+    if not os.path.exists(QUEUE_FILE):
+        return []
+    try:
+        with open(QUEUE_FILE, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        broadcast_log(f"[ERRO] Não foi possível carregar a fila persistida: {e}")
+        return []
+    if not isinstance(raw, list):
+        broadcast_log("[ERRO] A fila persistida tem um formato inválido.")
+        return []
+    jobs = []
+    for job in raw[-_QUEUE_MAX_JOBS:]:
+        if not isinstance(job, dict) or not isinstance(job.get("id"), str):
+            continue
+        if job.get("status") == "running":
+            job["status"] = "queued"
+            job["error"] = "Retomado após reinício da aplicação."
+        if job.get("proxy_requires_reentry") and job.get("status") == "queued":
+            job["status"] = "failed"
+            job["error"] = "O proxy não foi guardado por segurança. Recrie o download para o introduzir novamente."
+        jobs.append(job)
+    return jobs
+
+
+def _public_queue_job(job):
+    return {
+        "id": job["id"],
+        "urls": job.get("urls", []),
+        "status": job.get("status", "queued"),
+        "created_at": job.get("created_at"),
+        "scheduled_at": job.get("scheduled_at"),
+        "priority": job.get("priority", 0),
+        "attempt": job.get("attempt", 0),
+        "error": job.get("error", ""),
+        "completed": job.get("completed", 0),
+        "total": len(job.get("urls", [])),
+    }
+
+
+def _queue_snapshot():
+    with _queue_lock:
+        return [_public_queue_job(job) for job in _queue_jobs]
+
+
+def _broadcast_queue():
+    snapshot = _queue_snapshot()
+    broadcast("QUEUE_UPDATED: true")
+    return snapshot
+
+
+def _validate_download_request(req):
+    if not isinstance(req, dict):
+        raise ValueError("Os dados do download são inválidos.")
+    urls = req.get("urls")
+    if not isinstance(urls, list):
+        raise ValueError("A lista de URLs é inválida.")
+    urls = [url.strip() for url in urls if isinstance(url, str) and url.strip()]
+    if not urls or len(urls) > _QUEUE_MAX_URLS:
+        raise ValueError(f"Introduza entre 1 e {_QUEUE_MAX_URLS} endereços.")
+
+    mode = req.get("mode", "video")
+    if not isinstance(mode, str) or mode not in {"video", "audio"}:
+        raise ValueError("Tipo de download inválido.")
+    quality = str(req.get("quality", "best"))
+    valid_quality = {"best", "0", "2160", "1080", "720", "480"} if mode == "video" else {"0", "3", "5"}
+    if quality not in valid_quality:
+        raise ValueError("Qualidade inválida.")
+
+    vformat = req.get("vformat", "mp4")
+    if not isinstance(vformat, str) or vformat not in {"mp4", "mkv", "webm"}:
+        raise ValueError("Formato de vídeo inválido.")
+    audio_format = req.get("audio_format", "mp3")
+    if not isinstance(audio_format, str) or audio_format not in {"mp3", "m4a", "opus", "wav", "flac", "vorbis"}:
+        raise ValueError("Formato de áudio inválido.")
+
+    clip_start = str(req.get("clip_start") or "").strip()
+    clip_end = str(req.get("clip_end") or "").strip()
+    if not _valid_time_value(clip_start) or not _valid_time_value(clip_end):
+        raise ValueError("Use tempos de recorte em segundos ou HH:MM:SS.")
+    if clip_end and not clip_start:
+        raise ValueError("Indique também o início do recorte.")
+    if clip_end and _time_value_seconds(clip_end) <= _time_value_seconds(clip_start):
+        raise ValueError("O fim do recorte tem de ser posterior ao início.")
+
+    playlist_value = req.get("playlist_items", "")
+    if not isinstance(playlist_value, str):
+        raise ValueError("A seleção de itens da lista é inválida.")
+    playlist_items = playlist_value.strip()
+    if playlist_items and (
+        len(playlist_items) > 100
+        or not re.fullmatch(r"\d+(?:(?:-|:)\d+)?(?:,\d+(?:(?:-|:)\d+)?)*", playlist_items)
+    ):
+        raise ValueError("A seleção de itens da lista contém caracteres inválidos.")
+    playlist_sort = req.get("playlist_sort", "none")
+    if not isinstance(playlist_sort, str) or playlist_sort not in {
+        "none",
+        "duration-shortest",
+        "duration-longest",
+        "quality-lowest",
+        "quality-highest",
+    }:
+        raise ValueError("A ordenação da lista é inválida.")
+
+    proxy_value = req.get("proxy", "")
+    if not isinstance(proxy_value, str):
+        raise ValueError("O proxy tem de ser um endereço de texto.")
+    proxy = proxy_value.strip()
+    if proxy:
+        parsed_proxy = urlparse(proxy)
+        if parsed_proxy.scheme not in {"http", "https", "socks4", "socks4a", "socks5", "socks5h"} or not parsed_proxy.hostname:
+            raise ValueError("O proxy deve ser um endereço HTTP(S) ou SOCKS válido.")
+
+    scheduled_value = req.get("scheduled_at", "")
+    if not isinstance(scheduled_value, str):
+        raise ValueError("Data de agendamento inválida.")
+    scheduled_at = scheduled_value.strip()
+    if scheduled_at:
+        try:
+            scheduled_time = datetime.fromisoformat(scheduled_at.replace("Z", "+00:00"))
+            if scheduled_time.tzinfo is None:
+                scheduled_time = scheduled_time.astimezone()
+            scheduled_at = scheduled_time.isoformat()
+        except ValueError as e:
+            raise ValueError("Data de agendamento inválida.") from e
+
+    priority = req.get("priority", 0)
+    if isinstance(priority, bool) or not isinstance(priority, int) or priority not in {-1, 0, 1}:
+        raise ValueError("Prioridade inválida.")
+    retry_count = req.get("retry_count", config.get("download_retries", 2))
+    if isinstance(retry_count, bool) or not isinstance(retry_count, int) or not 0 <= retry_count <= 5:
+        raise ValueError("O número de novas tentativas deve estar entre 0 e 5.")
+
+    for key in ("subtitles", "embed_metadata", "embed_thumbnail", "embed_chapters", "write_info_json", "playlist_reverse"):
+        if key in req and not isinstance(req[key], bool):
+            raise ValueError(f"A opção '{key}' tem de ser booleana.")
+    options = {
+        "audio_format": audio_format,
+        "embed_metadata": bool(req.get("embed_metadata")),
+        "embed_thumbnail": bool(req.get("embed_thumbnail")),
+        "embed_chapters": bool(req.get("embed_chapters")),
+        "write_info_json": bool(req.get("write_info_json")),
+        "playlist_items": playlist_items,
+        "playlist_reverse": bool(req.get("playlist_reverse")),
+        "playlist_sort": playlist_sort,
+        "clip_start": clip_start,
+        "clip_end": clip_end,
+        "proxy": proxy,
+        "retry_count": retry_count,
+    }
+    return {
+        "urls": urls,
+        "mode": mode,
+        "quality": quality,
+        "vformat": vformat,
+        "subtitles": bool(req.get("subtitles")),
+        "sub_mode": config.get("sub_mode", "none"),
+        "sub_langs": config.get("sub_langs", "all"),
+        "sub_auto": config.get("sub_auto", True),
+        "options": options,
+        "scheduled_at": scheduled_at,
+        "priority": priority,
+    }
+
+
+def _process_queue_job(job):
+    options = job.get("options", {})
+    urls = job.get("urls", [])
+    failed = False
+    cancelled = False
+    start_index = min(max(0, int(job.get("completed", 0))), len(urls))
+    for index in range(start_index, len(urls)):
+        source_url = urls[index]
+        if download_cancel_requested:
+            cancelled = True
+            break
+
+        item_options = options
+        try:
+            if options.get("playlist_sort", "none") != "none":
+                broadcast_log("[INFO] A ler os metadados da lista para ordenar os itens.")
+                sorted_urls = _extract_sorted_playlist_urls(
+                    source_url, options
+                )
+                if sorted_urls is not None:
+                    item_options = dict(options)
+                    item_options.update(
+                        playlist_sort="none",
+                        playlist_items="",
+                        playlist_reverse=False,
+                    )
+                    items = sorted_urls
+                else:
+                    items = [source_url]
+            else:
+                items = [source_url]
+        except RuntimeError as e:
+            if download_cancel_requested:
+                cancelled = True
+                break
+            failed = True
+            broadcast_log(f"[ERRO] {e}")
+            with _queue_lock:
+                job["completed"] = index + 1
+                _persist_queue_locked()
+            _broadcast_queue()
+            continue
+
+        for item_index, url in enumerate(items):
+            if download_cancel_requested:
+                cancelled = True
+                break
+            if len(items) > 1:
+                broadcast_log(f"[INFO] Item ordenado {item_index + 1}/{len(items)}.")
+            with _queue_lock:
+                job["current_url"] = url
+                job["attempt"] = 0
+                _persist_queue_locked()
+            broadcast(f"PLATFORM: {detect_platform(url)}")
+            success = False
+            file_path = None
+            retries = options.get("retry_count", 2)
+            for attempt in range(retries + 1):
+                if download_cancel_requested:
+                    cancelled = True
+                    break
+                with _queue_lock:
+                    job["attempt"] = attempt + 1
+                    _persist_queue_locked()
+                success, file_path = run_download_with_fallback(
+                    url,
+                    job.get("mode", "video"),
+                    job.get("quality", "best"),
+                    job.get("vformat", "mp4"),
+                    job.get("subtitles", False),
+                    job.get("sub_mode", "none"),
+                    job.get("sub_langs", "all"),
+                    job.get("sub_auto", True),
+                    item_options,
+                )
+                if success or download_cancel_requested:
+                    break
+                if attempt < retries:
+                    delay = min(2 ** attempt, 10)
+                    broadcast_log(f"[AVISO] Nova tentativa {attempt + 1} de {retries} em {delay} s.")
+                    for _ in range(delay):
+                        if download_cancel_requested:
+                            cancelled = True
+                            break
+                        time.sleep(1)
+            if cancelled:
+                break
+
+            rel_path = None
+            if file_path and os.path.exists(file_path):
+                try:
+                    rel = os.path.relpath(file_path, get_downloads_dir()).replace("\\", "/")
+                except ValueError:
+                    rel = None
+                if rel and not rel.startswith("..") and not os.path.isabs(rel):
+                    rel_path = f"/downloads/{rel}"
+                else:
+                    rel_path = f"/downloads/{os.path.basename(file_path)}"
+
+            save_history_entry(
+                url,
+                "lote" if len(urls) > 1 or len(items) > 1 else "singular",
+                status="success" if success else "failed",
+                file_path=rel_path,
+                title=clean_media_title(file_path),
+                platform=detect_platform(url),
+                media_type=job.get("mode", "video"),
+            )
+            if not success:
+                failed = True
+                broadcast_log(f"[ERRO] Falha permanente para {url}")
+            if item_index + 1 < len(items) and not download_cancel_requested:
+                time.sleep(2)
+        if cancelled:
+            break
+
+        with _queue_lock:
+            job["completed"] = index + 1
+            _persist_queue_locked()
+        _broadcast_queue()
+        if index + 1 < len(urls) and not download_cancel_requested:
+            time.sleep(2)
+
+    if cancelled or download_cancel_requested:
+        return "cancelled", "Cancelado pelo utilizador."
+    if failed:
+        return "failed", "Um ou mais endereços falharam."
+    return "completed", ""
+
+
+def _queue_worker():
+    global _queue_worker_running, _active_download_id, download_cancel_requested
+    while True:
+        job = None
+        wait_seconds = None
+        with _queue_lock:
+            pending = [j for j in _queue_jobs if j.get("status") == "queued"]
+            if not pending:
+                _queue_worker_running = False
+                return
+            now = datetime.now().astimezone()
+
+            def scheduled_time(item):
+                raw = item.get("scheduled_at")
+                if not raw:
+                    return now
+                try:
+                    return datetime.fromisoformat(raw).astimezone()
+                except (TypeError, ValueError):
+                    return now
+
+            ready = [j for j in pending if scheduled_time(j) <= now]
+            if ready:
+                ready.sort(key=lambda j: (-j.get("priority", 0), j.get("created_at", "")))
+                job = ready[0]
+                job["status"] = "running"
+                job["started_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+                job["error"] = ""
+                _active_download_id = job["id"]
+                download_cancel_requested = False
+                for control_file in (PAUSE_FILE, CANCEL_FILE):
+                    try:
+                        os.remove(control_file)
+                    except FileNotFoundError:
+                        pass
+                    except OSError as e:
+                        broadcast_log(f"[AVISO] Não foi possível limpar o controlo {os.path.basename(control_file)}: {e}")
+                _persist_queue_locked()
+            else:
+                next_time = min(scheduled_time(j) for j in pending)
+                wait_seconds = max(0.1, min((next_time - now).total_seconds(), 30))
+
+        if job is None:
+            _queue_wakeup.wait(wait_seconds)
+            _queue_wakeup.clear()
+            continue
+
+        _broadcast_queue()
+        broadcast("DOWNLOAD_STARTED: true")
+        try:
+            status, error = _process_queue_job(job)
+        except Exception as e:
+            status, error = "failed", str(e)
+            broadcast_log(f"[ERRO] Erro inesperado na fila: {e}")
+        with _queue_lock:
+            job["status"] = status
+            job["error"] = error
+            job["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+            _active_download_id = None
+            download_cancel_requested = False
+            for control_file in (PAUSE_FILE, CANCEL_FILE):
+                try:
+                    os.remove(control_file)
+                except FileNotFoundError:
+                    pass
+                except OSError as e:
+                    broadcast_log(f"[AVISO] Não foi possível limpar o controlo {os.path.basename(control_file)}: {e}")
+            _persist_queue_locked()
+        broadcast("STATUS: " + ("Download concluído" if status == "completed" else ("Cancelado" if status == "cancelled" else "Download falhou")))
+        broadcast("DOWNLOAD_FINISHED: true")
+        _broadcast_queue()
+
+
+def _start_queue_worker():
+    global _queue_worker_running
+    with _queue_lock:
+        if _queue_worker_running or not any(j.get("status") == "queued" for j in _queue_jobs):
+            return
+        _queue_worker_running = True
+        threading.Thread(target=_queue_worker, daemon=True).start()
+
+
+def _enqueue_download(req):
+    validated = _validate_download_request(req)
+    with _queue_lock:
+        job = {
+            **validated,
+            "id": uuid.uuid4().hex,
+            "status": "queued",
+            "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "attempt": 0,
+            "completed": 0,
+            "error": "",
+        }
+        evicted = None
+        evicted_index = None
+        _queue_jobs.append(job)
+        if len(_queue_jobs) > _QUEUE_MAX_JOBS:
+            removable = next((j for j in _queue_jobs if j is not job and j.get("status") in _QUEUE_TERMINAL_STATES), None)
+            if removable:
+                evicted_index = _queue_jobs.index(removable)
+                evicted = removable
+                _queue_jobs.remove(removable)
+            else:
+                _queue_jobs.remove(job)
+                raise ValueError("A fila está cheia; remova downloads concluídos antes de adicionar mais.")
+        try:
+            _persist_queue_locked()
+        except OSError:
+            _queue_jobs.remove(job)
+            if evicted is not None:
+                _queue_jobs.insert(evicted_index, evicted)
+            raise
+    _start_queue_worker()
+    _queue_wakeup.set()
+    _broadcast_queue()
+    return job
+
+
+def _queue_action(req):
+    global download_cancel_requested
+    if not isinstance(req, dict):
+        raise ValueError("Ação da fila inválida.")
+    job_id = req.get("id")
+    action = req.get("action")
+    if not isinstance(job_id, str) or action not in {"cancel", "remove", "retry"}:
+        raise ValueError("Ação da fila inválida.")
+    with _queue_lock:
+        job = next((j for j in _queue_jobs if j.get("id") == job_id), None)
+        if not job:
+            raise ValueError("Download não encontrado na fila.")
+        if action == "cancel":
+            if job.get("status") == "queued":
+                job["status"] = "cancelled"
+                job["error"] = "Cancelado antes de iniciar."
+            elif job.get("status") == "running":
+                if _active_download_id != job_id:
+                    raise ValueError("O download já não está ativo.")
+                download_cancel_requested = True
+                open(CANCEL_FILE, "w").close()
+                try:
+                    os.remove(PAUSE_FILE)
+                except FileNotFoundError:
+                    pass
+            else:
+                raise ValueError("Só é possível cancelar downloads pendentes ou ativos.")
+        elif action == "remove":
+            if job.get("status") == "running":
+                raise ValueError("Cancele primeiro o download ativo.")
+            _queue_jobs.remove(job)
+        else:
+            if job.get("status") not in {"failed", "cancelled"}:
+                raise ValueError("Só é possível repetir downloads falhados ou cancelados.")
+            if job.get("proxy_requires_reentry"):
+                raise ValueError("O proxy não é guardado. Recrie o download para voltar a introduzi-lo.")
+            job["status"] = "queued"
+            job["scheduled_at"] = ""
+            job["attempt"] = 0
+            job["completed"] = 0
+            job["error"] = ""
+        _persist_queue_locked()
+    _start_queue_worker()
+    _queue_wakeup.set()
+    _broadcast_queue()
+
+
+_queue_jobs = _load_queue()
 
 
 # ========== HANDLER HTTP ==========
@@ -1463,6 +2315,15 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(load_json(HISTORY_FILE, [])).encode("utf-8"))
             return
 
+        if path == "/get_queue":
+            snapshot = _queue_snapshot()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(json.dumps(snapshot, ensure_ascii=False).encode("utf-8"))
+            return
+
         if path == "/clear_history":
             if os.path.exists(HISTORY_FILE):
                 os.remove(HISTORY_FILE)
@@ -1550,6 +2411,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        global download_cancel_requested
         length = int(self.headers.get("Content-Length", 0))
         data = self.rfile.read(length).decode("utf-8") if length else "{}"
 
@@ -1714,6 +2576,12 @@ class Handler(SimpleHTTPRequestHandler):
             # config nos ramos anteriores deste metodo.
             try:
                 new = json.loads(data)
+                if not isinstance(new, dict):
+                    raise ValueError("As definições têm de ser um objeto JSON.")
+                if "auto_quality_recommendation" in new and not isinstance(
+                    new["auto_quality_recommendation"], bool
+                ):
+                    raise ValueError("A recomendação automática tem de ser booleana.")
                 config.update(new)
                 save_json(CONFIG_FILE, config)
                 self.send_response(200)
@@ -1754,75 +2622,24 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/download":
             try:
                 req = json.loads(data)
-                urls = req.get("urls", [])
-                mode = req.get("mode", "video")
-                quality = req.get("quality", "best")
-                subtitles = req.get("subtitles", False)
-                vformat = req.get("vformat", "mp4")
-                sub_mode = config.get("sub_mode", "none")
-                sub_langs = config.get("sub_langs", "all")
-                sub_auto = config.get("sub_auto", True)
-
-                if not urls:
-                    self.send_error(400, "Sem URL")
-                    return
-
-                def worker():
-                    try:
-                        download_type = "lote" if len(urls) > 1 else "singular"
-                        for url in urls:
-                            if url.strip():
-                                success, file_path = run_download_with_fallback(
-                                    url.strip(),
-                                    mode,
-                                    quality,
-                                    vformat,
-                                    subtitles,
-                                    sub_mode,
-                                    sub_langs,
-                                    sub_auto,
-                                )
-                                
-                                rel_path = None
-                                if file_path and os.path.exists(file_path):
-                                    try:
-                                        rel = os.path.relpath(file_path, get_downloads_dir()).replace("\\", "/")
-                                    except ValueError:
-                                        rel = None
-                                    if rel and not rel.startswith("..") and not os.path.isabs(rel):
-                                        rel_path = f"/downloads/{rel}"
-                                    else:
-                                        rel_path = f"/downloads/{os.path.basename(file_path)}"
-                                
-                                save_history_entry(
-                                    url.strip(),
-                                    download_type,
-                                    status="success" if success else "failed",
-                                    file_path=rel_path,
-                                    title=clean_media_title(file_path),
-                                    platform=detect_platform(url.strip()),
-                                    media_type=mode
-                                )
-                                if not success:
-                                    broadcast_log(f"[ERRO] Falha permanente para {url}")
-                                time.sleep(2)
-                    finally:
-                        # Sinal final e independente do idioma: reactiva o botao
-                        # "Iniciar" no cliente mesmo quando o download falha ou e
-                        # cancelado, evitando ter de recarregar a aplicacao para
-                        # permitir novas descargas.
-                        broadcast("DOWNLOAD_FINISHED: true")
-
-                threading.Thread(target=worker).start()
+                job = _enqueue_download(req)
                 self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
                 self.end_headers()
-            except Exception as e:
+                self.wfile.write(json.dumps({"ok": True, "id": job["id"]}).encode("utf-8"))
+            except ValueError as e:
                 self.send_error(400, str(e))
+            except Exception as e:
+                self.send_error(500, str(e))
             return
 
         if self.path == "/pause_download":
             try:
                 d = json.loads(data)
+                if _active_download_id is None:
+                    self.send_error(409, "Não há download ativo.")
+                    return
                 if d.get("pause", True):
                     open(PAUSE_FILE, "w").close()
                     broadcast_log("[INFO] Pausado")
@@ -1832,18 +2649,40 @@ class Handler(SimpleHTTPRequestHandler):
                     broadcast_log("[INFO] Continuado")
                 self.send_response(200)
                 self.end_headers()
-            except:
-                self.send_response(200)
-                self.end_headers()
+            except Exception as e:
+                self.send_error(400, str(e))
             return
 
         if self.path == "/cancel_download":
-            open(CANCEL_FILE, "w").close()
-            if os.path.exists(PAUSE_FILE):
-                os.remove(PAUSE_FILE)
-            broadcast_log("[INFO] Cancelamento solicitado")
-            self.send_response(200)
-            self.end_headers()
+            try:
+                with _queue_lock:
+                    if _active_download_id is None:
+                        raise ValueError("Não há download ativo.")
+                    download_cancel_requested = True
+                    open(CANCEL_FILE, "w").close()
+                    try:
+                        os.remove(PAUSE_FILE)
+                    except FileNotFoundError:
+                        pass
+                broadcast_log("[INFO] Cancelamento solicitado")
+                self.send_response(200)
+                self.end_headers()
+            except ValueError as e:
+                self.send_error(409, str(e))
+            except OSError as e:
+                self.send_error(500, str(e))
+            return
+
+        if self.path == "/queue_action":
+            try:
+                _queue_action(json.loads(data))
+                self.send_response(200)
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+            except ValueError as e:
+                self.send_error(400, str(e))
+            except OSError as e:
+                self.send_error(500, str(e))
             return
 
         if self.path == "/delete_files":
@@ -2001,6 +2840,7 @@ def run_server():
         return
 
     server_instance = server
+    _start_queue_worker()
     print(f"\n[INFO] Servidor ativo em http://localhost:{actual_port}")
     print("[INFO] Pressione Ctrl+C para parar\n")
 

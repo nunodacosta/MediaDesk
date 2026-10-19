@@ -16,10 +16,17 @@ A **local** desktop interface for **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**
 - **Drawers:** real subfolders (Video or Audio), each with **its own colour**, shown as a grid in the sidebar with a per-type filter. Every file shows its drawer and can be moved between drawers of the same type — or to an external folder — from the file's own menu.
 - **Activity** with the download history and the drawer each file went to.
 - **5 languages** (PT/EN/ES/FR/DE), light/dark themes and colour palettes.
+- **Persistent download queue** with scheduling, priority, pause/resume, cancellation and retries.
+- **Advanced output options:** MP3/M4A/Opus/FLAC/WAV, metadata, artwork, chapters, playlist selection/sorting/reversal and time-range clips.
+- **Automatic video quality recommendation** based on the detected display resolution, with manual override.
+- **Settings controls** to enable/disable automatic quality recommendations; advanced download options are grouped in Settings.
+- **Media library date/time filter** with second-level range boundaries and newest/oldest sorting.
+- **Activity filters** by success/failure, media type and date range.
+- **Settings backup and restore** using JSON without exporting authentication tokens or proxy credentials.
 
 **Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `MediaDesk-Portable.zip` (recommended), self-extracting `.exe`, or `MediaDesk-Setup.exe`, all with SHA-256 hashes.
 
-> **Code signing policy:** the executables on that page are signed by the **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+> **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ---
 
@@ -29,7 +36,7 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
-- **Versão:** 3.7.4
+- **Versão:** 3.9.0
 
 > Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[Code signing policy](CODE_SIGNING_POLICY.md)** (política de assinatura de código e privacidade).
 
@@ -44,6 +51,17 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
   mantendo os ficheiros (movidos para «Sem gaveta») ou apagando-os.
 - **Atividade** com o histórico dos downloads e a gaveta de cada ficheiro.
 - **Interface em 5 idiomas** (PT/EN/ES/FR/DE), temas claro/escuro e paletas de cor.
+- **Fila persistente de downloads**, com agendamento, prioridade, pausa/retoma, cancelamento e novas tentativas.
+- **Opções avançadas de saída:** MP3/M4A/Opus/FLAC/WAV, metadados, capas, capítulos, seleção/ordenação/inversão de listas e recortes por tempo.
+- **Recomendação automática da qualidade de vídeo** com base na resolução do ecrã detetado, mantendo a escolha manual.
+- **Definições para ativar/desativar** a recomendação automática; as opções avançadas de transferência estão agrupadas em Configuração.
+- **Filtro temporal da mediateca** com intervalo até ao segundo e ordenação do mais recente para o mais antigo (ou vice-versa).
+- **Filtros da atividade** por sucesso/falha, tipo de conteúdo e intervalo de datas.
+- **Exportação/importação de definições** em JSON, sem exportar tokens de autenticação nem credenciais de proxy.
+
+Os trabalhos pendentes da fila são guardados localmente em `download_queue.json` para sobreviverem a reinícios. Por segurança, o endereço de proxy não é guardado: um trabalho agendado que use proxy precisa de ser criado novamente após reiniciar a aplicação.
+
+A exportação de definições inclui apenas tema, paleta, idioma, preferências de transferência, legendas e alguns filtros/layouts. Não transfere gavetas/categorias, a fila, credenciais ou cookies, a porta do servidor nem o caminho local do FFmpeg; a importação ignora campos desconhecidos.
 
 ## Capturas de ecrã
 
@@ -74,7 +92,7 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 | `MediaDesk-Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
 
-> **Code signing policy:** os executáveis desta página são assinados pela **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+> **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ### Verificar a integridade
 
@@ -90,7 +108,7 @@ sha256sum -c SHA256SUMS.txt
 
 ## Assinatura de código (Code signing policy)
 
-Os executáveis de release são assinados através da **SignPath Foundation** — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Quem assina, como verificar a assinatura e a política de privacidade estão em **[`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md)**.
+Os executáveis de release são assinados através da **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Quem assina, como verificar a assinatura e a política de privacidade estão em **[`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md)**.
 
 ## Compilar a partir do código
 

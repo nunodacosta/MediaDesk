@@ -11,6 +11,8 @@ config.json.bak
 cookies.txt
 history.json
 sessions.json
+download_queue.json
+download_queue.json.tmp
 downloads/
 
 # --- Saídas de build / runtime local ----------------------------------------

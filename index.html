@@ -96,7 +96,7 @@
             .content-area { flex: 1; display: flex; overflow: hidden; min-height: 0; }
             .left-panel { flex: 1; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; min-height: 0; }
             .scrollable-content { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 1.5rem; }
-            .right-panel { width: var(--sidebar-width); background: var(--bg-secondary); border-left: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+            .right-panel { width: var(--sidebar-width); background: var(--bg-secondary); border-left: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow-y: auto; overflow-x: hidden; }
             .brand-header { padding: 1rem 2rem; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr max(240px, min(46vw, 820px)) 1fr; align-items: center; background: var(--card-bg); gap: 1rem; flex-shrink: 0; }
             .header-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
             .header-left { justify-content: center; width: 100%; }
@@ -146,21 +146,47 @@
             .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
             .progress-wrapper { position: relative; width: 100%; margin-top: 1rem; height: 24px; }
             .progress-container { height: 24px; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+            .phase-status { min-height: 1.05em; margin-top: .4rem; font-size: .78rem; color: var(--text-secondary); }
             .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-hover)); width: 0%; transition: width 0.3s ease; position: relative; }
             .progress-percentage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.8rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); white-space: nowrap; }
             .status-text { font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 0.5rem; }
-            .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-            .library-list { flex: 1; overflow-y: auto; padding: 1rem; min-height: 0; }
+            .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; position: sticky; top: 0; z-index: 3; background: inherit; }
+            /* Fila de downloads no painel lateral: sempre visível, em qualquer aba. */
+            .queue-section { padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; max-height: 34vh; overflow-y: auto; }
+            .queue-section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin: 0 0 0.5rem; display: flex; align-items: center; gap: 6px; }
+            .library-list { flex: 0 0 auto; overflow: visible; padding: 1rem; min-height: 0; }
             
             .filter-section { padding: 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
             .filter-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
             .filter-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+            .library-time-filter-grid { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; align-items:end; }
+            .library-time-filter-grid label { display:block; margin-bottom:.25rem; font-size:.68rem; color:var(--text-secondary); }
+            .library-time-filter-grid input, .library-time-filter-grid select { width:100%; min-width:0; padding:.4rem .45rem; font-size:.68rem; }
+            .library-time-sort { grid-column:1 / -1; }
+            .library-time-filter-grid > button { width:100%; min-height:34px; padding:.35rem; font-size:.7rem; }
             .filter-btn { flex: 1; padding: 0.5rem; font-size: 0.8rem; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; border-radius: 20px; transition: all 0.2s ease; }
             .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
             .filter-btn:hover:not(.active) { background: var(--bg-secondary); transform: translateY(-1px); }
             
             .switch-group { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; margin-bottom: 0.5rem; }
             .switch-label { font-size: 0.85rem; color: var(--text-primary); }
+            .advanced-options { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.75rem; margin-top:.85rem; }
+            .advanced-subsection { min-width:0; padding:.85rem; border:1px solid var(--border); border-radius:10px; background:var(--bg-secondary); }
+            .advanced-subsection-title { margin:0 0 .7rem; color:var(--text-secondary); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.55px; }
+            .advanced-fields { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.65rem .75rem; }
+            .advanced-field { min-width:0; }
+            .advanced-field label { display:block; margin-bottom:.3rem; font-size:.75rem; color:var(--text-secondary); }
+            .advanced-field input, .advanced-field select { min-height:38px; padding:.55rem .65rem; font-size:.82rem; }
+            .advanced-switch-list { display:grid; gap:.45rem; }
+            .advanced-switch-row { display:flex; align-items:center; justify-content:space-between; gap:.8rem; min-height:40px; margin:0; padding:.45rem .6rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); cursor:pointer; font-weight:500; }
+            .advanced-switch-row > span:first-child { min-width:0; color:var(--text-primary); font-size:.78rem; line-height:1.35; }
+            .advanced-switch-row .switch { margin-left:auto; }
+            .settings-switch-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:0; padding:.7rem .8rem; border:1px solid var(--border); border-radius:9px; background:var(--bg-secondary); cursor:pointer; }
+            .settings-switch-copy { display:grid; gap:.25rem; min-width:0; }
+            .settings-switch-copy > span:first-child { color:var(--text-primary); font-size:.84rem; }
+            .settings-switch-copy > span:last-child { color:var(--text-secondary); font-size:.7rem; line-height:1.4; }
+            @media (max-width:760px) { .advanced-options { grid-template-columns:1fr; } }
+            @media (max-width:480px) { .advanced-fields { grid-template-columns:1fr; } }
             
             .switch {
                 position: relative;
@@ -790,7 +816,7 @@
                 <div class="brand">
                     <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
                     <div class="brand-text">
-                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.7.0</span></div>
+                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.9.0</span></div>
                         <div class="brand-subtitle" id="brand-subtitle" data-i18n="brand.subtitle">YT-DLP INTERFACE</div>
                     </div>
                 </div>
@@ -836,11 +862,14 @@
                     <div class="scrollable-content">
                         <div id="tab-download" class="card">
                             <div class="field-block"><div class="section-kicker" data-i18n="origin.kicker">Origem</div><label for="urls" data-i18n="urls.label">Endereços de conteúdo</label><p class="field-help" data-i18n="urls.help">Introduza um endereço por linha. São aceites vídeos, listas e canais suportados pelo yt-dlp.</p><textarea id="urls" placeholder="https://..." rows="4"></textarea></div>
+                            <div class="field-block"><label for="download-preset" data-i18n="preset.label">Predefinição</label><select id="download-preset"><option value="" data-i18n="preset.default">Personalizado</option><option value="best-video" data-i18n="preset.best">Melhor vídeo</option><option value="1080p" data-i18n="preset.1080">Vídeo 1080p</option><option value="720p" data-i18n="preset.720">Vídeo 720p</option><option value="audio-mp3" data-i18n="preset.audioMp3">Áudio MP3</option><option value="audio-flac" data-i18n="preset.audioFlac">Áudio FLAC</option><option value="audio-wav" data-i18n="preset.audioWav">Áudio WAV</option></select></div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem"><div><label for="mode" data-i18n="mode.label">Tipo</label><select id="mode" data-i18n-aria="mode.label" aria-label="Tipo de download" onchange="toggleVideoOptions()"><option value="video" data-i18n="mode.video">Vídeo</option><option value="audio" data-i18n="mode.audio">Áudio (MP3)</option></select></div><div><label for="quality" data-i18n="quality.label">Qualidade</label><select id="quality" data-i18n-aria="quality.label" aria-label="Qualidade"></select></div></div>
                             <div id="video-options" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem"><div><label for="vformat" data-i18n="format.label">Formato</label><select id="vformat" data-i18n-aria="format.label" aria-label="Formato do vídeo"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="webm">WebM</option></select></div><div style="display:flex; align-items:center; gap:0.5rem; padding-top:1.5rem"><div class="switch"><input type="checkbox" id="subtitles"><span class="slider"></span></div><label for="subtitles" style="margin:0; cursor:pointer" data-i18n="subtitles.label">Legendas</label></div></div>
+                            <div id="audio-format-wrap" class="field-block hidden"><label for="audio-format" data-i18n="format.audio">Formato de áudio</label><select id="audio-format"><option value="mp3">MP3</option><option value="m4a">M4A</option><option value="opus">Opus</option><option value="flac">FLAC</option><option value="wav">WAV</option><option value="vorbis">Vorbis</option></select></div>
                             <div class="button-group"><button id="start-btn" class="btn-download"><span data-icon="download"></span><span data-i18n="btn.start">Iniciar download</span></button><button id="pause-btn" class="btn-pause" disabled><span data-icon="pause"></span><span data-i18n="btn.pause">Pausar</span></button><button id="cancel-btn" class="btn-cancel" disabled><span data-icon="stop"></span><span data-i18n="btn.cancel">Cancelar</span></button></div>
                             <div class="status-text" id="current-file" data-i18n="status.ready">Pronto</div>
                             <div class="progress-wrapper"><span class="progress-indicator" id="progress-indicator"><span id="progress-platform"></span><span class="progress-percentage" id="progress-percentage">0%</span></span><div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div></div>
+                             <div class="phase-status" id="phase-status" aria-live="polite"></div>
                         </div>
                         <div id="tab-settings" class="card hidden">
                             <h2 data-i18n="settings.language">Idioma</h2>
@@ -853,9 +882,61 @@
                             <hr>
                             <h2 data-i18n="settings.system">Sistema</h2>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem"><button id="disk-btn" onclick="toggleDiskStatus()" class="secondary settings-action"><span data-icon="disk"></span><span data-i18n="btn.disk">Espaço em disco</span></button><button onclick="updateYtdlp()" class="secondary settings-action"><span data-icon="update"></span><span data-i18n="btn.updateYtdlp">Atualizar yt-dlp</span></button></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.75rem"><button type="button" onclick="exportSettings()" class="soft settings-action" data-i18n="settings.export">Exportar definições</button><button type="button" onclick="document.getElementById('settings-import-input').click()" class="soft settings-action" data-i18n="settings.import">Importar definições</button><input id="settings-import-input" type="file" accept="application/json,.json" hidden></div>
                             <button onclick="showChangelog()" class="soft settings-action" style="margin-top:1rem; width:100%"><span data-icon="news"></span><span data-i18n="btn.news">Novidades</span></button>
                             <div id="status-display"></div>
+
+                            <hr>
+                            <h2 data-i18n="settings.quality">Qualidade do vídeo</h2>
+                            <label class="settings-switch-row">
+                                <span class="settings-switch-copy"><span id="automatic-quality-label" data-i18n="settings.autoQuality">Recomendar automaticamente a qualidade para este dispositivo</span><span data-i18n="settings.autoQualityHelp">Usa a resolução detetada do ecrã como recomendação inicial. Pode sempre escolher outra qualidade no formulário de download.</span></span>
+                                <span class="switch"><input type="checkbox" id="automatic-quality-checkbox" aria-labelledby="automatic-quality-label" checked><span class="slider"></span></span>
+                            </label>
                             
+                            <hr>
+                            <h2 data-i18n="advanced.downloads">Opções avançadas</h2>
+                            <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.35rem" data-i18n="settings.advancedHelp">Estas opções são aplicadas aos próximos trabalhos enviados para a fila. O endereço do proxy não é guardado após fechar a aplicação.</p>
+                            <div class="advanced-options">
+                                <section class="advanced-subsection">
+                                    <h3 class="advanced-subsection-title" data-i18n="advanced.metadata">Metadados e ficheiros</h3>
+                                    <div class="advanced-switch-list">
+                                        <label class="advanced-switch-row"><span id="embed-metadata-label" data-i18n="opt.metadata">Incorporar metadados</span><span class="switch"><input type="checkbox" id="embed-metadata" aria-labelledby="embed-metadata-label"><span class="slider"></span></span></label>
+                                        <label class="advanced-switch-row"><span id="embed-thumbnail-label" data-i18n="opt.thumbnail">Incorporar capa/thumbnail</span><span class="switch"><input type="checkbox" id="embed-thumbnail" aria-labelledby="embed-thumbnail-label"><span class="slider"></span></span></label>
+                                        <label class="advanced-switch-row"><span id="embed-chapters-label" data-i18n="opt.chapters">Incorporar capítulos</span><span class="switch"><input type="checkbox" id="embed-chapters" aria-labelledby="embed-chapters-label"><span class="slider"></span></span></label>
+                                        <label class="advanced-switch-row"><span id="write-info-json-label" data-i18n="opt.infoJson">Guardar metadados .info.json</span><span class="switch"><input type="checkbox" id="write-info-json" aria-labelledby="write-info-json-label"><span class="slider"></span></span></label>
+                                    </div>
+                                </section>
+                                <section class="advanced-subsection">
+                                    <h3 class="advanced-subsection-title" data-i18n="advanced.playlists">Listas de reprodução</h3>
+                                    <div class="advanced-fields">
+                                        <div class="advanced-field"><label for="playlist-items" data-i18n="playlist.items">Itens da lista (ex.: 1,3,5-8)</label><input id="playlist-items" type="text" placeholder="1,3,5-8"></div>
+                                        <div class="advanced-field"><label for="playlist-sort" data-i18n="playlist.sort">Ordenar itens da lista</label><select id="playlist-sort"><option value="none" data-i18n="playlist.sort.none">Ordem original</option><option value="duration-shortest" data-i18n="playlist.sort.durationShort">Menor duração primeiro</option><option value="duration-longest" data-i18n="playlist.sort.durationLong">Maior duração primeiro</option><option value="quality-lowest" data-i18n="playlist.sort.qualityLow">Menor qualidade primeiro</option><option value="quality-highest" data-i18n="playlist.sort.qualityHigh">Maior qualidade primeiro</option></select></div>
+                                    </div>
+                                    <div class="advanced-switch-list" style="margin-top:.55rem">
+                                        <label class="advanced-switch-row"><span id="playlist-reverse-label" data-i18n="opt.reverse">Inverter ordem da lista</span><span class="switch"><input type="checkbox" id="playlist-reverse" aria-labelledby="playlist-reverse-label"><span class="slider"></span></span></label>
+                                    </div>
+                                </section>
+                                <section class="advanced-subsection">
+                                    <h3 class="advanced-subsection-title" data-i18n="advanced.clips">Recorte de vídeo</h3>
+                                    <div class="advanced-fields">
+                                        <div class="advanced-field"><label for="clip-start" data-i18n="clip.start">Recorte — início</label><input id="clip-start" type="text" placeholder="00:00:00"></div>
+                                        <div class="advanced-field"><label for="clip-end" data-i18n="clip.end">Recorte — fim</label><input id="clip-end" type="text" placeholder="00:01:00"></div>
+                                    </div>
+                                </section>
+                                <section class="advanced-subsection">
+                                    <h3 class="advanced-subsection-title" data-i18n="advanced.queue">Agendamento e fila</h3>
+                                    <div class="advanced-fields">
+                                        <div class="advanced-field"><label for="scheduled-at" data-i18n="schedule.at">Agendar para (opcional)</label><input id="scheduled-at" type="datetime-local"></div>
+                                        <div class="advanced-field"><label for="download-priority" data-i18n="priority.label">Prioridade</label><select id="download-priority"><option value="0" data-i18n="priority.normal">Normal</option><option value="1" data-i18n="priority.high">Alta</option><option value="-1" data-i18n="priority.low">Baixa</option></select></div>
+                                        <div class="advanced-field"><label for="retry-count" data-i18n="retry.count">Novas tentativas</label><select id="retry-count"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="5">5</option></select></div>
+                                    </div>
+                                </section>
+                                <section class="advanced-subsection">
+                                    <h3 class="advanced-subsection-title" data-i18n="advanced.network">Rede</h3>
+                                    <div class="advanced-field"><label for="proxy-url" data-i18n="proxy.url">Proxy (opcional)</label><input id="proxy-url" type="text" autocomplete="off" placeholder="socks5://host:porta"></div>
+                                </section>
+                            </div>
+
                             <hr>
                             <h2 data-i18n="settings.downloads">Pasta de downloads</h2>
                             <p style="font-size:0.72rem; color:var(--text-secondary); margin-top:0.35rem" data-i18n="dl.help">Escolha onde os ficheiros são guardados. A alteração aplica-se aos próximos downloads.</p>
@@ -972,7 +1053,15 @@
                             <hr>
                             <div style="display:flex; gap:0.5rem"><button onclick="clearHistory()" class="danger" style="flex:1" data-i18n="btn.clearHistory">Limpar Histórico</button><button onclick="restartApp()" class="danger" style="flex:1" data-i18n="btn.restart">Reiniciar</button></div>
                         </div>
-                        <div id="tab-history" class="card hidden"><ul id="history-list" style="list-style:none; padding:0"></ul></div>
+                        <div id="tab-history" class="card hidden">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-bottom:1rem">
+                                <div><label for="history-status-filter" data-i18n="history.filter.status">Estado</label><select id="history-status-filter"><option value="all" data-i18n="history.filter.all">Todos</option><option value="success" data-i18n="history.filter.success">Concluídos</option><option value="failed" data-i18n="history.filter.failed">Falhados</option></select></div>
+                                <div><label for="history-media-filter" data-i18n="history.filter.media">Tipo</label><select id="history-media-filter"><option value="all" data-i18n="history.filter.all">Todos</option><option value="video" data-i18n="history.filter.video">Vídeo</option><option value="audio" data-i18n="history.filter.audio">Áudio</option></select></div>
+                                <div><label for="history-from-filter" data-i18n="history.filter.from">De</label><input id="history-from-filter" type="date"></div>
+                                <div><label for="history-to-filter" data-i18n="history.filter.to">Até</label><input id="history-to-filter" type="date"></div>
+                            </div>
+                            <ul id="history-list" style="list-style:none; padding:0"></ul>
+                        </div>
                     </div>
                     <div class="console-wrapper">
                         <div class="console-header" id="console-header">
@@ -984,6 +1073,10 @@
                 </div>
                 <div class="right-panel">
                     <div class="sidebar-header"><div><span class="section-kicker" data-i18n="lib.kicker">Biblioteca local</span><h3><span data-icon="library"></span> <span data-i18n="lib.title">Mediateca</span></h3></div><button class="icon-only" onclick="loadLibrary()" data-i18n-aria="lib.refresh" aria-label="Atualizar mediateca" data-i18n-tip="lib.refresh" data-tip="Atualizar mediateca"><span data-icon="refresh"></span></button></div>
+                    <section class="queue-section" id="queue-section">
+                        <h2 class="queue-section-title"><span data-icon="download"></span> <span data-i18n="queue.title">Fila de downloads</span></h2>
+                        <ul id="queue-list" style="list-style:none; padding:0; margin:0"></ul>
+                    </section>
                     <div class="filter-section">
                         <div class="filter-title" data-i18n="filter.title">TIPO DE CONTEÚDO</div>
                         <div class="filter-buttons">
@@ -996,6 +1089,16 @@
                         <div class="filter-title" data-i18n="filter.categories">GAVETAS</div>
                         <div class="cat-filter-specials" id="category-filter-specials"></div>
                         <div class="cat-filter-grid" id="category-filters"></div>
+                    </div>
+                    <div class="filter-section library-time-filter" id="library-time-filter">
+                        <div class="filter-title" data-i18n="library.timeFilter.title">DATA E HORA</div>
+                        <div class="library-time-filter-grid">
+                            <div><label for="library-time-from" data-i18n="library.timeFilter.from">Desde</label><input id="library-time-from" type="datetime-local" step="1"></div>
+                            <div><label for="library-time-to" data-i18n="library.timeFilter.to">Até</label><input id="library-time-to" type="datetime-local" step="1"></div>
+                            <div class="library-time-sort"><label for="library-time-sort" data-i18n="library.timeFilter.sort">Ordenar por data</label><select id="library-time-sort"><option value="newest" data-i18n="library.timeFilter.newest">Mais recentes primeiro</option><option value="oldest" data-i18n="library.timeFilter.oldest">Mais antigos primeiro</option></select></div>
+                            <button type="button" id="library-time-clear" class="soft" data-i18n="library.timeFilter.clear">Limpar filtro</button>
+                        </div>
+                        <p id="library-time-error" class="history-fail" role="alert" style="display:none; margin:.4rem 0 0" data-i18n="library.timeFilter.invalidRange">A data/hora inicial tem de ser anterior à final.</p>
                     </div>
                     <div class="library-list" id="library-container"></div>
                     <div class="preview-container" id="preview-box">
@@ -1064,6 +1167,9 @@
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem"><h3 style="margin:0;display:flex;align-items:center;gap:9px"><span data-icon="help"></span> <span data-i18n="help.title">Ajuda</span></h3><button onclick="closeHelpModal()" style="width:32px;min-width:32px;padding:0.25rem; background:transparent; color:var(--text-secondary); border:1px solid var(--border)" data-i18n-aria="help.close.aria" aria-label="Fechar ajuda"><span data-icon="close"></span></button></div>
                 <h4 class="help-heading"><span data-icon="download"></span> <span data-i18n="help.download.h">Download</span></h4><p data-i18n="help.download.p">Cole a URL, escolha qualidade e clique em Download.</p>
+                <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.playlist.h">Listas e ordenação</span></h4><p data-i18n="help.playlist.p">Pode limitar os itens da lista e ordená-los por duração ou qualidade. A aplicação lê os metadados antes de descarregar e processa os itens nessa ordem; itens sem dados ficam no fim.</p>
+                <h4 class="help-heading"><span data-icon="download"></span> <span data-i18n="help.queue.h">Fila e qualidade</span></h4><p data-i18n="help.queue.p">Os trabalhos entram na fila persistente, onde pode definir prioridade, horário e novas tentativas. A qualidade automática recomenda uma resolução adequada ao ecrã detetado; pode escolher outra manualmente.</p>
+                <h4 class="help-heading"><span data-icon="sparkle"></span> <span data-i18n="help.advanced.h">Opções avançadas</span></h4><p data-i18n="help.advanced.p">Nas «Opções avançadas» pode incorporar metadados, capa e capítulos, guardar o .info.json, recortar um excerto (início/fim), escolher itens da lista, inverter a ordem e usar um proxy. No painel lateral da fila pode definir prioridade, agendamento e novas tentativas.</p>
                 <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.filters.h">Filtros</span></h4><p data-i18n="help.filters.p">Use Vídeo/Áudio/Todos para filtrar a mediateca. No painel lateral, as gavetas aparecem numa grelha e o filtro de tipo mostra apenas as gavetas desse tipo.</p>
                 <h4 class="help-heading"><span data-icon="tag"></span> <span data-i18n="help.categories.h">Gavetas</span></h4><p data-i18n="help.categories.p">Na Configuração pode criar gavetas — cada uma pertence a Vídeo ou Áudio e tem uma cor. Na mediateca, cada ficheiro mostra a gaveta a que pertence e pode ser movido entre gavetas do mesmo tipo pelo menu da carta.</p>
                 <h4 class="help-heading"><span data-icon="grid"></span> <span data-i18n="help.counts.h">Contagens</span></h4><p data-i18n="help.counts.p">Os totais de vídeos e áudios aparecem nos separadores Vídeo/Áudio. Em cada grupo da mediateca, os dísticos mostram quantos ficheiros vieram de cada rede social.</p>
@@ -1217,7 +1323,7 @@
                     "urls.help": "Introduza um endereço por linha. São aceites vídeos, listas e canais suportados pelo yt-dlp.",
                     "mode.label": "Tipo",
                     "mode.video": "Vídeo",
-                    "mode.audio": "Áudio (MP3)",
+                    "mode.audio": "Áudio",
                     "quality.label": "Qualidade",
                     "format.label": "Formato",
                     "subtitles.label": "Legendas",
@@ -1557,7 +1663,7 @@
                     "urls.help": "Enter one address per line. Videos, playlists and channels supported by yt-dlp are accepted.",
                     "mode.label": "Type",
                     "mode.video": "Video",
-                    "mode.audio": "Audio (MP3)",
+                    "mode.audio": "Audio",
                     "quality.label": "Quality",
                     "format.label": "Format",
                     "subtitles.label": "Subtitles",
@@ -1897,7 +2003,7 @@
                     "urls.help": "Introduce una dirección por línea. Se aceptan vídeos, listas y canales compatibles con yt-dlp.",
                     "mode.label": "Tipo",
                     "mode.video": "Vídeo",
-                    "mode.audio": "Audio (MP3)",
+                    "mode.audio": "Audio",
                     "quality.label": "Calidad",
                     "format.label": "Formato",
                     "subtitles.label": "Subtítulos",
@@ -2237,7 +2343,7 @@
                     "urls.help": "Saisissez une adresse par ligne. Les vidéos, listes et chaînes prises en charge par yt-dlp sont acceptées.",
                     "mode.label": "Type",
                     "mode.video": "Vidéo",
-                    "mode.audio": "Audio (MP3)",
+                    "mode.audio": "Audio",
                     "quality.label": "Qualité",
                     "format.label": "Format",
                     "subtitles.label": "Sous-titres",
@@ -2577,7 +2683,7 @@
                     "urls.help": "Geben Sie eine Adresse pro Zeile ein. Von yt-dlp unterstützte Videos, Playlists und Kanäle werden akzeptiert.",
                     "mode.label": "Typ",
                     "mode.video": "Video",
-                    "mode.audio": "Audio (MP3)",
+                    "mode.audio": "Audio",
                     "quality.label": "Qualität",
                     "format.label": "Format",
                     "subtitles.label": "Untertitel",
@@ -2874,13 +2980,200 @@
             };
             // Chaves adicionais usadas por listas geradas dinamicamente (qualidade, estados, horas).
             const I18N_EXTRA = {
-                pt: { "quality.best":"Melhor (320k)", "quality.high":"Alta (192k)", "quality.medium":"Média (128k)", "status.paused":"Pausado", "status.cancelled":"Cancelado", "status.downloading":"A descarregar...", "status.failed":"Falhou", "date.invalid":"—", "toast.close.aria":"Fechar notificação", "toast.download.title":"Download" },
-                en: { "quality.best":"Best (320k)", "quality.high":"High (192k)", "quality.medium":"Medium (128k)", "status.paused":"Paused", "status.cancelled":"Cancelled", "status.downloading":"Downloading...", "status.failed":"Failed", "date.invalid":"—", "toast.close.aria":"Close notification", "toast.download.title":"Download" },
-                es: { "quality.best":"Mejor (320k)", "quality.high":"Alta (192k)", "quality.medium":"Media (128k)", "status.paused":"En pausa", "status.cancelled":"Cancelado", "status.downloading":"Descargando...", "status.failed":"Falló", "date.invalid":"—", "toast.close.aria":"Cerrar notificación", "toast.download.title":"Descarga" },
-                fr: { "quality.best":"Meilleure (320k)", "quality.high":"Haute (192k)", "quality.medium":"Moyenne (128k)", "status.paused":"En pause", "status.cancelled":"Annulé", "status.downloading":"Téléchargement...", "status.failed":"Échec", "date.invalid":"—", "toast.close.aria":"Fermer la notification", "toast.download.title":"Téléchargement" },
-                de: { "quality.best":"Beste (320k)", "quality.high":"Hoch (192k)", "quality.medium":"Mittel (128k)", "status.paused":"Pausiert", "status.cancelled":"Abgebrochen", "status.downloading":"Wird heruntergeladen...", "status.failed":"Fehlgeschlagen", "date.invalid":"—", "toast.close.aria":"Benachrichtigung schließen", "toast.download.title":"Download" }
+                pt: { "quality.best":"Melhor (320k)", "quality.videoBest":"Melhor disponível", "quality.high":"Alta (192k)", "quality.medium":"Média (128k)", "status.paused":"Pausado", "status.cancelled":"Cancelado", "status.downloading":"A descarregar...", "status.failed":"Falhou", "date.invalid":"—", "toast.close.aria":"Fechar notificação", "toast.download.title":"Download", "preset.label":"Predefinição", "preset.default":"Personalizado", "preset.best":"Melhor vídeo", "preset.1080":"Vídeo 1080p", "preset.720":"Vídeo 720p", "preset.audioMp3":"Áudio MP3", "preset.audioFlac":"Áudio FLAC", "preset.audioWav":"Áudio WAV", "format.audio":"Formato de áudio", "advanced.downloads":"Opções avançadas", "opt.metadata":"Incorporar metadados", "opt.thumbnail":"Incorporar capa/thumbnail", "opt.chapters":"Incorporar capítulos", "opt.infoJson":"Guardar metadados .info.json", "opt.reverse":"Inverter ordem da lista", "clip.start":"Recorte — início", "clip.end":"Recorte — fim", "playlist.items":"Itens da lista (ex.: 1,3,5-8)", "proxy.url":"Proxy (opcional)", "schedule.at":"Agendar para (opcional)", "priority.label":"Prioridade", "priority.normal":"Normal", "priority.high":"Alta", "priority.low":"Baixa", "retry.count":"Novas tentativas", "queue.title":"Fila de downloads", "queue.empty":"A fila está vazia.", "queue.count":"{done}/{total} concluídos", "queue.cancel":"Cancelar", "queue.retry":"Repetir", "queue.remove":"Remover", "queue.scheduled":"Agendado para {date}", "queue.error":"Erro: {error}", "queue.status.queued":"Na fila", "queue.status.running":"A descarregar", "queue.status.completed":"Concluído", "queue.status.failed":"Falhou", "queue.status.cancelled":"Cancelado", "settings.export":"Exportar definições", "settings.import":"Importar definições", "toast.settingsExported":"Definições exportadas sem credenciais.", "toast.settingsImported":"Definições importadas. A aplicação será atualizada." },
+                en: { "quality.best":"Best (320k)", "quality.videoBest":"Best available", "quality.high":"High (192k)", "quality.medium":"Medium (128k)", "status.paused":"Paused", "status.cancelled":"Cancelled", "status.downloading":"Downloading...", "status.failed":"Failed", "date.invalid":"—", "toast.close.aria":"Close notification", "toast.download.title":"Download", "preset.label":"Preset", "preset.default":"Custom", "preset.best":"Best video", "preset.1080":"1080p video", "preset.720":"720p video", "preset.audioMp3":"MP3 audio", "preset.audioFlac":"FLAC audio", "preset.audioWav":"WAV audio", "format.audio":"Audio format", "advanced.downloads":"Advanced options", "opt.metadata":"Embed metadata", "opt.thumbnail":"Embed cover/thumbnail", "opt.chapters":"Embed chapters", "opt.infoJson":"Save .info.json metadata", "opt.reverse":"Reverse playlist order", "clip.start":"Clip — start", "clip.end":"Clip — end", "playlist.items":"Playlist items (e.g. 1,3,5-8)", "proxy.url":"Proxy (optional)", "schedule.at":"Schedule for (optional)", "priority.label":"Priority", "priority.normal":"Normal", "priority.high":"High", "priority.low":"Low", "retry.count":"Retries", "queue.title":"Download queue", "queue.empty":"The queue is empty.", "queue.count":"{done}/{total} completed", "queue.cancel":"Cancel", "queue.retry":"Retry", "queue.remove":"Remove", "queue.scheduled":"Scheduled for {date}", "queue.error":"Error: {error}", "queue.status.queued":"Queued", "queue.status.running":"Downloading", "queue.status.completed":"Completed", "queue.status.failed":"Failed", "queue.status.cancelled":"Cancelled", "settings.export":"Export settings", "settings.import":"Import settings", "toast.settingsExported":"Settings exported without credentials.", "toast.settingsImported":"Settings imported. The app will reload." },
+                es: { "quality.best":"Mejor (320k)", "quality.videoBest":"Mejor disponible", "quality.high":"Alta (192k)", "quality.medium":"Media (128k)", "status.paused":"En pausa", "status.cancelled":"Cancelado", "status.downloading":"Descargando...", "status.failed":"Falló", "date.invalid":"—", "toast.close.aria":"Cerrar notificación", "toast.download.title":"Descarga", "preset.label":"Preajuste", "preset.default":"Personalizado", "preset.best":"Mejor vídeo", "preset.1080":"Vídeo 1080p", "preset.720":"Vídeo 720p", "preset.audioMp3":"Audio MP3", "preset.audioFlac":"Audio FLAC", "preset.audioWav":"Audio WAV", "format.audio":"Formato de audio", "advanced.downloads":"Opciones avanzadas", "opt.metadata":"Incrustar metadatos", "opt.thumbnail":"Incrustar portada/miniatura", "opt.chapters":"Incrustar capítulos", "opt.infoJson":"Guardar metadatos .info.json", "opt.reverse":"Invertir orden de la lista", "clip.start":"Recorte — inicio", "clip.end":"Recorte — fin", "playlist.items":"Elementos de la lista (p. ej., 1,3,5-8)", "proxy.url":"Proxy (opcional)", "schedule.at":"Programar para (opcional)", "priority.label":"Prioridad", "priority.normal":"Normal", "priority.high":"Alta", "priority.low":"Baja", "retry.count":"Reintentos", "queue.title":"Cola de descargas", "queue.empty":"La cola está vacía.", "queue.count":"{done}/{total} completados", "queue.cancel":"Cancelar", "queue.retry":"Reintentar", "queue.remove":"Quitar", "queue.scheduled":"Programado para {date}", "queue.error":"Error: {error}", "queue.status.queued":"En cola", "queue.status.running":"Descargando", "queue.status.completed":"Completado", "queue.status.failed":"Falló", "queue.status.cancelled":"Cancelado", "settings.export":"Exportar ajustes", "settings.import":"Importar ajustes", "toast.settingsExported":"Ajustes exportados sin credenciales.", "toast.settingsImported":"Ajustes importados. La aplicación se recargará." },
+                fr: { "quality.best":"Meilleure (320k)", "quality.videoBest":"Meilleure disponible", "quality.high":"Haute (192k)", "quality.medium":"Moyenne (128k)", "status.paused":"En pause", "status.cancelled":"Annulé", "status.downloading":"Téléchargement...", "status.failed":"Échec", "date.invalid":"—", "toast.close.aria":"Fermer la notification", "toast.download.title":"Téléchargement", "preset.label":"Préréglage", "preset.default":"Personnalisé", "preset.best":"Meilleure vidéo", "preset.1080":"Vidéo 1080p", "preset.720":"Vidéo 720p", "preset.audioMp3":"Audio MP3", "preset.audioFlac":"Audio FLAC", "preset.audioWav":"Audio WAV", "format.audio":"Format audio", "advanced.downloads":"Options avancées", "opt.metadata":"Intégrer les métadonnées", "opt.thumbnail":"Intégrer la couverture/la miniature", "opt.chapters":"Intégrer les chapitres", "opt.infoJson":"Enregistrer les métadonnées .info.json", "opt.reverse":"Inverser l’ordre de la liste", "clip.start":"Extrait — début", "clip.end":"Extrait — fin", "playlist.items":"Éléments de la liste (ex. 1,3,5-8)", "proxy.url":"Proxy (facultatif)", "schedule.at":"Programmer pour (facultatif)", "priority.label":"Priorité", "priority.normal":"Normale", "priority.high":"Haute", "priority.low":"Basse", "retry.count":"Nouvelles tentatives", "queue.title":"File de téléchargements", "queue.empty":"La file est vide.", "queue.count":"{done}/{total} terminés", "queue.cancel":"Annuler", "queue.retry":"Réessayer", "queue.remove":"Retirer", "queue.scheduled":"Programmé pour {date}", "queue.error":"Erreur : {error}", "queue.status.queued":"En attente", "queue.status.running":"Téléchargement", "queue.status.completed":"Terminé", "queue.status.failed":"Échec", "queue.status.cancelled":"Annulé", "settings.export":"Exporter les paramètres", "settings.import":"Importer les paramètres", "toast.settingsExported":"Paramètres exportés sans identifiants.", "toast.settingsImported":"Paramètres importés. L’application va recharger." },
+                de: { "quality.best":"Beste (320k)", "quality.videoBest":"Beste verfügbare", "quality.high":"Hoch (192k)", "quality.medium":"Mittel (128k)", "status.paused":"Pausiert", "status.cancelled":"Abgebrochen", "status.downloading":"Wird heruntergeladen...", "status.failed":"Fehlgeschlagen", "date.invalid":"—", "toast.close.aria":"Benachrichtigung schließen", "toast.download.title":"Download", "preset.label":"Voreinstellung", "preset.default":"Benutzerdefiniert", "preset.best":"Bestes Video", "preset.1080":"1080p-Video", "preset.720":"720p-Video", "preset.audioMp3":"MP3-Audio", "preset.audioFlac":"FLAC-Audio", "preset.audioWav":"WAV-Audio", "format.audio":"Audioformat", "advanced.downloads":"Erweiterte Optionen", "opt.metadata":"Metadaten einbetten", "opt.thumbnail":"Cover/Vorschaubild einbetten", "opt.chapters":"Kapitel einbetten", "opt.infoJson":".info.json-Metadaten speichern", "opt.reverse":"Playlist-Reihenfolge umkehren", "clip.start":"Ausschnitt — Start", "clip.end":"Ausschnitt — Ende", "playlist.items":"Playlist-Elemente (z. B. 1,3,5-8)", "proxy.url":"Proxy (optional)", "schedule.at":"Zeitplan (optional)", "priority.label":"Priorität", "priority.normal":"Normal", "priority.high":"Hoch", "priority.low":"Niedrig", "retry.count":"Wiederholungen", "queue.title":"Download-Warteschlange", "queue.empty":"Die Warteschlange ist leer.", "queue.count":"{done}/{total} abgeschlossen", "queue.cancel":"Abbrechen", "queue.retry":"Erneut versuchen", "queue.remove":"Entfernen", "queue.scheduled":"Geplant für {date}", "queue.error":"Fehler: {error}", "queue.status.queued":"Eingereiht", "queue.status.running":"Wird heruntergeladen", "queue.status.completed":"Abgeschlossen", "queue.status.failed":"Fehlgeschlagen", "queue.status.cancelled":"Abgebrochen", "settings.export":"Einstellungen exportieren", "settings.import":"Einstellungen importieren", "toast.settingsExported":"Einstellungen ohne Zugangsdaten exportiert.", "toast.settingsImported":"Einstellungen importiert. Die App wird neu geladen." }
             };
             Object.keys(I18N_EXTRA).forEach(lng => Object.assign(I18N[lng], I18N_EXTRA[lng]));
+            // Estados de fase do download, usados pela barra de progresso para
+            // explicar o que esta a acontecer quando nao ha progresso de bytes.
+            const I18N_PHASE = {
+                pt: { "phase.info":"A obter informacoes...", "phase.wait":"A aguardar entre descargas...", "phase.download":"A descarregar...", "phase.merge":"A juntar audio e video...", "phase.extract":"A extrair audio...", "phase.thumbnail":"A incorporar a capa...", "phase.metadata":"A incorporar metadados...", "phase.finalize":"A finalizar..." },
+                en: { "phase.info":"Getting info...", "phase.wait":"Waiting between downloads...", "phase.download":"Downloading...", "phase.merge":"Merging audio and video...", "phase.extract":"Extracting audio...", "phase.thumbnail":"Embedding thumbnail...", "phase.metadata":"Embedding metadata...", "phase.finalize":"Finalizing..." },
+                es: { "phase.info":"Obteniendo informacion...", "phase.wait":"Esperando entre descargas...", "phase.download":"Descargando...", "phase.merge":"Uniendo audio y video...", "phase.extract":"Extrayendo audio...", "phase.thumbnail":"Incrustando la miniatura...", "phase.metadata":"Incrustando metadatos...", "phase.finalize":"Finalizando..." },
+                fr: { "phase.info":"Obtention des informations...", "phase.wait":"Attente entre les telechargements...", "phase.download":"Telechargement...", "phase.merge":"Fusion de l'audio et de la video...", "phase.extract":"Extraction de l'audio...", "phase.thumbnail":"Integration de la miniature...", "phase.metadata":"Integration des metadonnees...", "phase.finalize":"Finalisation..." },
+                de: { "phase.info":"Informationen werden abgerufen...", "phase.wait":"Warten zwischen Downloads...", "phase.download":"Wird heruntergeladen...", "phase.merge":"Audio und Video werden zusammengefuehrt...", "phase.extract":"Audio wird extrahiert...", "phase.thumbnail":"Vorschaubild wird eingebettet...", "phase.metadata":"Metadaten werden eingebettet...", "phase.finalize":"Wird abgeschlossen..." }
+            };
+            Object.keys(I18N_PHASE).forEach(lng => Object.assign(I18N[lng], I18N_PHASE[lng]));
+            // Textos de ajuda revistos (fila no painel lateral, progresso por fases,
+            // opcoes avancadas). Substituem as entradas antigas nos 5 idiomas.
+            const I18N_HELP3 = {
+                pt: { "help.queue.p":"A fila de downloads fica no painel lateral (junto à mediateca), por isso está sempre visível. Aí pode definir prioridade, agendar uma hora e novas tentativas; a qualidade automática recomenda uma resolução adequada ao ecrã detetado.", "help.progress.p":"A barra avança durante o download e volta ao início quando ele termina. Como um vídeo pode precisar de várias transferências (vídeo + áudio), a barra reparte o progresso por todas e só chega ao fim quando o trabalho conclui; a linha de estado indica a fase (a obter informações, a aguardar, a descarregar, a juntar, a incorporar).", "help.advanced.h":"Opções avançadas", "help.advanced.p":"Nas «Opções avançadas» pode incorporar metadados, capa e capítulos, guardar o .info.json, recortar um excerto (início/fim), escolher itens da lista, inverter a ordem e usar um proxy. No painel lateral da fila pode definir prioridade, agendamento e novas tentativas." },
+                en: { "help.queue.p":"The download queue lives in the side panel (next to the library), so it is always visible. There you can set priority, schedule a time and retries; auto quality recommends a resolution suited to the detected screen.", "help.progress.p":"The bar advances during the download and returns to the start when it finishes. Since one video may need several transfers (video + audio), the bar spreads the progress across all of them and only reaches the end when the job is done; the status line shows the phase (getting info, waiting, downloading, merging, embedding).", "help.advanced.h":"Advanced options", "help.advanced.p":"Under \"Advanced options\" you can embed metadata, cover and chapters, save the .info.json, trim a clip (start/end), pick playlist items, reverse the order and use a proxy. In the queue side panel you can set priority, scheduling and retries." },
+                es: { "help.queue.p":"La cola de descargas está en el panel lateral (junto a la mediateca), por lo que siempre está visible. Allí puedes definir prioridad, programar una hora y reintentos; la calidad automática recomienda una resolución adecuada a la pantalla detectada.", "help.progress.p":"La barra avanza durante la descarga y vuelve al inicio al terminar. Como un vídeo puede necesitar varias transferencias (vídeo + audio), la barra reparte el progreso entre todas y solo llega al final cuando el trabajo termina; la línea de estado indica la fase (obteniendo información, esperando, descargando, uniendo, incrustando).", "help.advanced.h":"Opciones avanzadas", "help.advanced.p":"En «Opciones avanzadas» puedes incrustar metadatos, portada y capítulos, guardar el .info.json, recortar un fragmento (inicio/fin), elegir elementos de la lista, invertir el orden y usar un proxy. En el panel lateral de la cola puedes definir prioridad, programación y reintentos." },
+                fr: { "help.queue.p":"La file de téléchargements se trouve dans le panneau latéral (à côté de la médiathèque), donc toujours visible. Vous pouvez y définir la priorité, programmer une heure et des nouvelles tentatives ; la qualité automatique recommande une résolution adaptée à l'écran détecté.", "help.progress.p":"La barre avance pendant le téléchargement et revient au début à la fin. Comme une vidéo peut nécessiter plusieurs transferts (vidéo + audio), la barre répartit la progression sur tous et n'atteint la fin qu'une fois le travail terminé ; la ligne d'état indique la phase (obtention des informations, attente, téléchargement, fusion, intégration).", "help.advanced.h":"Options avancées", "help.advanced.p":"Dans « Options avancées », vous pouvez intégrer les métadonnées, la couverture et les chapitres, enregistrer le .info.json, découper un extrait (début/fin), choisir des éléments de la liste, inverser l'ordre et utiliser un proxy. Dans le panneau latéral de la file, vous pouvez définir la priorité, la programmation et les nouvelles tentatives." },
+                de: { "help.queue.p":"Die Download-Warteschlange befindet sich im Seitenbereich (neben der Mediathek) und ist daher immer sichtbar. Dort können Sie Priorität, Zeitplan und Wiederholungen festlegen; die automatische Qualität empfiehlt eine zum erkannten Bildschirm passende Auflösung.", "help.progress.p":"Der Balken läuft während des Downloads und springt am Ende zurück an den Anfang. Da ein Video mehrere Übertragungen benötigen kann (Video + Audio), verteilt der Balken den Fortschritt auf alle und erreicht das Ende erst, wenn der Auftrag fertig ist; die Statuszeile zeigt die Phase an (Informationen abrufen, warten, herunterladen, zusammenführen, einbetten).", "help.advanced.h":"Erweiterte Optionen", "help.advanced.p":"Unter „Erweiterte Optionen“ können Sie Metadaten, Cover und Kapitel einbetten, die .info.json speichern, einen Ausschnitt zuschneiden (Start/Ende), Playlist-Elemente wählen, die Reihenfolge umkehren und einen Proxy verwenden. Im Seitenbereich der Warteschlange können Sie Priorität, Zeitplan und Wiederholungen festlegen." }
+            };
+            Object.keys(I18N_HELP3).forEach(lng => Object.assign(I18N[lng], I18N_HELP3[lng]));
+            const I18N_PLAYLIST_QUALITY = {
+                pt: {
+                    "quality.recommended":"Recomendado para este ecrã ({height}p)",
+                    "settings.quality":"Qualidade do vídeo",
+                    "settings.autoQuality":"Recomendar automaticamente a qualidade para este dispositivo",
+                    "settings.autoQualityHelp":"Usa a resolução detetada do ecrã como recomendação inicial. Pode sempre escolher outra qualidade no formulário de download.",
+                    "settings.advancedHelp":"Estas opções são aplicadas aos próximos trabalhos enviados para a fila. O endereço do proxy não é guardado após fechar a aplicação.",
+                    "playlist.sort":"Ordenar itens da lista",
+                    "playlist.sort.none":"Ordem original",
+                    "playlist.sort.durationShort":"Menor duração primeiro",
+                    "playlist.sort.durationLong":"Maior duração primeiro",
+                    "playlist.sort.qualityLow":"Menor qualidade primeiro",
+                    "playlist.sort.qualityHigh":"Maior qualidade primeiro",
+                    "help.playlist.h":"Listas e ordenação",
+                    "help.playlist.p":"Pode limitar os itens da lista e ordená-los por duração ou qualidade. A aplicação lê os metadados antes de descarregar e processa os itens nessa ordem; itens sem dados ficam no fim.",
+                    "help.queue.h":"Fila e qualidade",
+                    "help.queue.p":"Os trabalhos entram na fila persistente, onde pode definir prioridade, horário e novas tentativas. A qualidade automática recomenda uma resolução adequada ao ecrã detetado; pode escolher outra manualmente."
+                },
+                en: {
+                    "quality.recommended":"Recommended for this display ({height}p)",
+                    "settings.quality":"Video quality",
+                    "settings.autoQuality":"Automatically recommend video quality for this device",
+                    "settings.autoQualityHelp":"Uses the detected display resolution as the initial recommendation. You can always choose a different quality in the download form.",
+                    "settings.advancedHelp":"These options apply to new jobs added to the queue. The proxy address is not saved when the app closes.",
+                    "playlist.sort":"Sort playlist items",
+                    "playlist.sort.none":"Original order",
+                    "playlist.sort.durationShort":"Shortest duration first",
+                    "playlist.sort.durationLong":"Longest duration first",
+                    "playlist.sort.qualityLow":"Lowest quality first",
+                    "playlist.sort.qualityHigh":"Highest quality first",
+                    "help.playlist.h":"Playlists and sorting",
+                    "help.playlist.p":"Limit the playlist items or sort them by duration or quality. MediaDesk reads playlist metadata before downloading and processes items in that order; items without metadata are placed last.",
+                    "help.queue.h":"Queue and quality",
+                    "help.queue.p":"Downloads enter the persistent queue, where you can set priority, schedule and retries. Automatic quality recommends a resolution suitable for the detected display; you can choose a different quality manually."
+                },
+                es: {
+                    "quality.recommended":"Recomendada para esta pantalla ({height}p)",
+                    "settings.quality":"Calidad de vídeo",
+                    "settings.autoQuality":"Recomendar automáticamente la calidad para este dispositivo",
+                    "settings.autoQualityHelp":"Usa la resolución detectada de la pantalla como recomendación inicial. Siempre puedes elegir otra calidad en el formulario de descarga.",
+                    "settings.advancedHelp":"Estas opciones se aplican a los nuevos trabajos enviados a la cola. La dirección del proxy no se guarda al cerrar la aplicación.",
+                    "playlist.sort":"Ordenar elementos de la lista",
+                    "playlist.sort.none":"Orden original",
+                    "playlist.sort.durationShort":"Menor duración primero",
+                    "playlist.sort.durationLong":"Mayor duración primero",
+                    "playlist.sort.qualityLow":"Menor calidad primero",
+                    "playlist.sort.qualityHigh":"Mayor calidad primero",
+                    "help.playlist.h":"Listas y ordenación",
+                    "help.playlist.p":"Limita los elementos de la lista u ordénalos por duración o calidad. MediaDesk lee los metadatos antes de descargar y procesa los elementos en ese orden; los que no tengan datos quedan al final.",
+                    "help.queue.h":"Cola y calidad",
+                    "help.queue.p":"Las descargas entran en la cola persistente, donde puedes definir prioridad, horario e intentos. La calidad automática recomienda una resolución adecuada para la pantalla detectada; puedes elegir otra manualmente."
+                },
+                fr: {
+                    "quality.recommended":"Recommandée pour cet écran ({height}p)",
+                    "settings.quality":"Qualité vidéo",
+                    "settings.autoQuality":"Recommander automatiquement la qualité pour cet appareil",
+                    "settings.autoQualityHelp":"Utilise la résolution détectée de l'écran comme recommandation initiale. Vous pouvez toujours choisir une autre qualité dans le formulaire de téléchargement.",
+                    "settings.advancedHelp":"Ces options s'appliquent aux nouveaux travaux ajoutés à la file. L'adresse du proxy n'est pas conservée à la fermeture de l'application.",
+                    "playlist.sort":"Trier les éléments de la liste",
+                    "playlist.sort.none":"Ordre d'origine",
+                    "playlist.sort.durationShort":"Durée la plus courte d'abord",
+                    "playlist.sort.durationLong":"Durée la plus longue d'abord",
+                    "playlist.sort.qualityLow":"Qualité la plus faible d'abord",
+                    "playlist.sort.qualityHigh":"Qualité la plus élevée d'abord",
+                    "help.playlist.h":"Listes et tri",
+                    "help.playlist.p":"Limitez les éléments de la liste ou triez-les par durée ou qualité. MediaDesk lit les métadonnées avant le téléchargement et traite les éléments dans cet ordre ; ceux sans métadonnées sont placés à la fin.",
+                    "help.queue.h":"File d'attente et qualité",
+                    "help.queue.p":"Les téléchargements rejoignent la file persistante, où vous pouvez définir la priorité, la planification et les nouvelles tentatives. La qualité automatique recommande une résolution adaptée à l'écran détecté ; vous pouvez en choisir une autre."
+                },
+                de: {
+                    "quality.recommended":"Für diesen Bildschirm empfohlen ({height}p)",
+                    "settings.quality":"Videoqualität",
+                    "settings.autoQuality":"Videoqualität für dieses Gerät automatisch empfehlen",
+                    "settings.autoQualityHelp":"Verwendet die erkannte Bildschirmauflösung als anfängliche Empfehlung. Im Downloadformular können Sie jederzeit eine andere Qualität auswählen.",
+                    "settings.advancedHelp":"Diese Optionen gelten für neue Aufgaben in der Warteschlange. Die Proxy-Adresse wird beim Schließen der App nicht gespeichert.",
+                    "playlist.sort":"Playlist-Einträge sortieren",
+                    "playlist.sort.none":"Ursprüngliche Reihenfolge",
+                    "playlist.sort.durationShort":"Kürzeste Dauer zuerst",
+                    "playlist.sort.durationLong":"Längste Dauer zuerst",
+                    "playlist.sort.qualityLow":"Niedrigste Qualität zuerst",
+                    "playlist.sort.qualityHigh":"Höchste Qualität zuerst",
+                    "help.playlist.h":"Playlists und Sortierung",
+                    "help.playlist.p":"Begrenzen Sie die Playlist-Einträge oder sortieren Sie sie nach Dauer oder Qualität. MediaDesk liest vor dem Download die Metadaten und verarbeitet die Einträge in dieser Reihenfolge; Einträge ohne Metadaten stehen am Ende.",
+                    "help.queue.h":"Warteschlange und Qualität",
+                    "help.queue.p":"Downloads gelangen in die persistente Warteschlange, in der Sie Priorität, Zeitplan und Wiederholungen festlegen können. Die automatische Qualität empfiehlt eine Auflösung passend zum erkannten Bildschirm; Sie können manuell eine andere wählen."
+                }
+            };
+            Object.keys(I18N_PLAYLIST_QUALITY).forEach(lng => Object.assign(I18N[lng], I18N_PLAYLIST_QUALITY[lng]));
+            const I18N_LIBRARY_TIME = {
+                pt: {
+                    "library.timeFilter.title":"Data e hora",
+                    "library.timeFilter.from":"Desde",
+                    "library.timeFilter.to":"Até",
+                    "library.timeFilter.sort":"Ordenar por data",
+                    "library.timeFilter.newest":"Mais recentes primeiro",
+                    "library.timeFilter.oldest":"Mais antigos primeiro",
+                    "library.timeFilter.clear":"Limpar filtro",
+                    "library.timeFilter.invalidRange":"A data/hora inicial tem de ser anterior à final.",
+                    "help.download.p":"Cole a URL, escolha a qualidade e clique em Download. As opções avançadas de transferência estão em Configuração.",
+                    "help.filters.p":"Use Vídeo/Áudio/Todos para filtrar a mediateca. No painel lateral, filtre por intervalo de data e hora, até ao segundo, e ordene do mais recente para o mais antigo ou vice-versa. A pesquisa e as gavetas respeitam os filtros ativos."
+                },
+                en: {
+                    "library.timeFilter.title":"Date and time",
+                    "library.timeFilter.from":"From",
+                    "library.timeFilter.to":"To",
+                    "library.timeFilter.sort":"Sort by date",
+                    "library.timeFilter.newest":"Newest first",
+                    "library.timeFilter.oldest":"Oldest first",
+                    "library.timeFilter.clear":"Clear filter",
+                    "library.timeFilter.invalidRange":"The start date/time must be before the end date/time.",
+                    "help.download.p":"Paste the URL, choose a quality and click Download. Advanced download options are in Settings.",
+                    "help.filters.p":"Use Video/Audio/All to filter the media library. In the side panel, filter by a date and time range down to the second, and sort newest-first or oldest-first. Search and drawers respect the active filters."
+                },
+                es: {
+                    "library.timeFilter.title":"Fecha y hora",
+                    "library.timeFilter.from":"Desde",
+                    "library.timeFilter.to":"Hasta",
+                    "library.timeFilter.sort":"Ordenar por fecha",
+                    "library.timeFilter.newest":"Más recientes primero",
+                    "library.timeFilter.oldest":"Más antiguos primero",
+                    "library.timeFilter.clear":"Limpiar filtro",
+                    "library.timeFilter.invalidRange":"La fecha/hora inicial debe ser anterior a la final.",
+                    "help.download.p":"Pega la URL, elige la calidad y pulsa Descargar. Las opciones avanzadas de descarga están en Configuración.",
+                    "help.filters.p":"Usa Vídeo/Audio/Todos para filtrar la mediateca. En el panel lateral, filtra por un intervalo de fecha y hora hasta el segundo y ordena de más reciente a más antiguo o al revés. La búsqueda y los cajones respetan los filtros activos."
+                },
+                fr: {
+                    "library.timeFilter.title":"Date et heure",
+                    "library.timeFilter.from":"Du",
+                    "library.timeFilter.to":"Au",
+                    "library.timeFilter.sort":"Trier par date",
+                    "library.timeFilter.newest":"Plus récents d'abord",
+                    "library.timeFilter.oldest":"Plus anciens d'abord",
+                    "library.timeFilter.clear":"Effacer le filtre",
+                    "library.timeFilter.invalidRange":"La date/heure de début doit précéder celle de fin.",
+                    "help.download.p":"Collez l’URL, choisissez la qualité et cliquez sur Télécharger. Les options avancées de téléchargement se trouvent dans Configuration.",
+                    "help.filters.p":"Utilisez Vidéo/Audio/Tous pour filtrer la médiathèque. Dans le panneau latéral, filtrez par intervalle de date et d'heure à la seconde près, puis triez du plus récent au plus ancien ou inversement. La recherche et les tiroirs respectent les filtres actifs."
+                },
+                de: {
+                    "library.timeFilter.title":"Datum und Uhrzeit",
+                    "library.timeFilter.from":"Von",
+                    "library.timeFilter.to":"Bis",
+                    "library.timeFilter.sort":"Nach Datum sortieren",
+                    "library.timeFilter.newest":"Neueste zuerst",
+                    "library.timeFilter.oldest":"Älteste zuerst",
+                    "library.timeFilter.clear":"Filter zurücksetzen",
+                    "library.timeFilter.invalidRange":"Startdatum und -uhrzeit müssen vor dem Endzeitpunkt liegen.",
+                    "help.download.p":"Fügen Sie die URL ein, wählen Sie die Qualität und klicken Sie auf Download. Erweiterte Downloadoptionen finden Sie unter Konfiguration.",
+                    "help.filters.p":"Verwenden Sie Video/Audio/Alle, um die Mediathek zu filtern. Filtern Sie im Seitenbereich nach einem Datums- und Uhrzeitbereich bis auf die Sekunde und sortieren Sie neueste oder älteste zuerst. Suche und Schubladen berücksichtigen aktive Filter."
+                }
+            };
+            Object.keys(I18N_LIBRARY_TIME).forEach(lng => Object.assign(I18N[lng], I18N_LIBRARY_TIME[lng]));
+            const I18N_ADVANCED_LAYOUT = {
+                pt: { "advanced.metadata":"Metadados e ficheiros", "advanced.playlists":"Listas de reprodução", "advanced.clips":"Recorte de vídeo", "advanced.queue":"Agendamento e fila", "advanced.network":"Rede" },
+                en: { "advanced.metadata":"Metadata and files", "advanced.playlists":"Playlists", "advanced.clips":"Video clipping", "advanced.queue":"Scheduling and queue", "advanced.network":"Network" },
+                es: { "advanced.metadata":"Metadatos y archivos", "advanced.playlists":"Listas de reproducción", "advanced.clips":"Recorte de vídeo", "advanced.queue":"Programación y cola", "advanced.network":"Red" },
+                fr: { "advanced.metadata":"Métadonnées et fichiers", "advanced.playlists":"Listes de lecture", "advanced.clips":"Découpage vidéo", "advanced.queue":"Planification et file", "advanced.network":"Réseau" },
+                de: { "advanced.metadata":"Metadaten und Dateien", "advanced.playlists":"Wiedergabelisten", "advanced.clips":"Videoschnitt", "advanced.queue":"Zeitplanung und Warteschlange", "advanced.network":"Netzwerk" }
+            };
+            Object.keys(I18N_ADVANCED_LAYOUT).forEach(lng => Object.assign(I18N[lng], I18N_ADVANCED_LAYOUT[lng]));
+            const HISTORY_FILTER_I18N = {
+                pt: { "history.filter.status":"Estado", "history.filter.all":"Todos", "history.filter.success":"Concluídos", "history.filter.failed":"Falhados", "history.filter.media":"Tipo de conteúdo", "history.filter.video":"Vídeo", "history.filter.audio":"Áudio", "history.filter.from":"De", "history.filter.to":"Até" },
+                en: { "history.filter.status":"Status", "history.filter.all":"All", "history.filter.success":"Completed", "history.filter.failed":"Failed", "history.filter.media":"Media type", "history.filter.video":"Video", "history.filter.audio":"Audio", "history.filter.from":"From", "history.filter.to":"To" },
+                es: { "history.filter.status":"Estado", "history.filter.all":"Todos", "history.filter.success":"Completados", "history.filter.failed":"Fallidos", "history.filter.media":"Tipo de contenido", "history.filter.video":"Vídeo", "history.filter.audio":"Audio", "history.filter.from":"Desde", "history.filter.to":"Hasta" },
+                fr: { "history.filter.status":"Statut", "history.filter.all":"Tous", "history.filter.success":"Terminés", "history.filter.failed":"Échecs", "history.filter.media":"Type de média", "history.filter.video":"Vidéo", "history.filter.audio":"Audio", "history.filter.from":"Du", "history.filter.to":"Au" },
+                de: { "history.filter.status":"Status", "history.filter.all":"Alle", "history.filter.success":"Abgeschlossen", "history.filter.failed":"Fehlgeschlagen", "history.filter.media":"Medientyp", "history.filter.video":"Video", "history.filter.audio":"Audio", "history.filter.from":"Von", "history.filter.to":"Bis" }
+            };
+            Object.keys(HISTORY_FILTER_I18N).forEach(lng => Object.assign(I18N[lng], HISTORY_FILTER_I18N[lng]));
             const LEGAL_NOTICE = {
                 pt: {
                     heading: "AVISO LEGAL, LICENÇA E CRÉDITOS",
@@ -2947,6 +3240,7 @@
                 if (_langSel) _langSel.value = lang;
                 document.title = t("app.title");
                 applyI18n(document);
+                if (typeof refreshRecommendedVideoQualityLabel === "function") refreshRecommendedVideoQualityLabel();
                 // Atualiza as partes dinamicas das gavetas (placeholder, nota e cartas).
                 if (typeof setCategoryArea === "function") { try { setCategoryArea(categoryArea); } catch(e) {} }
                 else if (typeof renderCategoriesList === "function") { try { renderCategoriesList(); } catch(e) {} }
@@ -3019,6 +3313,162 @@
 
             // ==================== UTILITÁRIOS DE ESTADO ====================
             function saveConfig(patch) { try { return fetch("/save_config", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(patch) }); } catch(e) { return Promise.resolve(); } }
+
+            async function loadDownloadQueue() {
+                const response = await fetch("/get_queue", { cache:"no-store" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const items = await response.json();
+                removeCompletedUrlsFromInput(items);
+                renderDownloadQueue(items);
+            }
+            // Retira da caixa de entrada os endereços cujo download já terminou
+            // com sucesso. Os que ainda pertençam a algum trabalho não concluído
+            // (na fila, a correr, falhado ou cancelado) ficam, para poderem ser
+            // repetidos sem voltar a escrevê-los.
+            function removeCompletedUrlsFromInput(items) {
+                const box = document.getElementById("urls");
+                if (!box || !box.value.trim()) return;
+                const completed = new Set();
+                const active = new Set();
+                (items || []).forEach(job => {
+                    const urls = Array.isArray(job.urls) ? job.urls : [];
+                    urls.forEach(raw => {
+                        const url = (raw || "").trim();
+                        if (!url) return;
+                        if (job.status === "completed") completed.add(url);
+                        else active.add(url);
+                    });
+                });
+                const toRemove = [...completed].filter(url => !active.has(url));
+                if (!toRemove.length) return;
+                const remove = new Set(toRemove);
+                const lines = box.value.split("\n");
+                const kept = lines.filter(line => !remove.has(line.trim()));
+                if (kept.length !== lines.length) box.value = kept.join("\n");
+            }
+            function renderDownloadQueue(items) {
+                const list = document.getElementById("queue-list");
+                if (!list) return;
+                if (!items.length) {
+                    list.innerHTML = `<li style="padding:.75rem; color:var(--text-secondary)">${escapeHtml(t("queue.empty"))}</li>`;
+                    return;
+                }
+                list.innerHTML = items.slice().reverse().map(job => {
+                    const urls = Array.isArray(job.urls) ? job.urls : [];
+                    const firstUrl = urls[0] || "";
+                    const stateKey = `queue.status.${job.status}`;
+                    const state = t(stateKey);
+                    const schedule = job.scheduled_at ? `<div class="meta-item">${escapeHtml(t("queue.scheduled", { date:new Date(job.scheduled_at).toLocaleString(currentLocale()) }))}</div>` : "";
+                    const error = job.error ? `<div class="history-fail">${escapeHtml(t("queue.error", { error:job.error }))}</div>` : "";
+                    const progress = job.status === "running" || job.completed > 0
+                        ? `<div class="meta-item">${escapeHtml(t("queue.count", { done:job.completed || 0, total:job.total || urls.length }))}</div>` : "";
+                    const actions = [];
+                    if (job.status === "queued" || job.status === "running") actions.push(`<button class="soft" type="button" data-queue-action="cancel" data-queue-id="${escapeHtml(job.id)}">${escapeHtml(t("queue.cancel"))}</button>`);
+                    if (job.status === "failed" || job.status === "cancelled") actions.push(`<button class="soft" type="button" data-queue-action="retry" data-queue-id="${escapeHtml(job.id)}">${escapeHtml(t("queue.retry"))}</button>`);
+                    if (job.status !== "running") actions.push(`<button class="soft" type="button" data-queue-action="remove" data-queue-id="${escapeHtml(job.id)}">${escapeHtml(t("queue.remove"))}</button>`);
+                    return `<li style="padding:.75rem 0; border-bottom:1px solid var(--border)">
+                        <div style="display:flex; justify-content:space-between; gap:.5rem; align-items:center"><strong>${escapeHtml(state)}</strong><span class="meta-item">${urls.length} · ${escapeHtml(t("urls.label"))}</span></div>
+                        <div class="history-url" title="${escapeHtml(firstUrl)}">${escapeHtml(firstUrl)}</div>
+                        <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.25rem">${schedule}${progress}${job.priority ? `<span class="meta-item">${escapeHtml(t(job.priority > 0 ? "priority.high" : "priority.low"))}</span>` : ""}</div>
+                        ${error}<div style="display:flex; gap:.4rem; margin-top:.4rem">${actions.join("")}</div>
+                    </li>`;
+                }).join("");
+            }
+            async function queueAction(action, id) {
+                const response = await fetch("/queue_action", {
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({ action, id })
+                });
+                if (!response.ok) {
+                    const raw = await response.text();
+                    const message = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                await loadDownloadQueue();
+            }
+            function applyDownloadPreset(value) {
+                const presets = {
+                    "best-video": { mode:"video", quality:"best" },
+                    "1080p": { mode:"video", quality:"1080" },
+                    "720p": { mode:"video", quality:"720" },
+                    "audio-mp3": { mode:"audio", quality:"0", audio_format:"mp3" },
+                    "audio-flac": { mode:"audio", quality:"0", audio_format:"flac" },
+                    "audio-wav": { mode:"audio", quality:"0", audio_format:"wav" }
+                };
+                const preset = presets[value];
+                if (!preset) return;
+                document.getElementById("mode").value = preset.mode;
+                toggleVideoOptions();
+                document.getElementById("quality").value = preset.quality;
+                if (preset.audio_format) document.getElementById("audio-format").value = preset.audio_format;
+            }
+
+            const SAFE_CONFIG_KEYS = [
+                "theme", "theme_palette", "language", "downloads_mode", "downloads_custom_dir",
+                "group_by_uploader", "download_delay", "download_retries", "sub_mode",
+                "sub_langs", "sub_auto", "library_filter", "categories_per_row",
+                "auto_quality_recommendation"
+            ];
+            async function exportSettings() {
+                try {
+                    const response = await fetch("/get_config", { cache:"no-store" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const config = await response.json();
+                    const settings = {};
+                    SAFE_CONFIG_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(config, key)) settings[key] = config[key]; });
+                    const blob = new Blob([JSON.stringify({ format:"MediaDeskSettings", version:1, settings }, null, 2)], { type:"application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "mediadesk-settings.json";
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    showToast(t("toast.settingsExported"), { type:"success" });
+                } catch(e) {
+                    showToast(e.message || t("toast.serverError"), { type:"error" });
+                }
+            }
+            function validateSettingsImport(settings) {
+                const has = key => Object.prototype.hasOwnProperty.call(settings, key);
+                const oneOf = (key, values) => !has(key) || values.includes(settings[key]);
+                const string = (key, max = 2048) => !has(key) || (typeof settings[key] === "string" && settings[key].length <= max);
+                const integer = (key, min, max) => !has(key) || (Number.isInteger(settings[key]) && settings[key] >= min && settings[key] <= max);
+                const boolean = key => !has(key) || typeof settings[key] === "boolean";
+                if (!oneOf("theme", ["system", "light", "dark"]) ||
+                    !oneOf("theme_palette", ["indigo", "ocean", "violet", "emerald", "amber", "graphite"]) ||
+                    !oneOf("language", SUPPORTED_LANGS) ||
+                    !oneOf("downloads_mode", ["internal", "system", "custom"]) ||
+                    !oneOf("sub_mode", ["none", "separate", "embedded"]) ||
+                    !oneOf("library_filter", ["all", "video", "audio"]) ||
+                    !string("downloads_custom_dir") || !string("sub_langs", 200) ||
+                    !integer("download_delay", 5, 30) || !integer("download_retries", 0, 5) ||
+                    !integer("categories_per_row", 1, 6) ||
+                    !boolean("group_by_uploader") || !boolean("sub_auto") ||
+                    !boolean("auto_quality_recommendation")) {
+                    throw new Error("O ficheiro contém definições inválidas.");
+                }
+            }
+            async function importSettingsFile(file) {
+                if (!file || file.size > 1024 * 1024) throw new Error("Ficheiro inválido ou superior a 1 MB.");
+                const data = JSON.parse(await file.text());
+                if (!data || data.format !== "MediaDeskSettings" || data.version !== 1 || !data.settings || typeof data.settings !== "object" || Array.isArray(data.settings)) {
+                    throw new Error("O ficheiro não é uma exportação de definições válida.");
+                }
+                const settings = {};
+                SAFE_CONFIG_KEYS.forEach(key => {
+                    if (Object.prototype.hasOwnProperty.call(data.settings, key)) settings[key] = data.settings[key];
+                });
+                validateSettingsImport(settings);
+                const response = await fetch("/save_config", {
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify(settings)
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                showToast(t("toast.settingsImported"), { type:"success", timeout:1800 });
+                setTimeout(() => window.location.reload(), 1800);
+            }
 
             // ==================== NOTIFICAÇÕES (TOASTS) ====================
             function showToast(message, opts = {}) {
@@ -3245,10 +3695,50 @@
             });
             // ==================== SISTEMA DE VERSÃO ====================
             // VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao.
-            const APP_VERSION = "3.7.4";
-            const APP_VERSION_DATE = "2026-10-16";
-            const APP_BUILD = 2026101601;
+            const APP_VERSION = "3.9.0";
+            const APP_VERSION_DATE = "2026-10-19";
+            const APP_BUILD = 2026101902;
             const VERSION_HISTORY = [
+                {
+                    version: "3.9.0",
+                    date: "2026-10-19",
+                    groups: {
+                        "Adicionado": ["A «Fila de downloads» passa para o painel lateral, junto à Mediateca, ficando sempre visível em qualquer aba"],
+                        "Corrigido": ["A barra de progresso volta a avançar durante o download e regressa ao início (0%) quando o download conclui", "A ordenação da Mediateca volta a respeitar o menu de cada grupo (nome, data, tamanho) e a direção ascendente/descendente; o seletor «Ordenar por data» mantém-se sincronizado", "Os endereços cujo download já concluiu são retirados automaticamente da caixa de entrada"],
+                        "Melhorado": ["As capas são convertidas para um formato compatível com o contentor (JPG/WebP) antes de serem incorporadas no ficheiro", "A repetição de downloads lê o número de tentativas de forma tolerante, evitando falhas em trabalhos antigos"],
+                    }
+                },
+                {
+                    version: "3.8.3",
+                    date: "2026-10-19",
+                    groups: {
+                        "Melhorado": ["As opções avançadas de Configuração foram reorganizadas em subsecções responsivas, com campos alinhados e melhor aproveitamento do espaço", "As opções avançadas e a recomendação automática de qualidade usam switches consistentes com o restante interface"],
+                    }
+                },
+                {
+                    version: "3.8.2",
+                    date: "2026-10-18",
+                    groups: {
+                        "Adicionado": ["A mediateca permite filtrar downloads por intervalo de data e hora até ao segundo e ordenar por data, com preferência guardada localmente"],
+                        "Corrigido": ["A ordenação cronológica respeita corretamente a direção mais antigos/mais recentes"],
+                        "Melhorado": ["O modal de ajuda documenta o filtro temporal e indica que as opções avançadas estão em Configuração"],
+                    }
+                },
+                {
+                    version: "3.8.1",
+                    date: "2026-10-18",
+                    groups: {
+                        "Melhorado": ["A recomendação automática de qualidade passa a poder ser ativada ou desativada nas Definições e a preferência fica guardada", "As opções avançadas de download passam a estar agrupadas na página Configuração, incluindo a ordenação e seleção de itens de listas"],
+                    }
+                },
+                {
+                    version: "3.8.0",
+                    date: "2026-10-18",
+                    groups: {
+                        "Adicionado": ["As listas podem ser ordenadas por duração ou qualidade, nos dois sentidos, com seleção de itens e processamento efetivo pela ordem escolhida", "A qualidade automática recomenda a resolução de vídeo adequada à altura física do ecrã detetado, mantendo a escolha manual disponível"],
+                        "Melhorado": ["O modal de ajuda documenta a fila persistente, a recomendação de qualidade e a ordenação das listas", "O motor de versões sincroniza também o número visível no cabeçalho e gera o histórico com escaping seguro para JavaScript"],
+                    }
+                },
                 {
                     version: "3.7.4",
                     date: "2026-10-16",
@@ -3261,7 +3751,7 @@
                     version: "3.7.3",
                     date: "2026-10-15",
                     groups: {
-                        "Corrigido": ["Downloads de vídeos com títulos com acentos ou emoji (ex.: partilhas do Facebook) falhavam com «'utf-8' codec can't decode byte 0xb7». O yt-dlp passa a escrever a sua saída em UTF-8 (--encoding utf-8), pelo que os títulos chegam intactos", "Títulos muito longos deixavam de conseguir criar a pasta/ficheiro no Windows («Unable to create directory», WinError 3) — os nomes passam a ser truncados para não exceder o limite de caminho do Windows (MAX_PATH), mantendo o agrupamento por pasta/canal"],
+                        "Corrigido": ["Downloads de vídeos com títulos com acentos ou emoji (ex.: partilhas do Facebook) falhavam com «\u0027utf-8\u0027 codec can\u0027t decode byte 0xb7». O yt-dlp passa a escrever a sua saída em UTF-8 (--encoding utf-8), pelo que os títulos chegam intactos", "Títulos muito longos deixavam de conseguir criar a pasta/ficheiro no Windows («Unable to create directory», WinError 3) — os nomes passam a ser truncados para não exceder o limite de caminho do Windows (MAX_PATH), mantendo o agrupamento por pasta/canal"],
                     }
                 },
                 {
@@ -3334,7 +3824,7 @@
             ];
             const CURRENT_VERSION_CHANGES = VERSION_HISTORY[0].groups
                 ? Object.values(VERSION_HISTORY[0].groups).flat()
-                : VERSION_HISTORY[0].changes;
+                : (VERSION_HISTORY[0].changes || []);
             // VERSION:END
 
             const CHANGE_GROUP_ORDER = ["Adicionado", "Melhorado", "Corrigido", "Removido"];
@@ -3479,6 +3969,17 @@
                 document.getElementById("progress-platform").innerHTML = platformIcon(currentPlatform);
                 positionProgressIndicator(p);
             }
+
+            // Mostra o estado de fase enviado pelo servidor (PHASE: <chave>).
+            function setPhase(key) {
+                const el = document.getElementById("phase-status");
+                if (!el) return;
+                const clean = String(key || "").trim().toLowerCase();
+                if (!clean) { el.innerText = ""; return; }
+                const name = "phase." + clean;
+                const label = t(name);
+                el.innerText = (label === name) ? "" : label;
+            }
             
             function openPreview(file, type, element) {
                 document.querySelectorAll(".library-item").forEach(el => el.classList.remove("active"));
@@ -3564,8 +4065,90 @@
                 const multiplier = order === "asc" ? 1 : -1;
                 if (sortBy === "name") sorted.sort((a, b) => multiplier * a.name.localeCompare(b.name));
                 else if (sortBy === "size") sorted.sort((a, b) => multiplier * (a.size - b.size));
-                else if (sortBy === "date") sorted.sort((a, b) => { const da = a.timestamp || 0, db = b.timestamp || 0; return multiplier * (db - da); });
+                else if (sortBy === "date") sorted.sort((a, b) => { const da = Number(a.timestamp) || 0, db = Number(b.timestamp) || 0; return multiplier * (da - db); });
                 return sorted;
+            }
+
+            function getLibraryTimeFilter() {
+                const fromValue = document.getElementById("library-time-from").value;
+                const toValue = document.getElementById("library-time-to").value;
+                const from = fromValue ? Date.parse(fromValue) / 1000 : null;
+                const to = toValue ? Date.parse(toValue) / 1000 : null;
+                const invalid = (fromValue && !Number.isFinite(from)) || (toValue && !Number.isFinite(to)) || (from !== null && to !== null && from > to);
+                const error = document.getElementById("library-time-error");
+                error.style.display = invalid ? "block" : "none";
+                if (invalid) return null;
+                return { from, to, order: document.getElementById("library-time-sort").value };
+            }
+
+            function persistSortPreferences() {
+                localStorage.setItem("ytdlp_video_sort_by", videoSortBy);
+                localStorage.setItem("ytdlp_video_sort_order", videoSortOrder);
+                localStorage.setItem("ytdlp_audio_sort_by", audioSortBy);
+                localStorage.setItem("ytdlp_audio_sort_order", audioSortOrder);
+            }
+
+            // O seletor "Ordenar por data" (painel DATA E HORA) e o menu de
+            // ordenação de cada grupo partilham o mesmo estado. Escolher uma
+            // direção de data coloca os dois grupos a ordenar por data.
+            function applyLibraryDateOrder(value) {
+                const order = value === "oldest" ? "asc" : "desc";
+                videoSortBy = "date";
+                audioSortBy = "date";
+                videoSortOrder = order;
+                audioSortOrder = order;
+                persistSortPreferences();
+            }
+
+            // Mantém o seletor "Ordenar por data" espelhado no estado real dos
+            // grupos, para os dois controlos nunca divergirem.
+            function syncLibraryDateSelect() {
+                const sort = document.getElementById("library-time-sort");
+                if (!sort) return;
+                if (videoSortBy === "date" && audioSortBy === "date") {
+                    sort.value = videoSortOrder === "asc" ? "oldest" : "newest";
+                }
+            }
+
+            function initLibraryTimeFilter() {
+                const from = document.getElementById("library-time-from");
+                const to = document.getElementById("library-time-to");
+                const sort = document.getElementById("library-time-sort");
+                from.value = localStorage.getItem("ytdlp_library_time_from") || "";
+                to.value = localStorage.getItem("ytdlp_library_time_to") || "";
+                const savedOrder = localStorage.getItem("ytdlp_library_time_sort");
+                // Repõe a direção de data guardada apenas quando os grupos ainda
+                // ordenam por data — nunca sobrepõe uma escolha de nome/tamanho.
+                if (savedOrder && videoSortBy === "date" && audioSortBy === "date") {
+                    applyLibraryDateOrder(savedOrder);
+                }
+                syncLibraryDateSelect();
+                const update = () => {
+                    const filter = getLibraryTimeFilter();
+                    if (filter) {
+                        localStorage.setItem("ytdlp_library_time_from", from.value);
+                        localStorage.setItem("ytdlp_library_time_to", to.value);
+                    }
+                    renderLibrary();
+                };
+                from.addEventListener("input", update);
+                to.addEventListener("input", update);
+                sort.addEventListener("change", () => {
+                    applyLibraryDateOrder(sort.value);
+                    localStorage.setItem("ytdlp_library_time_sort", sort.value);
+                    renderLibrary();
+                });
+                document.getElementById("library-time-clear").addEventListener("click", () => {
+                    from.value = "";
+                    to.value = "";
+                    sort.value = "newest";
+                    localStorage.removeItem("ytdlp_library_time_from");
+                    localStorage.removeItem("ytdlp_library_time_to");
+                    localStorage.removeItem("ytdlp_library_time_sort");
+                    applyLibraryDateOrder("newest");
+                    getLibraryTimeFilter();
+                    renderLibrary();
+                });
             }
             
             function setFilter(filter) {
@@ -4434,12 +5017,24 @@
             
             function renderLibrary() {
                 closeItemMenu();
+                const timeFilter = getLibraryTimeFilter();
+                if (!timeFilter) return;
                 const container = document.getElementById("library-container");
                 container.innerHTML = "";
                 document.getElementById("video-total").textContent = (currentFiles.video||[]).length;
                 document.getElementById("audio-total").textContent = (currentFiles.audio||[]).length;
                 let videosToShow = filterByCategory(currentFilter === "audio" ? [] : currentFiles.video);
                 let audiosToShow = filterByCategory(currentFilter === "video" ? [] : currentFiles.audio);
+                const inTimeRange = file => {
+                    const timestamp = Number(file.timestamp);
+                    if (timeFilter.from === null && timeFilter.to === null && !Number.isFinite(timestamp)) return true;
+                    return Number.isFinite(timestamp) &&
+                        (timeFilter.from === null || timestamp >= timeFilter.from) &&
+                        (timeFilter.to === null || timestamp < timeFilter.to + 1);
+                };
+                videosToShow = (videosToShow || []).filter(inTimeRange);
+                audiosToShow = (audiosToShow || []).filter(inTimeRange);
+                syncLibraryDateSelect();
                 
                 if (videosToShow && videosToShow.length > 0) {
                     const group = document.createElement("div"); group.className = "library-group video-group";
@@ -4578,10 +5173,28 @@
                 const res = await fetch("/get_history"); 
                 const history = await res.json(); 
                 const list = document.getElementById("history-list"); 
-                list.innerHTML = history.length === 0 ? `<li style="text-align:center;color:var(--text-secondary);padding:1rem">${escapeHtml(t("history.empty"))}</li>` : ""; 
+                const statusFilter = document.getElementById("history-status-filter")?.value || "all";
+                const mediaFilter = document.getElementById("history-media-filter")?.value || "all";
+                const fromFilter = document.getElementById("history-from-filter")?.value || "";
+                const toFilter = document.getElementById("history-to-filter")?.value || "";
+                const localDateKey = value => {
+                    const date = new Date(value);
+                    if (Number.isNaN(date.getTime())) return "";
+                    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+                };
+                const filteredHistory = history.filter(item => {
+                    if (statusFilter !== "all" && item.status !== statusFilter) return false;
+                    if (mediaFilter !== "all" && item.media_type !== mediaFilter) return false;
+                    if (fromFilter || toFilter) {
+                        const date = localDateKey(item.date);
+                        if (!date || (fromFilter && date < fromFilter) || (toFilter && date > toFilter)) return false;
+                    }
+                    return true;
+                });
+                list.innerHTML = filteredHistory.length === 0 ? `<li style="text-align:center;color:var(--text-secondary);padding:1rem">${escapeHtml(t("history.empty"))}</li>` : "";
                 
                 const usedFiles = new Set();
-                history.forEach(item => { 
+                filteredHistory.forEach(item => {
                     const li = document.createElement("li"); 
                     li.style.cssText = "padding:0.75rem; border-bottom:1px solid var(--border); cursor:pointer; position: relative;";
                     
@@ -4885,6 +5498,9 @@
                         const progress = parseFloat(msg.split(":")[1]);
                         if (!isNaN(progress)) updateProgressPosition(progress);
                     } 
+                    else if (msg.startsWith("PHASE:")) { 
+                        setPhase(msg.slice(6));
+                    } 
                     else if (msg.startsWith("FILENAME:")) { 
                         currentFileName = msg.replace("FILENAME:", "");
                         document.getElementById("current-file").innerText = currentFileName;
@@ -4901,16 +5517,21 @@
                     else if (msg.startsWith("DOWNLOAD_FINISHED:")) { 
                         // Fim do pedido de download (sucesso, falha ou cancelamento).
                         // Reactiva o botao "Iniciar" para permitir novas descargas
-                        // sem ser preciso recarregar a aplicacao.
-                        updateProgressPosition(0); 
-                        document.getElementById("start-btn").disabled = false; 
+                        // sem ser preciso recarregar a aplicacao e repoe a barra no
+                        // inicio (0%), pronta para o proximo download.
+                        updateProgressPosition(0);
+                        document.getElementById("start-btn").disabled = false;
                         document.getElementById("pause-btn").disabled = true; 
                         document.getElementById("cancel-btn").disabled = true; 
                         downloadActive = false; 
+                        setPhase("");
                         loadLibrary(); 
                         currentDownloadIndex = 0; 
                         currentTotalFiles = 0; 
                     } 
+                    else if (msg.startsWith("QUEUE_UPDATED:")) {
+                        loadDownloadQueue().catch(e => console.error("Failed to refresh download queue:", e));
+                    }
                     else if (msg.startsWith("LOG:")) { 
                         const logMsg = msg.replace("LOG:", "");
                         logToConsole(logMsg);
@@ -4936,16 +5557,17 @@
                             logMsg.includes("download completed")) {
                             updateProgressPosition(100);
                         }
-                    } 
-                    else if (msg.startsWith("DOWNLOAD_STARTED:")) { 
-                        downloadActive = true; 
-                        document.getElementById("start-btn").disabled = true; 
-                        document.getElementById("pause-btn").disabled = false; 
+                    }
+                    else if (msg.startsWith("DOWNLOAD_STARTED:")) {
+                        downloadActive = true;
+                        document.getElementById("start-btn").disabled = false;
+                        document.getElementById("pause-btn").disabled = false;
                         document.getElementById("cancel-btn").disabled = false;
                         const pb = document.getElementById("pause-btn"); pb.dataset.state = "running"; pb.innerHTML = `${icon("pause")} ${escapeHtml(t("btn.pause"))}`;
                         currentDownloadIndex = 0;
                         currentTotalFiles = 0;
                         updateProgressPosition(0);
+                        setPhase("");
                         logToConsole(t("log.downloadStarted"));
                     } 
                     else if (msg.startsWith("UPDATE_LIBRARY:")) { 
@@ -4977,9 +5599,35 @@
                 const mode = document.getElementById("mode").value;
                 const qualitySelect = document.getElementById("quality");
                 const videoOpts = document.getElementById("video-options");
+                const audioFormat = document.getElementById("audio-format-wrap");
+                const previousQuality = qualitySelect.value;
                 qualitySelect.innerHTML = "";
-                if (mode === "audio") { videoOpts.classList.add("hidden"); [{v:"0",t:t("quality.best")},{v:"3",t:t("quality.high")},{v:"5",t:t("quality.medium")}].forEach(q => qualitySelect.add(new Option(q.t, q.v))); }
-                else { videoOpts.classList.remove("hidden"); [{v:"2160",t:"4K"},{v:"1080",t:"1080p"},{v:"720",t:"720p"},{v:"480",t:"480p"}].forEach(q => qualitySelect.add(new Option(q.t, q.v))); }
+                if (mode === "audio") { videoOpts.classList.add("hidden"); audioFormat.classList.remove("hidden"); [{v:"0",t:t("quality.best")},{v:"3",t:t("quality.high")},{v:"5",t:t("quality.medium")}].forEach(q => qualitySelect.add(new Option(q.t, q.v))); }
+                else {
+                    videoOpts.classList.remove("hidden");
+                    audioFormat.classList.add("hidden");
+                    const autoQualityEnabled = document.getElementById("automatic-quality-checkbox")?.checked !== false;
+                    if (autoQualityEnabled) qualitySelect.add(new Option("", "auto"));
+                    [{v:"best",t:t("quality.videoBest")},{v:"2160",t:"4K"},{v:"1080",t:"1080p"},{v:"720",t:"720p"},{v:"480",t:"480p"}].forEach(q => qualitySelect.add(new Option(q.t, q.v)));
+                    const preferredQuality = previousQuality && [...qualitySelect.options].some(option => option.value === previousQuality)
+                        ? previousQuality
+                        : (autoQualityEnabled ? "auto" : "best");
+                    qualitySelect.value = preferredQuality === "auto" && !autoQualityEnabled ? "best" : preferredQuality;
+                    refreshRecommendedVideoQualityLabel();
+                }
+            }
+            function refreshRecommendedVideoQualityLabel() {
+                const option = document.querySelector('#quality option[value="auto"]');
+                if (option) option.textContent = t("quality.recommended", { height: getRecommendedVideoQuality() });
+            }
+            function getRecommendedVideoQuality() {
+                const screenHeight = window.screen?.height || window.innerHeight || 480;
+                const physicalHeight = Math.round(screenHeight * Math.max(1, window.devicePixelRatio || 1));
+                return [2160, 1080, 720, 480].find(height => height <= physicalHeight) || 480;
+            }
+            function resolveVideoQuality() {
+                const quality = document.getElementById("quality").value;
+                return quality === "auto" ? String(getRecommendedVideoQuality()) : quality;
             }
             
             function toggleSubSettings() { 
@@ -5024,11 +5672,42 @@
                 searchInput.addEventListener("input", e=>updateAutocomplete(e.target.value));
                 document.getElementById("search-button").onclick = () => updateAutocomplete(searchInput.value.trim());
                 
-                document.getElementById("start-btn").onclick = async () => { 
-                    const urls = document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(u=>u); 
-                    if (!urls.length) { showToast(t("toast.invalidUrl"), { type:"warning" }); return; } 
-                    document.getElementById("start-btn").disabled = true; 
-                    await fetch("/download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ urls, mode:document.getElementById("mode").value, quality:document.getElementById("quality").value, vformat:document.getElementById("vformat").value, subtitles:document.getElementById("subtitles").checked }) }); 
+                document.getElementById("start-btn").onclick = async () => {
+                    const urls = document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(u=>u);
+                    if (!urls.length) { showToast(t("toast.invalidUrl"), { type:"warning" }); return; }
+                    const scheduledValue = document.getElementById("scheduled-at").value;
+                    const payload = {
+                        urls,
+                        mode:document.getElementById("mode").value,
+                        quality:document.getElementById("mode").value === "video" ? resolveVideoQuality() : document.getElementById("quality").value,
+                        vformat:document.getElementById("vformat").value,
+                        audio_format:document.getElementById("audio-format").value,
+                        subtitles:document.getElementById("subtitles").checked,
+                        embed_metadata:document.getElementById("embed-metadata").checked,
+                        embed_thumbnail:document.getElementById("embed-thumbnail").checked,
+                        embed_chapters:document.getElementById("embed-chapters").checked,
+                        write_info_json:document.getElementById("write-info-json").checked,
+                        playlist_items:document.getElementById("playlist-items").value.trim(),
+                        playlist_reverse:document.getElementById("playlist-reverse").checked,
+                        playlist_sort:document.getElementById("playlist-sort").value,
+                        clip_start:document.getElementById("clip-start").value.trim(),
+                        clip_end:document.getElementById("clip-end").value.trim(),
+                        proxy:document.getElementById("proxy-url").value.trim(),
+                        scheduled_at:scheduledValue ? new Date(scheduledValue).toISOString() : "",
+                        priority:Number(document.getElementById("download-priority").value),
+                        retry_count:Number(document.getElementById("retry-count").value)
+                    };
+                    try {
+                        const response = await fetch("/download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+                        if (!response.ok) {
+                            const raw = await response.text();
+                            throw new Error(raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || `HTTP ${response.status}`);
+                        }
+                        await loadDownloadQueue();
+                        showToast(t("queue.status.queued"), { type:"success" });
+                    } catch(e) {
+                        showToast(e.message || t("toast.serverError"), { type:"error" });
+                    }
                 };
                 document.getElementById("pause-btn").onclick = async () => { if (!downloadActive) return; const btn = document.getElementById("pause-btn"); const isPaused = btn.dataset.state !== "paused"; await fetch("/pause_download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pause:isPaused }) }); btn.dataset.state = isPaused ? "paused" : "running"; btn.innerHTML = isPaused ? `${icon("play")} ${escapeHtml(t("btn.resume"))}` : `${icon("pause")} ${escapeHtml(t("btn.pause"))}`; showToast(isPaused ? t("toast.paused") : t("toast.resumed"), { type:"info" }); };
                 document.getElementById("cancel-btn").onclick = async () => { if (!downloadActive) return; if (await uiConfirm(t("confirm.cancelDownload"), { title:t("confirm.cancelDownload.title"), danger:true, icon:"stop", confirmText:t("confirm.cancelDownload.btn") })) { await fetch("/cancel_download", { method:"POST" }); showToast(t("toast.downloadCancelled"), { type:"info" }); } };
@@ -5037,9 +5716,58 @@
                 document.getElementById("use-cookies").onchange = e => fetch("/save_config", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({use_cookies:e.target.checked}) });
                 document.getElementById("group-by-uploader").onchange = e => { fetch("/save_config", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({group_by_uploader:e.target.checked}) }); showToast(e.target.checked ? t("toast.groupByOn") : t("toast.groupByOff"), { type:"interaction" }); };
                 document.querySelectorAll('input[name="dl-dest"]').forEach(r => r.addEventListener("change", toggleDlCustomRow));
+                document.getElementById("download-preset").addEventListener("change", e => applyDownloadPreset(e.target.value));
+                document.getElementById("automatic-quality-checkbox").addEventListener("change", async e => {
+                    const checkbox = e.target;
+                    const enabled = checkbox.checked;
+                    try {
+                        const response = await fetch("/save_config", {
+                            method:"POST",
+                            headers:{"Content-Type":"application/json"},
+                            body:JSON.stringify({ auto_quality_recommendation: enabled })
+                        });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        appConfig.auto_quality_recommendation = enabled;
+                        toggleVideoOptions();
+                    } catch(error) {
+                        checkbox.checked = !enabled;
+                        showToast(error.message || t("toast.serverError"), { type:"error" });
+                    }
+                });
+                ["mode", "quality", "vformat", "audio-format"].forEach(id => {
+                    document.getElementById(id).addEventListener("change", () => { document.getElementById("download-preset").value = ""; });
+                });
+                document.getElementById("queue-list").addEventListener("click", async e => {
+                    const button = e.target.closest("[data-queue-action]");
+                    if (!button) return;
+                    button.disabled = true;
+                    try {
+                        await queueAction(button.dataset.queueAction, button.dataset.queueId);
+                    } catch(err) {
+                        showToast(err.message || t("toast.serverError"), { type:"error" });
+                        button.disabled = false;
+                    }
+                });
+                document.getElementById("settings-import-input").addEventListener("change", async e => {
+                    const file = e.target.files && e.target.files[0];
+                    try {
+                        if (file) await importSettingsFile(file);
+                    } catch(err) {
+                        showToast(err.message || t("toast.serverError"), { type:"error" });
+                    } finally {
+                        e.target.value = "";
+                    }
+                });
+                ["history-status-filter", "history-media-filter", "history-from-filter", "history-to-filter"].forEach(id => {
+                    document.getElementById(id).addEventListener("change", () => loadHistory());
+                });
+                loadDownloadQueue().catch(e => console.error("Failed to load download queue:", e));
                 
                 fetch("/get_config").then(res=>res.json()).then(cfg => { 
                     appConfig = cfg; 
+                    const autoQualityCheckbox = document.getElementById("automatic-quality-checkbox");
+                    autoQualityCheckbox.checked = cfg.auto_quality_recommendation !== false;
+                    toggleVideoOptions();
                     document.getElementById("app-version").innerText = `v${APP_VERSION}`; 
                     document.getElementById("use-cookies").checked = cfg.use_cookies !== undefined ? cfg.use_cookies : true; 
                     document.getElementById("group-by-uploader").checked = cfg.group_by_uploader === true; 
@@ -5102,7 +5830,9 @@
                 window.openCategoryColorMenu = openCategoryColorMenu;
                 
                 toggleVideoOptions();
+                window.addEventListener("resize", refreshRecommendedVideoQualityLabel);
                 loadSortPreferences();
+                initLibraryTimeFilter();
                 updateProgressPosition(0);
                 window.addEventListener("resize", () => positionProgressIndicator(lastProgress));
                 window.addEventListener("resize", () => closeItemMenu());

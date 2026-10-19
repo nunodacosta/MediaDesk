@@ -1,10 +1,77 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.7.4",
-  "date": "2026-10-16",
-  "build": 2026101601,
+  "version": "3.9.0",
+  "date": "2026-10-19",
+  "build": 2026101902,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.9.0",
+      "date": "2026-10-19",
+      "groups": {
+        "Adicionado": [
+          "A «Fila de downloads» passa para o painel lateral, junto à Mediateca, ficando sempre visível em qualquer aba"
+        ],
+        "Corrigido": [
+          "A barra de progresso volta a avançar durante o download e regressa ao início (0%) quando o download conclui",
+          "A ordenação da Mediateca volta a respeitar o menu de cada grupo (nome, data, tamanho) e a direção ascendente/descendente; o seletor «Ordenar por data» mantém-se sincronizado",
+          "Os endereços cujo download já concluiu são retirados automaticamente da caixa de entrada"
+        ],
+        "Melhorado": [
+          "As capas são convertidas para um formato compatível com o contentor (JPG/WebP) antes de serem incorporadas no ficheiro",
+          "A repetição de downloads lê o número de tentativas de forma tolerante, evitando falhas em trabalhos antigos"
+        ]
+      }
+    },
+    {
+      "version": "3.8.3",
+      "date": "2026-10-19",
+      "groups": {
+        "Melhorado": [
+          "As opções avançadas de Configuração foram reorganizadas em subsecções responsivas, com campos alinhados e melhor aproveitamento do espaço",
+          "As opções avançadas e a recomendação automática de qualidade usam switches consistentes com o restante interface"
+        ]
+      }
+    },
+    {
+      "version": "3.8.2",
+      "date": "2026-10-18",
+      "groups": {
+        "Adicionado": [
+          "A mediateca permite filtrar downloads por intervalo de data e hora até ao segundo e ordenar por data, com preferência guardada localmente"
+        ],
+        "Corrigido": [
+          "A ordenação cronológica respeita corretamente a direção mais antigos/mais recentes"
+        ],
+        "Melhorado": [
+          "O modal de ajuda documenta o filtro temporal e indica que as opções avançadas estão em Configuração"
+        ]
+      }
+    },
+    {
+      "version": "3.8.1",
+      "date": "2026-10-18",
+      "groups": {
+        "Melhorado": [
+          "A recomendação automática de qualidade passa a poder ser ativada ou desativada nas Definições e a preferência fica guardada",
+          "As opções avançadas de download passam a estar agrupadas na página Configuração, incluindo a ordenação e seleção de itens de listas"
+        ]
+      }
+    },
+    {
+      "version": "3.8.0",
+      "date": "2026-10-18",
+      "groups": {
+        "Adicionado": [
+          "As listas podem ser ordenadas por duração ou qualidade, nos dois sentidos, com seleção de itens e processamento efetivo pela ordem escolhida",
+          "A qualidade automática recomenda a resolução de vídeo adequada à altura física do ecrã detetado, mantendo a escolha manual disponível"
+        ],
+        "Melhorado": [
+          "O modal de ajuda documenta a fila persistente, a recomendação de qualidade e a ordenação das listas",
+          "O motor de versões sincroniza também o número visível no cabeçalho e gera o histórico com escaping seguro para JavaScript"
+        ]
+      }
+    },
     {
       "version": "3.7.4",
       "date": "2026-10-16",
