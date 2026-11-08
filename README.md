@@ -137,6 +137,14 @@ licenses/                 licenças de terceiros
 - **WebView2:** requer o WebView2 Runtime (presente no Windows 11 e em muitos Windows 10). Para portabilidade offline total, distribuir o *Fixed Runtime* e adaptar `EnsureCoreWebView2Async`.
 - **Zero instalação:** distribuir `bin\python` já preparado com as dependências.
 
+
+## About ALDACO
+A ALDACO é uma identidade independente de software criada por Alexandre da Costa.
+
+Os seus projetos abrangem aplicações desktop, aplicações móveis, aplicações web e ferramentas de automação, incluindo software educativo, aplicações multimédia e utilitários para o quotidiano.
+
+A ALDACO procura criar software útil, simples e acessível, concebido para responder a necessidades reais e proporcionar uma experiência de utilização clara e intuitiva.
+
 ## Licença
 
 Software livre — **GNU GPL-3.0** (ver [`LICENSE`](LICENSE)). © 2026 Alexandre da Costa / ALDACO. Créditos: conceito, design e direção de Alexandre da Costa / ALDACO; implementação técnica assistida por IA, sob direção do autor. Ver [`licenses/ALDACO-IP-NOTICE.txt`](licenses/ALDACO-IP-NOTICE.txt) e [`licenses.json`](licenses.json).
