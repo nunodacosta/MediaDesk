@@ -153,4 +153,29 @@ if (Test-Path $readmePath) {
     }
 }
 
+# ============================ RELEASE_NOTES_NEXT.md ========================
+# Mantem o cabecalho das notas de release alinhado com version.json. O corpo
+# das notas continua a ser escrito a mao; apenas a versao e o exemplo de
+# publicacao sao sincronizados.
+$notesPath = Join-Path $root 'RELEASE_NOTES_NEXT.md'
+if (Test-Path $notesPath) {
+    $ntBytes = [System.IO.File]::ReadAllBytes($notesPath)
+    $ntHasBom = ($ntBytes.Length -ge 3 -and $ntBytes[0] -eq 0xEF -and $ntBytes[1] -eq 0xBB -and $ntBytes[2] -eq 0xBF)
+    $nt = [System.Text.Encoding]::UTF8.GetString($ntBytes)
+    if ($ntHasBom) { $nt = $nt.TrimStart([char]0xFEFF) }
+    $newNt = [regex]::Replace($nt, '(?m)^(## Vers\u00e3o: `)v[^`]*`', "`${1}v$version``")
+    # Apenas o primeiro titulo (o da release em rascunho) e atualizado; os
+    # titulos do historico publicado ficam intactos.
+    $newNt = ([regex]'(?m)^## YT-DLP Media Desk v[\d.]+$').Replace($newNt, "## YT-DLP Media Desk v$version", 1)
+    $newNt = [regex]::Replace($newNt, '(?m)^(git commit -m "release: )v[\d.]+(")$', "`${1}v$version`${2}")
+    $newNt = [regex]::Replace($newNt, '(?m)^(git tag -a )v[\d.]+( -m "YT-DLP Media Desk )v[\d.]+(")$', "`${1}v$version`${2}v$version`${3}")
+    $newNt = [regex]::Replace($newNt, '(?m)^(git push origin )v[\d.]+', "`${1}v$version")
+    if ($newNt -ne $nt) {
+        [System.IO.File]::WriteAllText($notesPath, $newNt, (New-Object System.Text.UTF8Encoding($ntHasBom)))
+        Write-Host '[sync_version] RELEASE_NOTES_NEXT.md atualizado' -ForegroundColor Green
+    } else {
+        Write-Host '[sync_version] RELEASE_NOTES_NEXT.md: versao ja correta' -ForegroundColor Yellow
+    }
+}
+
 Write-Host "[sync_version] concluido: $version" -ForegroundColor Cyan

@@ -13,7 +13,7 @@
 ; ---------------------------------------------------------------------------
 
 #define AppName "YT-DLP Media Desk"
-#define AppVersion "3.11.4"
+#define AppVersion "3.12.0"
 #define AppPublisher "ALDACO"
 #define AppCopyright "Design e interacao por ALDACO. Motor de downloads por YT-DLP. Software livre: GPL-3.0."
 #define AppExeName "Media Desk.exe"

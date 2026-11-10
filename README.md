@@ -36,7 +36,7 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
-- **Versão:** 3.11.4
+- **Versão:** 3.12.0
 
 > Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[Code signing policy](CODE_SIGNING_POLICY.md)** (política de assinatura de código e privacidade).
 

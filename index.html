@@ -6,8 +6,8 @@
         <title>YT-DLP Media Desk</title>
         <meta name="description" content="Descarregue, organize e reproduza media com o motor yt-dlp." />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content="#0a0a0c" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0a0c1a" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f7f8ff" media="(prefers-color-scheme: light)" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Media Desk" />
@@ -20,7 +20,11 @@
             (function () {
                 try {
                     var m = localStorage.getItem("theme") || "system";
-                    var p = localStorage.getItem("theme_palette") || "indigo";
+                    var stored = localStorage.getItem("theme_palette") || "indigo";
+                    // Compatibilidade: "ocean", "emerald" e "graphite" deram lugar a "rose", "crimson" e "blue".
+                    var aliases = { ocean: "rose", emerald: "crimson", graphite: "blue" };
+                    var p = aliases[stored] || stored;
+                    if (p !== stored) localStorage.setItem("theme_palette", p);
                     var d = m === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : m;
                     document.documentElement.setAttribute("data-theme", d);
                     document.documentElement.setAttribute("data-palette", p);
@@ -38,60 +42,60 @@
         </script>
         <style>
             :root {
-                --bg-primary: #ffffff;
-                --bg-secondary: #f4f4f5;
-                --text-primary: #18181b;
-                --text-secondary: #5f6368;
-                --accent: #2563eb;
-                --accent-hover: #1d4ed8;
-                --border: #e4e4e7;
-                --card-bg: #ffffff;
+                --bg-primary: #f7f8ff;
+                --bg-secondary: #eef0fb;
+                --text-primary: #151a36;
+                --text-secondary: #565e86;
+                --accent: #4f46e5;
+                --accent-hover: #4338ca;
+                --border: #dde1f4;
+                --card-bg: #fbfbff;
                 --success: #16a34a;
                 --danger: #dc2626;
                 --warning: #f59e0b;
                 --sidebar-width: 320px;
-                --console-header-bg: #e5e5eb;
-                --console-bg: #1e1e1e;
-                --console-text: #83b886;
-                --console-error: #ff6b6b;
-                --console-success: #69db7e;
+                --console-header-bg: #e2e5f7;
+                --console-bg: #141830;
+                --console-text: #9fd6a8;
+                --console-error: #ff8a8a;
+                --console-success: #8bc34a;
                 --console-warning: #ffd43b;
-                --console-number: #bd93f9;
+                --console-number: #b9a5ff;
                 --console-url: #8be9fd;
-                --search-bg: #f1f5f9;
-                --search-border: #e2e8f0;
-                --search-icon: #64748b;
-                --search-icon-hover: #2563eb;
-                --switch-off-bg: #cbd5e1;
-                --switch-off-border: #94a3b8;
-                --switch-on-bg: #2563eb;
-                --switch-on-border: #1d4ed8;
+                --search-bg: #eef1fc;
+                --search-border: #dde2f5;
+                --search-icon: #5f6790;
+                --search-icon-hover: var(--accent);
+                --switch-off-bg: #ccd3f0;
+                --switch-off-border: #9aa5d8;
+                --switch-on-bg: var(--accent);
+                --switch-on-border: var(--accent-hover);
             }
             [data-theme="dark"] {
-                --bg-primary: #0a0a0c;
-                --bg-secondary: #1a1a1f;
-                --text-primary: #ededee;
-                --text-secondary: #a1a1aa;
-                --accent: #3b82f6;
-                --accent-hover: #60a5fa;
-                --border: #2a2a30;
-                --card-bg: #141418;
-                --search-bg: #1f1f24;
-                --search-border: #2a2a30;
-                --search-icon: #9ca3af;
-                --search-icon-hover: #60a5fa;
-                --console-header-bg: #2a2a30;
-                --console-bg: #0d0d0f;
+                --bg-primary: #0a0c1a;
+                --bg-secondary: #141830;
+                --text-primary: #eef0fb;
+                --text-secondary: #a6adcf;
+                --accent: #818cf8;
+                --accent-hover: #a5b4fc;
+                --border: #2a3050;
+                --card-bg: #111527;
+                --search-bg: #1a1f38;
+                --search-border: #2a3050;
+                --search-icon: #9aa3c8;
+                --search-icon-hover: var(--accent);
+                --console-header-bg: #232a4a;
+                --console-bg: #0b0e1d;
                 --console-text: #a5d6a5;
                 --console-error: #ff8a8a;
                 --console-success: #8bc34a;
                 --console-warning: #ffb74d;
-                --console-number: #bd93f9;
+                --console-number: #b9a5ff;
                 --console-url: #8be9fd;
-                --switch-off-bg: #334155;
-                --switch-off-border: #475569;
-                --switch-on-bg: #3b82f6;
-                --switch-on-border: #60a5fa;
+                --switch-off-bg: #303a63;
+                --switch-off-border: #4a5688;
+                --switch-on-bg: var(--accent);
+                --switch-on-border: var(--accent-hover);
             }
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
@@ -121,7 +125,7 @@
             
             .search-wrapper { flex: 1; width: 100%; max-width: none; position: relative; }
             .search-input { width: 100%; padding: 0.625rem 2.5rem 0.625rem 1rem; font-size: 0.9rem; border: 1px solid var(--search-border); border-radius: 40px; background: var(--search-bg); color: var(--text-primary); outline: none; }
-            .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+            .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
             .search-button { position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%); background: transparent !important; border: none !important; padding: 0; margin: 0; width: 32px; min-width: 32px; height: 32px; min-height: 32px; display: grid; place-items: center; border-radius: 8px; cursor: pointer; }
             .search-button svg { width: 18px; height: 18px; stroke: var(--search-icon); display: block; }
             .search-button:hover svg { stroke: var(--search-icon-hover); }
@@ -140,8 +144,8 @@
             button.secondary:hover { background: var(--bg-secondary); transform: translateY(-1px); }
             button.danger { background: var(--danger); color: white; }
             button.danger:hover { filter: brightness(1.1); }
-            button.soft { background: #e8f5e9 !important; color: #2e7d32 !important; border: 1px solid #c8e6c9 !important; }
-            [data-theme="dark"] button.soft { background: #1e2a1e !important; color: #81c784 !important; border: 1px solid #2e4a2e !important; }
+            button.soft { background: color-mix(in srgb, var(--accent) 12%, var(--card-bg)) !important; color: var(--accent) !important; border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border)) !important; }
+            [data-theme="dark"] button.soft { background: color-mix(in srgb, var(--accent) 18%, var(--card-bg)) !important; color: var(--accent) !important; border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border)) !important; }
             button.soft:hover { filter: brightness(0.95); transform: translateY(-1px); }
             button.icon-only { width: auto; padding: 0.5rem; background: transparent; color: var(--text-secondary); border: none; }
             button.icon-only:hover { background: var(--bg-secondary); transform: none; }
@@ -200,6 +204,7 @@
             .queue-carousel-nav:hover { background:color-mix(in srgb,var(--text-primary) 12%, var(--card-bg)); border-color:color-mix(in srgb,var(--text-primary) 40%, var(--border)); color:var(--text-primary); }
             .queue-carousel-nav:active { background:color-mix(in srgb,var(--text-primary) 16%, var(--card-bg)); }
             .queue-carousel-nav.prev { left:.25rem; } .queue-carousel-nav.next { right:.25rem; }
+            .queue-carousel-nav .icon { width:14px; height:14px; stroke-width:2.2; }
             @media (max-width: 900px) {
                 .download-actions-grid { grid-template-columns: 1fr; gap:.75rem; }
                 .queue-card { --queue-card-size: clamp(84px, calc((100% - 1.2rem) / 5), 100px); }
@@ -215,6 +220,7 @@
             .library-time-filter-grid input, .library-time-filter-grid select { width:100%; min-width:0; padding:.4rem .45rem; font-size:.68rem; }
             .library-time-sort { grid-column:1 / -1; }
             .library-time-filter-grid > button { width:100%; min-height:34px; padding:.35rem; font-size:.7rem; }
+            .library-time-filter-grid > .icon-cmd { width:38px; min-width:38px; height:38px; min-height:38px; justify-self:start; }
             .filter-btn { flex: 1; padding: 0.5rem; font-size: 0.8rem; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; border-radius: 20px; transition: all 0.2s ease; }
             .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
             .filter-btn:hover:not(.active) { background: var(--bg-secondary); transform: translateY(-1px); }
@@ -312,7 +318,7 @@
                 width: 12px;
                 left: 2px;
                 top: 2px;
-                background-color: white;
+                background-color: #eef1ff;
                 transition: 0.2s;
                 border-radius: 50%;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -389,7 +395,7 @@
                 left: 2px;
                 width: 12px;
                 height: 12px;
-                background: white;
+                background: #eef1ff;
                 border-radius: 50%;
                 transition: transform 0.2s ease;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -416,7 +422,7 @@
             .mb-1 { margin-bottom: 0.5rem; }
             .mb-2 { margin-bottom: 1rem; }
             
-            .library-group.video-group .library-group-title { background: rgba(37, 99, 235, 0.15); color: var(--accent); --group-bar: var(--accent); }
+            .library-group.video-group .library-group-title { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); --group-bar: var(--accent); }
             .library-group.audio-group .library-group-title { background: rgba(22, 163, 74, 0.15); color: var(--success); --group-bar: var(--success); }
             .library-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
             .library-group-header .library-group-title { margin-bottom: 0; flex: 1; display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
@@ -452,7 +458,7 @@
             .library-item-action.delete:hover { opacity: 1; color: var(--danger); }
             
             /* Pré-visualização flutuante: a posição é escolhida nas definições. */
-            .preview-container { position: fixed; z-index: 5000; width: min(420px, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); max-height: calc(100vh - 2rem); overflow: auto; background: #000; color: white; padding: 1rem; display: none; flex-direction: column; border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.55); min-height: 180px; }
+            .preview-container { position: fixed; z-index: 5000; width: min(420px, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); max-height: calc(100vh - 2rem); overflow: auto; background: #0a0c1a; color: #eef0fb; padding: 1rem; display: none; flex-direction: column; border: 1px solid rgba(147,160,255,0.22); border-radius: 14px; box-shadow: 0 24px 60px rgba(4,7,22,0.6); min-height: 180px; }
             .preview-container.open { display: flex; }
             .preview-container[data-pos="top-left"] { top: 1rem; left: 1rem; }
             .preview-container[data-pos="top-center"] { top: 1rem; left: 50%; transform: translateX(-50%); }
@@ -464,7 +470,7 @@
             .preview-container[data-pos="bottom-center"] { bottom: 1rem; left: 50%; transform: translateX(-50%); }
             .preview-container[data-pos="bottom-right"] { bottom: 1rem; right: 1rem; }
             .preview-header { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.85rem; font-weight: bold; }
-            .preview-player { width: 100%; border-radius: 8px; background: #000; max-height: 240px; }
+            .preview-player { width: 100%; border-radius: 8px; background: #0a0c1a; max-height: 240px; }
             audio.preview-player { height: 50px; width: 100%; }
             .preview-error { color: #ff6b6b; text-align: center; padding: 2rem; font-size: 0.9rem; }
 
@@ -594,7 +600,7 @@
             .hidden { display: none !important; }
             #status-display { display: none; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin-top: 1rem; }
             
-            .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
+            .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6,10,30,0.82); display: none; justify-content: center; align-items: center; z-index: 2000; }
             .modal-content { 
                 background: var(--card-bg); 
                 padding: 2rem; 
@@ -622,7 +628,7 @@
             @media (max-width:700px) { .right-panel { display: none; } }
 
             /* Professional UI layer */
-            :root { --accent:#315b8a; --accent-hover:#25486f; --success:#19724b; --warning:#a46314; --danger:#b43b42; --sidebar-width:380px; --radius:10px; --shadow:0 10px 30px rgba(15,23,42,.06); }
+            :root { --accent:#3b46c4; --accent-hover:#2f39a8; --success:#19724b; --warning:#a46314; --danger:#b43b42; --sidebar-width:380px; --radius:10px; --shadow:0 10px 30px rgba(15,23,42,.06); }
             body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg-secondary); }
             .brand-header { height:72px; padding:0 28px; box-shadow:0 1px 0 var(--border); }
             .brand { min-width:0; justify-self:start; } .brand-text { gap:3px; }
@@ -716,26 +722,33 @@
             }
             :root[data-theme="dark"] {
                 --on-accent:#0b1020; --on-success:#04241a; --on-danger:#2a0d0f; --on-warning:#2a1a05;
+                --tooltip-bg: color-mix(in srgb, var(--accent) 16%, #151a30);
+                --tooltip-fg: #f2f4ff;
+                --tooltip-border: color-mix(in srgb, var(--accent) 66%, #39406a);
             }
 
-            /* --- Paletas de tema (cada uma com variante clara e escura) --- */
-            :root[data-palette="indigo"]   { --accent:#4f46e5; --accent-hover:#6366f1; }
+            /* --- Paletas de tema (cada uma com variante clara e escura) ---
+               Cores alinhadas com o logotipo em cristal: amarelo -> laranja ->
+               vermelho -> rosa -> magenta -> roxo -> azul. Em modo claro o acento
+               e mais profundo para manter contraste com texto branco; em modo
+               escuro e mais luminoso para contraste com texto quase preto. */
+            :root[data-palette="amber"]    { --accent:#b45309; --accent-hover:#92400e; }
+            :root[data-palette="amber"][data-theme="dark"]    { --accent:#fab03e; --accent-hover:#feda75; }
+
+            :root[data-palette="crimson"]  { --accent:#cf1b2b; --accent-hover:#b91c1c; }
+            :root[data-palette="crimson"][data-theme="dark"]  { --accent:#ff6b6b; --accent-hover:#ff9a9a; }
+
+            :root[data-palette="rose"]     { --accent:#c2185b; --accent-hover:#9d174d; }
+            :root[data-palette="rose"][data-theme="dark"]     { --accent:#ff6fa8; --accent-hover:#ff9bc2; }
+
+            :root[data-palette="violet"]   { --accent:#8134af; --accent-hover:#6d28a0; }
+            :root[data-palette="violet"][data-theme="dark"]   { --accent:#bb7ce8; --accent-hover:#cba0f2; }
+
+            :root[data-palette="indigo"]   { --accent:#4f46e5; --accent-hover:#4338ca; }
             :root[data-palette="indigo"][data-theme="dark"]   { --accent:#818cf8; --accent-hover:#a5b4fc; }
 
-            :root[data-palette="ocean"]    { --accent:#0e7490; --accent-hover:#0b5f77; }
-            :root[data-palette="ocean"][data-theme="dark"]    { --accent:#22d3ee; --accent-hover:#67e8f9; }
-
-            :root[data-palette="violet"]   { --accent:#7c3aed; --accent-hover:#6d28d9; }
-            :root[data-palette="violet"][data-theme="dark"]   { --accent:#a78bfa; --accent-hover:#c4b5fd; }
-
-            :root[data-palette="emerald"]  { --accent:#047857; --accent-hover:#065f46; }
-            :root[data-palette="emerald"][data-theme="dark"]  { --accent:#34d399; --accent-hover:#6ee7b7; }
-
-            :root[data-palette="amber"]    { --accent:#b45309; --accent-hover:#92400e; }
-            :root[data-palette="amber"][data-theme="dark"]    { --accent:#fbbf24; --accent-hover:#fcd34d; }
-
-            :root[data-palette="graphite"] { --accent:#3f4652; --accent-hover:#2f3540; }
-            :root[data-palette="graphite"][data-theme="dark"] { --accent:#cbd5e1; --accent-hover:#e2e8f0; }
+            :root[data-palette="blue"] { --accent:#3b46c4; --accent-hover:#2f39a8; }
+            :root[data-palette="blue"][data-theme="dark"] { --accent:#93a0ff; --accent-hover:#b3bcff; }
 
             /* --- Cor de texto sobre superfícies de acento (contraste correto) --- */
             button { color: var(--on-accent); }
@@ -786,13 +799,13 @@
             .palette-name { font-size:.66rem; font-weight:650; }
 
             /* --- Tooltips --- */
-            .tooltip { position:fixed; z-index:6000; max-width:280px; padding:7px 11px; border-radius:9px; background:var(--tooltip-bg); color:var(--tooltip-fg); border:1px solid var(--tooltip-border); font-size:.73rem; font-weight:600; line-height:1.4; letter-spacing:.01em; box-shadow:0 12px 30px rgba(0,0,0,.30); pointer-events:none; opacity:0; transform:translateY(-4px); transition:opacity .13s ease, transform .13s ease; }
-            .tooltip.show { opacity:1; transform:translateY(0); }
-            .tooltip[data-placement="top"] { transform:translateY(4px); }
-            .tooltip[data-placement="top"].show { transform:translateY(0); }
+            .tooltip { position:fixed; z-index:6000; max-width:min(280px, calc(100vw - 16px)); padding:7px 11px; border-radius:9px; background:var(--tooltip-bg); color:var(--tooltip-fg); border:1px solid var(--tooltip-border); font-size:.73rem; font-weight:600; line-height:1.4; letter-spacing:.01em; box-shadow:0 12px 30px rgba(0,0,0,.30); pointer-events:none; opacity:0; transform:scale(.97); transition:opacity .13s ease, transform .13s ease; }
+            .tooltip.show { opacity:1; transform:scale(1); }
             .tooltip::after { content:""; position:absolute; width:9px; height:9px; background:var(--tooltip-bg); transform:rotate(45deg); pointer-events:none; }
             .tooltip[data-placement="bottom"]::after { top:-5px; left:var(--arrow-x,50%); margin-left:-5px; border-top:1px solid var(--tooltip-border); border-left:1px solid var(--tooltip-border); border-top-left-radius:2px; }
             .tooltip[data-placement="top"]::after { bottom:-5px; left:var(--arrow-x,50%); margin-left:-5px; border-right:1px solid var(--tooltip-border); border-bottom:1px solid var(--tooltip-border); border-bottom-right-radius:2px; }
+            .tooltip[data-placement="right"]::after { left:-5px; top:var(--arrow-y,50%); margin-top:-5px; border-bottom:1px solid var(--tooltip-border); border-left:1px solid var(--tooltip-border); border-bottom-left-radius:2px; }
+            .tooltip[data-placement="left"]::after { right:-5px; top:var(--arrow-y,50%); margin-top:-5px; border-top:1px solid var(--tooltip-border); border-right:1px solid var(--tooltip-border); border-top-right-radius:2px; }
             .tooltip.has-copy { display:flex; align-items:center; gap:9px; pointer-events:auto; }
             .tooltip-text { min-width:0; flex:1; }
             .tooltip-copy { width:22px; height:22px; min-width:22px; min-height:0; flex:0 0 auto; border-radius:50%; border:1px solid color-mix(in srgb,var(--accent) 45%, var(--border)); background:color-mix(in srgb,var(--accent) 12%, var(--card-bg)); color:var(--accent); display:grid; place-items:center; cursor:pointer; padding:0; margin:0; transition:none; }
@@ -800,6 +813,16 @@
             .tooltip-copy svg { width:12px; height:12px; }
             .tooltip-hint { display:block; margin-top:4px; font-size:.62rem; font-weight:600; letter-spacing:.02em; color:var(--text-secondary); }
             .tooltip-copied .tooltip-copy { background:var(--success); border-color:var(--success); color:var(--on-success); }
+
+            /* --- Comandos em ícone (o texto passa para a tooltip) --- */
+            .icon-cmd { width:38px; min-width:38px; height:38px; min-height:38px; padding:0 !important; gap:0; flex:none; justify-content:center; border-radius:10px; }
+            .icon-cmd .icon { width:18px; height:18px; }
+            .icon-cmd .cmd-label { display:none !important; }
+            .icon-cmd:disabled { opacity:.45; cursor:not-allowed; }
+            .download-actions-left .icon-cmd { width:44px; min-width:44px; height:44px; border-radius:12px; flex:0 0 44px; }
+            .settings-card-grid--compact { grid-template-columns:repeat(auto-fit, 38px); justify-content:start; gap:.5rem; }
+            .settings-inline-row .icon-cmd { flex:none; }
+            .rss-command-column { display:flex; flex-direction:column; gap:.6rem; min-width:0; align-items:flex-start; }
 
             /* --- Toasts --- */
             .toast-container { position:fixed; right:18px; bottom:18px; z-index:7000; display:flex; flex-direction:column; gap:10px; align-items:flex-end; pointer-events:none; }
@@ -1025,7 +1048,7 @@
             .change-group-label[data-group="adicionado"] { color:#19724b; }
             .change-group-label[data-group="corrigido"] { color:#b43b42; }
             .change-group-label[data-group="melhorado"] { color:#a46314; }
-            .change-group-label[data-group="removido"] { color:#64748b; }
+            .change-group-label[data-group="removido"] { color:var(--text-secondary); }
             .change-group ul { margin:.1rem 0 .2rem 1.35rem; color:var(--text-secondary); }
             .change-group li { margin-bottom:.2rem; }
             .integrity-ok { color:var(--success); }
@@ -1121,7 +1144,7 @@
                         <img src="favicon.svg" width="64" height="64" alt="">
                     </div>
                     <div class="brand-text">
-                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.11.4</span></div>
+                        <div class="brand-name"><span class="brand-name-text">Media Desk</span><span class="brand-version" id="app-version" role="button" tabindex="0" onclick="showCurrentVersionChanges()" data-i18n-tip="version.tip" data-tip="Ver novidades desta versão">v3.12.0</span></div>
                         <div class="brand-subtitle" id="brand-subtitle" data-i18n="brand.subtitle">YT-DLP INTERFACE</div>
                     </div>
                 </div>
@@ -1174,14 +1197,14 @@
                             <div id="audio-format-wrap" class="field-block hidden"><label for="audio-format" data-i18n="format.audio">Formato de áudio</label><select id="audio-format"><option value="mp3">MP3</option><option value="m4a">M4A</option><option value="opus">Opus</option><option value="flac">FLAC</option><option value="wav">WAV</option><option value="vorbis">Vorbis</option></select></div>
                             <div class="download-actions-grid">
                                 <div class="download-actions-left">
-                                    <button id="start-btn" class="btn-download"><span data-icon="download"></span><span data-i18n="btn.startShort">Iniciar</span></button>
-                                    <button id="pause-btn" class="btn-pause" disabled><span data-icon="pause"></span><span data-i18n="btn.pause">Pausar</span></button>
-                                    <button id="cancel-btn" class="btn-cancel" disabled><span data-icon="stop"></span><span data-i18n="btn.cancel">Cancelar</span></button>
+                                    <button id="start-btn" class="btn-download" data-cmd-icon><span data-icon="download"></span><span data-i18n="btn.startShort">Iniciar</span></button>
+                                    <button id="pause-btn" class="btn-pause" data-cmd-icon disabled><span data-icon="pause"></span><span data-i18n="btn.pause">Pausar</span></button>
+                                    <button id="cancel-btn" class="btn-cancel" data-cmd-icon disabled><span data-icon="stop"></span><span data-i18n="btn.cancel">Cancelar</span></button>
                                 </div>
                                 <div class="download-queue-carousel" id="download-queue-carousel">
                                     <div class="queue-carousel-track" id="queue-carousel-track"></div>
-                                    <button class="queue-carousel-nav prev" id="queue-carousel-prev" type="button" onclick="queueCarouselNav(-1)" aria-label="Anterior">‹</button>
-                                    <button class="queue-carousel-nav next" id="queue-carousel-next" type="button" onclick="queueCarouselNav(1)" aria-label="Seguinte">›</button>
+                                    <button class="queue-carousel-nav prev" id="queue-carousel-prev" type="button" onclick="queueCarouselNav(-1)" data-i18n-aria="queue.prev" aria-label="Anterior" data-i18n-tip="queue.prev" data-tip="Anterior"><span data-icon="chevron-left"></span></button>
+                                    <button class="queue-carousel-nav next" id="queue-carousel-next" type="button" onclick="queueCarouselNav(1)" data-i18n-aria="queue.next" aria-label="Seguinte" data-i18n-tip="queue.next" data-tip="Seguinte"><span data-icon="chevron-right"></span></button>
                                 </div>
                             </div>
                             <div class="status-text" id="current-file" data-i18n="status.ready">Pronto</div>
@@ -1320,7 +1343,7 @@
                                             <span class="switch"><input type="checkbox" id="online-checks-enabled" aria-labelledby="online-checks-label" checked><span class="slider"></span></span>
                                         </label>
                                         <div class="lib-update-toolbar" style="display:flex; align-items:center; gap:.8rem; flex-wrap:wrap">
-                                            <button type="button" class="soft settings-action" onclick="loadLibraryUpdates(true)" style="width:auto"><span data-icon="refresh"></span><span data-i18n="updates.checkNow">Verificar agora</span></button>
+                                            <button type="button" class="soft settings-action" onclick="loadLibraryUpdates(true)" style="width:auto" data-cmd-icon><span data-icon="refresh"></span><span data-i18n="updates.checkNow">Verificar agora</span></button>
                                             <span id="lib-updates-status" class="lib-update-status" aria-live="polite"></span>
                                         </div>
                                         <div id="lib-updates-list" class="lib-updates-list">
@@ -1397,10 +1420,10 @@
                                                 </div>
                                                 <div id="rss-channels-list" class="rss-channel-grid" role="list" aria-label="Canais RSS seguidos" data-i18n-aria="automation.followedChannels"></div>
                                             </div>
-                                            <div style="display:flex; flex-direction:column; gap:.6rem; min-width:220px">
-                                                <button type="button" class="secondary settings-action" onclick="addRssChannel()"><span data-icon="plus"></span><span data-i18n="automation.add">Adicionar</span></button>
-                                                <button type="button" class="soft settings-action" onclick="checkRssNow()"><span data-icon="refresh"></span><span data-i18n="automation.checkNow">Verificar agora</span></button>
-                                                <button type="button" class="soft settings-action" onclick="suggestFromHistory()"><span data-icon="sparkle"></span><span data-i18n="automation.suggestHistory">Sugerir pelo histórico</span></button>
+                                            <div class="rss-command-column">
+                                                <button type="button" class="secondary settings-action" onclick="addRssChannel()" data-cmd-icon><span data-icon="plus"></span><span data-i18n="automation.add">Adicionar</span></button>
+                                                <button type="button" class="soft settings-action" onclick="checkRssNow()" data-cmd-icon><span data-icon="refresh"></span><span data-i18n="automation.checkNow">Verificar agora</span></button>
+                                                <button type="button" class="soft settings-action" onclick="suggestFromHistory()" data-cmd-icon><span data-icon="sparkle"></span><span data-i18n="automation.suggestHistory">Sugerir pelo histórico</span></button>
                                             </div>
                                         </div>
 
@@ -1410,7 +1433,7 @@
                                                     <h3 style="margin:0;font-size:.88rem" data-i18n="automation.proposals">Propostas RSS</h3>
                                                     <p style="margin:.2rem 0 0;font-size:.72rem;color:var(--text-secondary)">Sugestões baseadas nos canais seguidos e no histórico.</p>
                                                 </div>
-                                                <button type="button" class="soft settings-action" onclick="showRssProposals()"><span data-icon="list"></span><span data-i18n="automation.proposals">Propostas RSS</span></button>
+                                                <button type="button" class="soft settings-action" onclick="showRssProposals()" data-cmd-icon><span data-icon="list"></span><span data-i18n="automation.proposals">Propostas RSS</span></button>
                                             </div>
                                             <div style="min-height:70px; border:1px dashed var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; text-align:center; padding:.8rem; color:var(--text-secondary); font-size:.72rem">
                                                 <span>As propostas aparecem aqui ou podem ser abertas no modal.</span>
@@ -1446,10 +1469,10 @@
                                                     <label class="dl-radio"><input type="radio" name="dl-dest" value="custom" id="dl-custom"><span data-i18n="cfg.dlCustom">Pasta personalizada</span></label>
                                                     <div class="dl-custom-row" id="dl-custom-row" style="display:none">
                                                         <input type="text" id="dl-custom-path" data-i18n-placeholder="cfg.dlPathPlaceholder" placeholder="Por exemplo: C:\Downloads\Media Desk" aria-label="Pasta personalizada">
-                                                        <button type="button" id="dl-browse-btn" class="soft settings-action" style="flex:none" onclick="browseDownloadsDir()"><span data-icon="folder"></span><span data-i18n="btn.browse">Procurar…</span></button>
+                                                        <button type="button" id="dl-browse-btn" class="soft settings-action" style="flex:none" onclick="browseDownloadsDir()" data-cmd-icon><span data-icon="folder"></span><span data-i18n="btn.browse">Procurar…</span></button>
                                                     </div>
                                                     <div style="display:flex; align-items:center; gap:.75rem; margin-top:.5rem; flex-wrap:wrap">
-                                                        <button type="button" onclick="saveDownloadsDir()" class="soft settings-action" style="width:auto"><span data-icon="save"></span><span data-i18n="btn.save">Guardar</span></button>
+                                                        <button type="button" onclick="saveDownloadsDir()" class="soft settings-action" style="width:auto" data-cmd-icon><span data-icon="save"></span><span data-i18n="btn.save">Guardar</span></button>
                                                         <span id="dl-current" class="config-label" style="margin:0; font-size:.72rem; color:var(--text-secondary)"></span>
                                                     </div>
                                                 </div>
@@ -1468,7 +1491,7 @@
                                                 </div>
                                                 <div class="categories-add-row">
                                                     <input type="text" id="new-category-input" maxlength="64" placeholder="ex.: filmes, vídeos, tutoriais" data-i18n-placeholder="categories.placeholderVideo" aria-label="Nome da gaveta" data-i18n-aria="categories.nameAria">
-                                                    <button type="button" class="soft settings-action" onclick="addCategory()"><span data-icon="plus"></span><span data-i18n="categories.add">Criar</span></button>
+                                                    <button type="button" class="soft settings-action" onclick="addCategory()" data-cmd-icon><span data-icon="plus"></span><span data-i18n="categories.add">Criar</span></button>
                                                 </div>
                                                 <div class="cat-per-row">
                                                     <label for="cat-per-row" data-i18n="categories.perRow">Gavetas por linha</label>
@@ -1507,7 +1530,7 @@
                                                         <span class="switch-label" style="display:inline-flex;align-items:center;gap:7px"><span data-icon="tag"></span> <span data-i18n="sub.auto">Legendas automáticas</span></span>
                                                         <label class="switch"><input type="checkbox" id="sub_auto"><span class="slider"></span></label>
                                                     </div>
-                                                    <button onclick="saveSubSettings()" class="soft save-button-right settings-action"><span data-icon="save"></span><span data-i18n="btn.save">Guardar</span></button>
+                                                    <button onclick="saveSubSettings()" class="soft save-button-right settings-action" data-cmd-icon><span data-icon="save"></span><span data-i18n="btn.save">Guardar</span></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -1531,7 +1554,7 @@
                                                 <label for="server_port" class="config-label" data-i18n="cfg.server">Servidor</label>
                                                 <div class="port-row" style="margin:0">
                                                     <input type="number" id="server_port" data-i18n-placeholder="port.placeholder" placeholder="Porta" class="port-input" style="flex:2">
-                                                    <button onclick="savePort()" class="soft port-button settings-action" style="flex:1"><span data-icon="save"></span><span data-i18n="btn.savePort">Guardar porta</span></button>
+                                                    <button onclick="savePort()" class="soft port-button settings-action" style="flex:none" data-cmd-icon><span data-icon="save"></span><span data-i18n="btn.savePort">Guardar porta</span></button>
                                                 </div>
                                             </div>
                                             <div class="advanced-field">
@@ -1550,7 +1573,7 @@
                                             <div id="po-token-fields" style="display:grid; gap:.5rem">
                                                 <input type="text" id="po-token" placeholder="PO Token">
                                                 <input type="text" id="visitor-data" placeholder="Visitor Data">
-                                                <button onclick="savePoToken()" class="soft settings-action" style="width:max-content"><span data-icon="save"></span><span data-i18n="btn.saveToken">Guardar token</span></button>
+                                                <button onclick="savePoToken()" class="soft settings-action" style="width:max-content" data-cmd-icon><span data-icon="save"></span><span data-i18n="btn.saveToken">Guardar token</span></button>
                                             </div>
                                         </div>
                                     </div>
@@ -1574,7 +1597,7 @@
                                                 <option value="1" data-i18n="cfg.pythonEmbedded">Python embutido (portátil)</option>
                                                 <option value="0" data-i18n="cfg.pythonSystem">Python do sistema</option>
                                             </select>
-                                            <button id="apply-python-mode" class="soft" style="width:auto" data-i18n="btn.apply">Aplicar</button>
+                                            <button id="apply-python-mode" class="soft settings-action" style="width:auto" data-cmd-icon><span data-icon="check"></span><span data-i18n="btn.apply">Aplicar</span></button>
                                         </div>
                                         <div class="settings-inline-row">
                                             <span class="config-label" data-i18n="cfg.ffmpeg">FFmpeg</span>
@@ -1596,13 +1619,13 @@
                                         </div>
                                     </header>
                                     <div class="settings-card__body">
-                                        <div class="settings-card-grid">
-                                            <button id="disk-btn" onclick="toggleDiskStatus()" class="secondary settings-action"><span data-icon="disk"></span><span data-i18n="btn.disk">Espaço em disco</span></button>
-                                            <button onclick="updateYtdlp()" class="secondary settings-action"><span data-icon="update"></span><span data-i18n="btn.updateYtdlp">Atualizar yt-dlp</span></button>
-                                            <button type="button" onclick="exportSettings()" class="soft settings-action" data-i18n="settings.export">Exportar definições</button>
-                                            <button type="button" onclick="document.getElementById('settings-import-input').click()" class="soft settings-action" data-i18n="settings.import">Importar definições</button>
+                                        <div class="settings-card-grid settings-card-grid--compact">
+                                            <button id="disk-btn" onclick="toggleDiskStatus()" class="secondary settings-action" data-cmd-icon><span data-icon="disk"></span><span data-i18n="btn.disk">Espaço em disco</span></button>
+                                            <button onclick="updateYtdlp()" class="secondary settings-action" data-cmd-icon><span data-icon="update"></span><span data-i18n="btn.updateYtdlp">Atualizar yt-dlp</span></button>
+                                            <button type="button" onclick="exportSettings()" class="soft settings-action" data-cmd-icon><span data-icon="external"></span><span data-i18n="settings.export">Exportar definições</span></button>
+                                            <button type="button" onclick="document.getElementById('settings-import-input').click()" class="soft settings-action" data-cmd-icon><span data-icon="download"></span><span data-i18n="settings.import">Importar definições</span></button>
                                             <input id="settings-import-input" type="file" accept="application/json,.json" hidden>
-                                            <button onclick="showChangelog()" class="soft settings-action"><span data-icon="news"></span><span data-i18n="btn.news">Novidades</span></button>
+                                            <button onclick="showChangelog()" class="soft settings-action" data-cmd-icon><span data-icon="news"></span><span data-i18n="btn.news">Novidades</span></button>
                                         </div>
 
                                         <div style="display:grid; gap:.7rem; padding:.9rem 1rem; border:1px solid var(--border); border-radius:12px; background:var(--bg-primary)">
@@ -1616,15 +1639,15 @@
                                                 <span class="config-label" data-i18n="system.repoLabel">Repositório GitHub (owner/repo)</span>
                                                 <input id="app-release-repo" type="text" data-i18n-placeholder="system.repoPlaceholder" placeholder="ex: user/MediaDesk" style="flex:1; min-width:220px; max-width:320px">
                                             </div>
-                                            <div class="settings-card-grid">
-                                                <button type="button" class="soft settings-action" onclick="saveAppUpdateRepo()"><span data-icon="save"></span><span data-i18n="system.saveRepo">Guardar repositório</span></button>
-                                                <button type="button" class="soft settings-action" onclick="checkAppUpdateNow()"><span data-icon="refresh"></span><span data-i18n="system.checkUpdates">Verificar atualizações</span></button>
+                                            <div class="settings-card-grid settings-card-grid--compact">
+                                                <button type="button" class="soft settings-action" onclick="saveAppUpdateRepo()" data-cmd-icon><span data-icon="save"></span><span data-i18n="system.saveRepo">Guardar repositório</span></button>
+                                                <button type="button" class="soft settings-action" onclick="checkAppUpdateNow()" data-cmd-icon><span data-icon="refresh"></span><span data-i18n="system.checkUpdates">Verificar atualizações</span></button>
                                             </div>
                                         </div>
 
                                         <div class="settings-card-grid">
-                                            <button onclick="clearHistory()" class="danger settings-action"><span data-icon="trash"></span><span data-i18n="btn.clearHistory">Limpar Histórico</span></button>
-                                            <button onclick="restartFullApp()" class="danger settings-action"><span data-icon="refresh"></span><span data-i18n="btn.restartFull">Reiniciar aplicação</span></button>
+                                            <button onclick="clearHistory()" class="danger settings-action" data-i18n-tip="tip.clearHistory"><span data-icon="trash"></span><span data-i18n="btn.clearHistory">Limpar Histórico</span></button>
+                                            <button onclick="restartFullApp()" class="danger settings-action" data-i18n-tip="tip.restartFull"><span data-icon="refresh"></span><span data-i18n="btn.restartFull">Reiniciar aplicação</span></button>
                                         </div>
                                         <div id="status-display"></div>
                                     </div>
@@ -1732,7 +1755,7 @@
                             <div><label for="library-time-from" data-i18n="library.timeFilter.from">Desde</label><input id="library-time-from" type="datetime-local" step="1"></div>
                             <div><label for="library-time-to" data-i18n="library.timeFilter.to">Até</label><input id="library-time-to" type="datetime-local" step="1"></div>
                             <div class="library-time-sort"><label for="library-time-sort" data-i18n="library.timeFilter.sort">Ordenar por data</label><select id="library-time-sort"><option value="newest" data-i18n="library.timeFilter.newest">Mais recentes primeiro</option><option value="oldest" data-i18n="library.timeFilter.oldest">Mais antigos primeiro</option></select></div>
-                            <button type="button" id="library-time-clear" class="soft" data-i18n="library.timeFilter.clear">Limpar filtro</button>
+                            <button type="button" id="library-time-clear" class="soft" data-cmd-icon><span data-icon="close"></span><span data-i18n="library.timeFilter.clear">Limpar filtro</span></button>
                         </div>
                         <p id="library-time-error" class="history-fail" role="alert" style="display:none; margin:.4rem 0 0" data-i18n="library.timeFilter.invalidRange">A data/hora inicial tem de ser anterior à final.</p>
                     </div>
@@ -1772,8 +1795,8 @@
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <button onclick="closeDeleteModal()" class="secondary" data-i18n="btn.cancel">Cancelar</button>
-                    <button onclick="confirmDelete()" class="danger" data-i18n="btn.remove">Remover</button>
+                    <button onclick="closeDeleteModal()" class="secondary" data-i18n="btn.cancel" data-i18n-tip="tip.deleteCancel">Cancelar</button>
+                    <button onclick="confirmDelete()" class="danger" data-i18n="btn.remove" data-i18n-tip="tip.deleteRemove">Remover</button>
                 </div>
             </div>
         </div>
@@ -1795,17 +1818,17 @@
                         <p id="rss-history-subtitle" style="font-size:.72rem;color:var(--text-secondary);margin:0 0 .7rem"></p>
                         <div id="rss-history-list" class="rss-channel-list" role="list" style="max-height:52vh"></div>
                         <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.85rem">
-                            <button type="button" class="secondary settings-action" onclick="closeRssHistorySuggestions()">Fechar</button>
-                            <button type="button" class="settings-action" onclick="addSelectedHistoryChannels()"><span data-icon="plus"></span><span>Adicionar selecionados</span></button>
+                            <button type="button" class="secondary settings-action" onclick="closeRssHistorySuggestions()" data-i18n-tip="tip.closeDialog">Fechar</button>
+                            <button type="button" class="settings-action" onclick="addSelectedHistoryChannels()" data-cmd-icon><span data-icon="plus"></span><span data-i18n="rss.addSelected">Adicionar selecionados</span></button>
                         </div>
                     </div>
                 </div>
                 <p id="rss-proposals-subtitle" style="font-size:.72rem;color:var(--text-secondary);margin:0 0 .7rem">Sugestões curadas a partir dos canais que segue e do seu histórico.</p>
                 <div id="rss-proposals-list" style="max-height:52vh; overflow:auto; display:flex; flex-direction:column; gap:.5rem"></div>
                 <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.9rem">
-                    <button type="button" class="soft settings-action" onclick="checkRssNow()" style="flex:1"><span data-icon="refresh"></span><span>Verificar agora</span></button>
-                    <button type="button" class="soft settings-action" onclick="clearRssSeen()" style="flex:1"><span data-icon="trash"></span><span>Limpar decisões</span></button>
-                    <button type="button" class="secondary settings-action" onclick="closeRssProposals()" style="flex:1" data-i18n="btn.close">Fechar</button>
+                    <button type="button" class="soft settings-action" onclick="checkRssNow()" data-cmd-icon><span data-icon="refresh"></span><span data-i18n="automation.checkNow">Verificar agora</span></button>
+                    <button type="button" class="soft settings-action" onclick="clearRssSeen()" data-cmd-icon><span data-icon="trash"></span><span data-i18n="rss.clearDecisions">Limpar decisões</span></button>
+                    <button type="button" class="secondary settings-action" onclick="closeRssProposals()" style="flex:1" data-i18n="btn.close" data-i18n-tip="tip.closeDialog">Fechar</button>
                 </div>
             </div>
         </div>
@@ -1822,11 +1845,11 @@
                 <h3 id="move-modal-title" style="display:flex;align-items:center;gap:9px"><span data-icon="move"></span> <span data-i18n="move.title">Mover ficheiros</span></h3>
                 <p id="move-modal-message" style="color:var(--text-secondary)">Escolha o destino:</p>
                 <div class="modal-options" id="move-dest-list"></div>
-                <button type="button" class="soft settings-action" id="move-external-btn" style="width:100%" onclick="chooseExternalFolder()"><span data-icon="folder"></span><span data-i18n="move.external">Escolher pasta externa…</span></button>
+                <button type="button" class="soft settings-action" id="move-external-btn" onclick="chooseExternalFolder()" data-cmd-icon><span data-icon="folder"></span><span data-i18n="move.external">Escolher pasta externa…</span></button>
                 <p class="move-hint" id="move-external-path" style="display:none"></p>
                 <div class="modal-buttons">
-                    <button onclick="closeMoveModal()" class="secondary" data-i18n="btn.cancel">Cancelar</button>
-                    <button onclick="confirmMove()" data-i18n="move.confirm">Mover</button>
+                    <button onclick="closeMoveModal()" class="secondary" data-i18n="btn.cancel" data-i18n-tip="tip.moveCancel">Cancelar</button>
+                    <button onclick="confirmMove()" data-i18n="move.confirm" data-i18n-tip="tip.moveConfirm">Mover</button>
                 </div>
             </div>
         </div>
@@ -1858,12 +1881,12 @@
                     <p class="about-meta about-meta-split"><span class="about-version-part"><span class="inline-ico" data-icon="code"></span> <span data-i18n="about.versionLabel">Versão</span> <strong id="about-version">—</strong> <span id="about-date"></span></span><span class="about-author" data-i18n="about.copyright">© 2026 Alexandre da Costa (ALDACO)</span></p>
                     <p class="about-meta" id="about-integrity-line"><span class="inline-ico" data-icon="shield"></span> <span id="about-integrity" data-i18n="about.integrity.checking">A verificar integridade…</span></p>
                     <div class="about-actions">
-                        <button class="soft" onclick="showLicenses()"><span data-icon="license"></span> <span data-i18n="about.licensesBtn">Licenças de terceiros</span></button>
-                        <button class="soft" onclick="showLegalNotice()"><span data-icon="shield"></span> <span data-i18n="about.legalBtn">Termos e aviso legal</span></button>
-                        <button class="soft" onclick="closeHelpModal();showCurrentVersionChanges()"><span data-icon="news"></span> <span data-i18n="about.newsBtn">Novidades desta versão</span></button>
+                        <button class="soft" onclick="showLicenses()" data-i18n-tip="tip.helpLicenses"><span data-icon="license"></span> <span data-i18n="about.licensesBtn">Licenças de terceiros</span></button>
+                        <button class="soft" onclick="showLegalNotice()" data-i18n-tip="tip.helpLegal"><span data-icon="shield"></span> <span data-i18n="about.legalBtn">Termos e aviso legal</span></button>
+                        <button class="soft" onclick="closeHelpModal();showCurrentVersionChanges()" data-i18n-tip="tip.helpNews"><span data-icon="news"></span> <span data-i18n="about.newsBtn">Novidades desta versão</span></button>
                     </div>
                 </div>
-                <button onclick="closeHelpModal()" style="margin-top:1rem" data-i18n="btn.close">Fechar</button>
+                <button onclick="closeHelpModal()" style="margin-top:1rem" data-i18n="btn.close" data-i18n-tip="tip.closeDialog">Fechar</button>
             </div>
         </div>
         
@@ -1872,7 +1895,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem"><h3 style="margin:0;display:flex;align-items:center;gap:9px"><span data-icon="license"></span> <span data-i18n="licenses.title">Licenças de terceiros</span></h3><button onclick="closeLicenses()" style="width:32px;min-width:32px;padding:0.25rem; background:transparent; color:var(--text-secondary); border:1px solid var(--border)" data-i18n-aria="licenses.close.aria" aria-label="Fechar licenças"><span data-icon="close"></span></button></div>
                 <p class="licenses-intro" data-i18n-html="licenses.intro">Este software utiliza os seguintes componentes open-source. Os textos completos das licenças acompanham a distribuição na pasta <code>licenses</code>.</p>
                 <div id="licenses-list-container"></div>
-                <button onclick="closeLicenses()" style="margin-top:1rem" data-i18n="btn.close">Fechar</button>
+                <button onclick="closeLicenses()" style="margin-top:1rem" data-i18n="btn.close" data-i18n-tip="tip.closeDialog">Fechar</button>
             </div>
         </div>
         
@@ -1881,12 +1904,12 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem"><h3 style="margin:0;display:flex;align-items:center;gap:9px"><span data-icon="shield"></span> <span data-i18n="legal.title">Termos e Aviso Legal</span></h3><button onclick="closeLegalNotice()" style="width:32px;min-width:32px;padding:0.25rem; background:transparent; color:var(--text-secondary); border:1px solid var(--border)" data-i18n-aria="legal.close.aria" aria-label="Fechar termos e aviso legal"><span data-icon="close"></span></button></div>
                 <p class="legal-intro" data-i18n="legal.intro">Nota sobre o uso, a distribuição e a autoria do aplicativo.</p>
                 <div id="legal-notice-container"></div>
-                <button onclick="closeLegalNotice()" style="margin-top:1rem" data-i18n="btn.close">Fechar</button>
+                <button onclick="closeLegalNotice()" style="margin-top:1rem" data-i18n="btn.close" data-i18n-tip="tip.closeDialog">Fechar</button>
             </div>
         </div>
 
         <div id="changelog-modal" class="modal-overlay" onclick="if(event.target===this)closeChangelog()">
-            <div class="modal-content"><h3 data-i18n="changelog.title">Histórico de Atualizações</h3><div id="changelog-list-container"></div><button onclick="closeChangelog()" style="margin-top:1rem" data-i18n="btn.close">Fechar</button></div>
+            <div class="modal-content"><h3 data-i18n="changelog.title">Histórico de Atualizações</h3><div id="changelog-list-container"></div><button onclick="closeChangelog()" style="margin-top:1rem" data-i18n="btn.close" data-i18n-tip="tip.closeDialog">Fechar</button></div>
         </div>
 
         <!-- Confirmação (substitui o confirm() nativo) -->
@@ -1900,8 +1923,8 @@
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <button class="secondary" id="confirm-cancel" onclick="resolveConfirm(false)" data-i18n="btn.cancel">Cancelar</button>
-                    <button id="confirm-ok" onclick="resolveConfirm(true)" data-i18n="btn.confirm">Confirmar</button>
+                    <button class="secondary" id="confirm-cancel" onclick="resolveConfirm(false)" data-i18n="btn.cancel" data-i18n-tip="tip.confirmCancel">Cancelar</button>
+                    <button id="confirm-ok" onclick="resolveConfirm(true)" data-i18n="btn.confirm" data-i18n-tip="tip.confirmOk">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -1917,9 +1940,9 @@
                     </div>
                 </div>
                 <div class="modal-buttons" style="flex-wrap:wrap">
-                    <button class="secondary" id="cat-remove-cancel" onclick="resolveCategoryRemove(null)" data-i18n="btn.cancel">Cancelar</button>
-                    <button class="danger" id="cat-remove-delete" onclick="resolveCategoryRemove('delete')" data-i18n="categories.deleteFiles">Apagar ficheiros</button>
-                    <button id="cat-remove-keep" onclick="resolveCategoryRemove('keep')" data-i18n="categories.keepFiles">Manter ficheiros</button>
+                    <button class="secondary" id="cat-remove-cancel" onclick="resolveCategoryRemove(null)" data-i18n="btn.cancel" data-i18n-tip="tip.catRemoveCancel">Cancelar</button>
+                    <button class="danger" id="cat-remove-delete" onclick="resolveCategoryRemove('delete')" data-i18n="categories.deleteFiles" data-i18n-tip="tip.catRemoveDelete">Apagar ficheiros</button>
+                    <button id="cat-remove-keep" onclick="resolveCategoryRemove('keep')" data-i18n="categories.keepFiles" data-i18n-tip="tip.catRemoveKeep">Manter ficheiros</button>
                 </div>
             </div>
         </div>
@@ -1934,7 +1957,7 @@
                 help:'<circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1-1.4 2.1"/><path d="M12 17h.01"/>',
                 moon:'<path d="M20.5 14.2A8 8 0 0 1 9.8 3.5 8 8 0 1 0 20.5 14.2z"/>', sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
                 download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>', settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/>',
-                history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', pause:'<path d="M8 5v14M16 5v14"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1"/>', terminal:'<path d="M4 6l4 4-4 4M10 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/>', library:'<path d="M4 4v16M9 4v16M14 5l4 14"/>', refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.5-2L20 12M4 12l2.4 5a7 7 0 0 0 11.5-2"/>', video:'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2z"/>', audio:'<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>', grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>', trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>', user:'<circle cx="12" cy="8" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/>', save:'<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>', news:'<path d="M4 5h14v14H6a2 2 0 0 1-2-2z"/><path d="M8 9h6M8 13h7M8 17h4M18 8h2v9a2 2 0 0 1-2 2"/>', disk:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>', update:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 8.5A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15.5"/>', check:'<path d="M5 12l4 4L19 6"/>', pointer:'<path d="M5 3l6.4 16.6 2.7-6.5 6.5-2.7z"/>', eye:'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/>', tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h5a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.3"/>', folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', plus:'<path d="M12 5v14M5 12h14"/>', move:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 9.5v4M10 11.5l2 2 2-2"/>', kebab:'<g fill="currentColor" stroke="none"><circle cx="12" cy="5.4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.6" r="1.6"/></g>', link:'<path d="M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9"/><path d="M14 11a5 5 0 0 0-7.1 0L4.5 13.4a5 5 0 0 0 7.1 7.1L13 19.1"/>', alert:'<path d="M12 3.2l9 15.6H3z"/><path d="M12 9.6v4.2M12 17.2h.01"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', close:'<path d="M6 6l12 12M18 6L6 18"/>', minimize:'<path d="M5 12h14"/>', maximize:'<rect x="5" y="5" width="14" height="14" rx="2"/>', restore:'<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V6a1 1 0 0 1 1-1h9"/>', monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', palette:'<path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.3c1.5 0 2.7-1.2 2.7-2.7C20 6.6 16.4 3 12 3z"/><circle cx="7.6" cy="10.6" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="16.4" cy="10.6" r="1.1"/>', install:'<path d="M12 3v10M8.5 9.5L12 13l3.5-3.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>', 'chevron-up':'<path d="M6 15l6-6 6 6"/>', 'chevron-down':'<path d="M6 9l6 6 6-6"/>', 'chevron-right':'<path d="M9 6l6 6-6 6"/>', external:'<path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>', sort:'<path d="M8 5v14M5 8l3-3 3 3"/><path d="M16 19V5M13 16l3 3 3-3"/>', play:'<path d="M8 5v14l11-7z"/>', file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>', 'fullscreen':'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'fullscreen-exit':'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>', license:'<path d="M6 3h12v18l-6-3-6 3z"/><path d="M9 8h6M9 12h4"/>', shield:'<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/><path d="M9 12l2 2 4-4"/>', copyright:'<circle cx="12" cy="12" r="9"/><path d="M14.6 9.3a3.6 3.6 0 1 0 0 5.4"/>', code:'<path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/>', sparkle:'<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="M18 16l.7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7z"/>'
+                history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', pause:'<path d="M8 5v14M16 5v14"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1"/>', terminal:'<path d="M4 6l4 4-4 4M10 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/>', library:'<path d="M4 4v16M9 4v16M14 5l4 14"/>', refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.5-2L20 12M4 12l2.4 5a7 7 0 0 0 11.5-2"/>', video:'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2z"/>', audio:'<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>', grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>', trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>', user:'<circle cx="12" cy="8" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/>', save:'<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>', news:'<path d="M4 5h14v14H6a2 2 0 0 1-2-2z"/><path d="M8 9h6M8 13h7M8 17h4M18 8h2v9a2 2 0 0 1-2 2"/>', disk:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>', update:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 8.5A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15.5"/>', check:'<path d="M5 12l4 4L19 6"/>', pointer:'<path d="M5 3l6.4 16.6 2.7-6.5 6.5-2.7z"/>', eye:'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/>', tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h5a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.3"/>', folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', plus:'<path d="M12 5v14M5 12h14"/>', move:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 9.5v4M10 11.5l2 2 2-2"/>', kebab:'<g fill="currentColor" stroke="none"><circle cx="12" cy="5.4" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.6" r="1.6"/></g>', link:'<path d="M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9"/><path d="M14 11a5 5 0 0 0-7.1 0L4.5 13.4a5 5 0 0 0 7.1 7.1L13 19.1"/>', alert:'<path d="M12 3.2l9 15.6H3z"/><path d="M12 9.6v4.2M12 17.2h.01"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', close:'<path d="M6 6l12 12M18 6L6 18"/>', minimize:'<path d="M5 12h14"/>', maximize:'<rect x="5" y="5" width="14" height="14" rx="2"/>', restore:'<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V6a1 1 0 0 1 1-1h9"/>', monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', palette:'<path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.3c1.5 0 2.7-1.2 2.7-2.7C20 6.6 16.4 3 12 3z"/><circle cx="7.6" cy="10.6" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="16.4" cy="10.6" r="1.1"/>', install:'<path d="M12 3v10M8.5 9.5L12 13l3.5-3.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>', 'chevron-up':'<path d="M6 15l6-6 6 6"/>', 'chevron-down':'<path d="M6 9l6 6 6-6"/>', 'chevron-right':'<path d="M9 6l6 6-6 6"/>', 'chevron-left':'<path d="M15 6l-6 6 6 6"/>', external:'<path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>', sort:'<path d="M8 5v14M5 8l3-3 3 3"/><path d="M16 19V5M13 16l3 3 3-3"/>', play:'<path d="M8 5v14l11-7z"/>', file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>', 'fullscreen':'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'fullscreen-exit':'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>', license:'<path d="M6 3h12v18l-6-3-6 3z"/><path d="M9 8h6M9 12h4"/>', shield:'<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/><path d="M9 12l2 2 4-4"/>', copyright:'<circle cx="12" cy="12" r="9"/><path d="M14.6 9.3a3.6 3.6 0 1 0 0 5.4"/>', code:'<path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/>', sparkle:'<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="M18 16l.7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7z"/>'
             };
             function icon(name, cls='icon') { return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`; }
             function hydrateIcons(root=document) { root.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML=icon(el.dataset.icon); }); }
@@ -1969,12 +1992,12 @@
                     "mode.light.short": "Claro",
                     "mode.system.short": "Sistema",
                     "mode.dark.short": "Escuro",
-                    "palette.indigo": "Índigo",
-                    "palette.ocean": "Oceano",
-                    "palette.violet": "Violeta",
-                    "palette.emerald": "Esmeralda",
                     "palette.amber": "Âmbar",
-                    "palette.graphite": "Grafite",
+                    "palette.crimson": "Carmesim",
+                    "palette.rose": "Rosa",
+                    "palette.violet": "Violeta",
+                    "palette.indigo": "Índigo",
+                    "palette.blue": "Azul",
                     "appearance.applied": "Aparência aplicada",
                     "settings.appearance.title": "Aparência & Localização",
                     "settings.behavior.title": "Comportamento",
@@ -2384,12 +2407,12 @@
                     "mode.light.short": "Light",
                     "mode.system.short": "System",
                     "mode.dark.short": "Dark",
-                    "palette.indigo": "Indigo",
-                    "palette.ocean": "Ocean",
-                    "palette.violet": "Violet",
-                    "palette.emerald": "Emerald",
                     "palette.amber": "Amber",
-                    "palette.graphite": "Graphite",
+                    "palette.crimson": "Crimson",
+                    "palette.rose": "Rose",
+                    "palette.violet": "Violet",
+                    "palette.indigo": "Indigo",
+                    "palette.blue": "Blue",
                     "appearance.applied": "Appearance applied",
                     "win.minimize": "Minimize",
                     "win.maximize": "Restore / Maximize",
@@ -2726,12 +2749,12 @@
                     "mode.light.short": "Claro",
                     "mode.system.short": "Sistema",
                     "mode.dark.short": "Oscuro",
-                    "palette.indigo": "Índigo",
-                    "palette.ocean": "Océano",
-                    "palette.violet": "Violeta",
-                    "palette.emerald": "Esmeralda",
                     "palette.amber": "Ámbar",
-                    "palette.graphite": "Grafito",
+                    "palette.crimson": "Carmesí",
+                    "palette.rose": "Rosa",
+                    "palette.violet": "Violeta",
+                    "palette.indigo": "Índigo",
+                    "palette.blue": "Azul",
                     "appearance.applied": "Apariencia aplicada",
                     "win.minimize": "Minimizar",
                     "win.maximize": "Restaurar / Maximizar",
@@ -3068,12 +3091,12 @@
                     "mode.light.short": "Clair",
                     "mode.system.short": "Système",
                     "mode.dark.short": "Sombre",
-                    "palette.indigo": "Indigo",
-                    "palette.ocean": "Océan",
-                    "palette.violet": "Violet",
-                    "palette.emerald": "Émeraude",
                     "palette.amber": "Ambre",
-                    "palette.graphite": "Graphite",
+                    "palette.crimson": "Cramoisi",
+                    "palette.rose": "Rose",
+                    "palette.violet": "Violet",
+                    "palette.indigo": "Indigo",
+                    "palette.blue": "Bleu",
                     "appearance.applied": "Apparence appliquée",
                     "win.minimize": "Réduire",
                     "win.maximize": "Restaurer / Agrandir",
@@ -3410,12 +3433,12 @@
                     "mode.light.short": "Hell",
                     "mode.system.short": "System",
                     "mode.dark.short": "Dunkel",
-                    "palette.indigo": "Indigo",
-                    "palette.ocean": "Ozean",
-                    "palette.violet": "Violett",
-                    "palette.emerald": "Smaragd",
                     "palette.amber": "Bernstein",
-                    "palette.graphite": "Graphit",
+                    "palette.crimson": "Karminrot",
+                    "palette.rose": "Rosé",
+                    "palette.violet": "Violett",
+                    "palette.indigo": "Indigo",
+                    "palette.blue": "Blau",
                     "appearance.applied": "Erscheinungsbild angewendet",
                     "win.minimize": "Minimieren",
                     "win.maximize": "Wiederherstellen / Maximieren",
@@ -4371,6 +4394,228 @@
                 }
             };
             Object.keys(I18N_UI4).forEach(lng => Object.assign(I18N[lng], I18N_UI4[lng]));
+            const I18N_COMMANDS = {
+                pt: { "queue.prev": "Anterior", "queue.next": "Seguinte", "rss.addSelected": "Adicionar selecionados", "rss.ignore": "Ignorar", "rss.download": "Descarregar", "rss.clearDecisions": "Limpar decisões" },
+                en: { "queue.prev": "Previous", "queue.next": "Next", "rss.addSelected": "Add selected", "rss.ignore": "Ignore", "rss.download": "Download", "rss.clearDecisions": "Clear decisions" },
+                es: { "queue.prev": "Anterior", "queue.next": "Siguiente", "rss.addSelected": "Añadir seleccionados", "rss.ignore": "Ignorar", "rss.download": "Descargar", "rss.clearDecisions": "Borrar decisiones" },
+                fr: { "queue.prev": "Précédent", "queue.next": "Suivant", "rss.addSelected": "Ajouter la sélection", "rss.ignore": "Ignorer", "rss.download": "Télécharger", "rss.clearDecisions": "Effacer les décisions" },
+                de: { "queue.prev": "Zurück", "queue.next": "Weiter", "rss.addSelected": "Ausgewählte hinzufügen", "rss.ignore": "Ignorieren", "rss.download": "Herunterladen", "rss.clearDecisions": "Entscheidungen löschen" }
+            };
+            Object.keys(I18N_COMMANDS).forEach(lng => Object.assign(I18N[lng], I18N_COMMANDS[lng]));
+            // Notas breves para comandos que mantêm o texto visível: a tooltip
+            // explica o efeito da ação em vez de repetir o rótulo.
+            const I18N_TIPS = {
+                pt: {
+                    "tip.clearHistory": "Apaga o histórico de downloads. Os ficheiros no disco não são removidos.",
+                    "tip.restartFull": "Fecha e volta a abrir a aplicação para aplicar alterações.",
+                    "tip.deleteCancel": "Fecha a janela sem remover o download.",
+                    "tip.deleteRemove": "Remove o download e os itens marcados acima.",
+                    "tip.closeDialog": "Fecha esta janela sem alterações.",
+                    "tip.moveCancel": "Fecha a janela sem mover o ficheiro.",
+                    "tip.moveConfirm": "Move o ficheiro para o destino selecionado.",
+                    "tip.confirmCancel": "Cancela a ação e fecha a janela.",
+                    "tip.confirmOk": "Confirma e executa a ação.",
+                    "tip.catRemoveCancel": "Fecha sem alterar a gaveta nem os ficheiros.",
+                    "tip.catRemoveDelete": "Elimina a gaveta e apaga os ficheiros que contém.",
+                    "tip.catRemoveKeep": "Elimina a gaveta e mantém os ficheiros na mediateca.",
+                    "tip.helpLicenses": "Consulta as bibliotecas usadas e as respetivas licenças.",
+                    "tip.helpLegal": "Lê os termos de utilização e o aviso legal.",
+                    "tip.helpNews": "Abre o histórico de novidades desta versão.",
+                    "tip.palette": "Aplica a paleta {name} à interface."
+                },
+                en: {
+                    "tip.clearHistory": "Clears the download history. Files on disk are not deleted.",
+                    "tip.restartFull": "Closes and reopens the app to apply pending changes.",
+                    "tip.deleteCancel": "Closes this window without removing the download.",
+                    "tip.deleteRemove": "Removes the download and the items ticked above.",
+                    "tip.closeDialog": "Closes this window without changes.",
+                    "tip.moveCancel": "Closes the window without moving the file.",
+                    "tip.moveConfirm": "Moves the file to the selected destination.",
+                    "tip.confirmCancel": "Cancels the action and closes the window.",
+                    "tip.confirmOk": "Confirms and runs the action.",
+                    "tip.catRemoveCancel": "Closes without changing the drawer or its files.",
+                    "tip.catRemoveDelete": "Deletes the drawer and the files inside it.",
+                    "tip.catRemoveKeep": "Deletes the drawer but keeps the files in the library.",
+                    "tip.helpLicenses": "Shows the third-party components and their licences.",
+                    "tip.helpLegal": "Opens the terms of use and legal notice.",
+                    "tip.helpNews": "Opens the release notes for this version.",
+                    "tip.palette": "Applies the {name} palette to the interface."
+                },
+                es: {
+                    "tip.clearHistory": "Borra el historial de descargas. Los archivos del disco no se eliminan.",
+                    "tip.restartFull": "Cierra y vuelve a abrir la aplicación para aplicar los cambios.",
+                    "tip.deleteCancel": "Cierra la ventana sin eliminar la descarga.",
+                    "tip.deleteRemove": "Elimina la descarga y los elementos marcados arriba.",
+                    "tip.closeDialog": "Cierra esta ventana sin cambios.",
+                    "tip.moveCancel": "Cierra la ventana sin mover el archivo.",
+                    "tip.moveConfirm": "Mueve el archivo al destino seleccionado.",
+                    "tip.confirmCancel": "Cancela la acción y cierra la ventana.",
+                    "tip.confirmOk": "Confirma y ejecuta la acción.",
+                    "tip.catRemoveCancel": "Cierra sin cambiar el cajón ni sus archivos.",
+                    "tip.catRemoveDelete": "Elimina el cajón y los archivos que contiene.",
+                    "tip.catRemoveKeep": "Elimina el cajón pero mantiene los archivos en la biblioteca.",
+                    "tip.helpLicenses": "Muestra los componentes de terceros y sus licencias.",
+                    "tip.helpLegal": "Abre los términos de uso y el aviso legal.",
+                    "tip.helpNews": "Abre las novedades de esta versión.",
+                    "tip.palette": "Aplica la paleta {name} a la interfaz."
+                },
+                fr: {
+                    "tip.clearHistory": "Efface l’historique des téléchargements. Les fichiers sur le disque ne sont pas supprimés.",
+                    "tip.restartFull": "Ferme et relance l’application pour appliquer les changements.",
+                    "tip.deleteCancel": "Ferme la fenêtre sans supprimer le téléchargement.",
+                    "tip.deleteRemove": "Supprime le téléchargement et les éléments cochés ci-dessus.",
+                    "tip.closeDialog": "Ferme cette fenêtre sans modification.",
+                    "tip.moveCancel": "Ferme la fenêtre sans déplacer le fichier.",
+                    "tip.moveConfirm": "Déplace le fichier vers la destination choisie.",
+                    "tip.confirmCancel": "Annule l’action et ferme la fenêtre.",
+                    "tip.confirmOk": "Confirme et exécute l’action.",
+                    "tip.catRemoveCancel": "Ferme sans modifier le tiroir ni ses fichiers.",
+                    "tip.catRemoveDelete": "Supprime le tiroir et les fichiers qu’il contient.",
+                    "tip.catRemoveKeep": "Supprime le tiroir mais conserve les fichiers dans la bibliothèque.",
+                    "tip.helpLicenses": "Affiche les composants tiers et leurs licences.",
+                    "tip.helpLegal": "Ouvre les conditions d’utilisation et la mention légale.",
+                    "tip.helpNews": "Ouvre les nouveautés de cette version.",
+                    "tip.palette": "Applique la palette {name} à l’interface."
+                },
+                de: {
+                    "tip.clearHistory": "Löscht den Download-Verlauf. Dateien auf dem Datenträger bleiben erhalten.",
+                    "tip.restartFull": "Schließt und öffnet die App neu, um Änderungen anzuwenden.",
+                    "tip.deleteCancel": "Schließt das Fenster, ohne den Download zu entfernen.",
+                    "tip.deleteRemove": "Entfernt den Download und die oben markierten Elemente.",
+                    "tip.closeDialog": "Schließt dieses Fenster ohne Änderungen.",
+                    "tip.moveCancel": "Schließt das Fenster, ohne die Datei zu verschieben.",
+                    "tip.moveConfirm": "Verschiebt die Datei an den ausgewählten Zielort.",
+                    "tip.confirmCancel": "Bricht die Aktion ab und schließt das Fenster.",
+                    "tip.confirmOk": "Bestätigt und führt die Aktion aus.",
+                    "tip.catRemoveCancel": "Schließt, ohne die Schublade oder ihre Dateien zu ändern.",
+                    "tip.catRemoveDelete": "Löscht die Schublade und die darin enthaltenen Dateien.",
+                    "tip.catRemoveKeep": "Löscht die Schublade und behält die Dateien in der Mediathek.",
+                    "tip.helpLicenses": "Zeigt die Fremdkomponenten und ihre Lizenzen.",
+                    "tip.helpLegal": "Öffnet die Nutzungsbedingungen und den rechtlichen Hinweis.",
+                    "tip.helpNews": "Öffnet die Neuerungen dieser Version.",
+                    "tip.palette": "Wendet die Palette {name} auf die Oberfläche an."
+                }
+            };
+            Object.keys(I18N_TIPS).forEach(lng => Object.assign(I18N[lng], I18N_TIPS[lng]));
+            // Chaves que faltavam noutros idiomas nos paineis de automatismo e sistema.
+            const I18N_MISSING = {
+                pt: {
+                    "btn.restartFull": "Reiniciar aplicação"
+                },
+                en: {
+                    "btn.restartFull": "Restart app",
+                    "automation.add": "Add",
+                    "automation.checkNow": "Check now",
+                    "automation.suggestHistory": "Suggest from history",
+                    "automation.proposals": "RSS proposals",
+                    "automation.serviceBg": "Enable background service",
+                    "automation.serviceBgHelp": "Checks periodically and stores proposals in the config",
+                    "automation.autostartWin": "Start with Windows",
+                    "automation.autostartWinHelp": "Keeps monitoring active even when the app is closed",
+                    "automation.mode": "Mode",
+                    "automation.modeManual": "Manual",
+                    "automation.modeAuto": "Automatic (default)",
+                    "automation.interval": "Interval",
+                    "automation.platforms": "Platforms",
+                    "automation.rssCompat": "RSS compatibility verified",
+                    "automation.rssCompatText": "Confirmed feeds: YouTube (channel ID), PeerTube (by instance and ID), Dailymotion (observed user route) and SoundCloud (only public feeds configured by the creator). Vimeo discontinued its old feeds. TikTok, Instagram, Facebook, X, Twitch and Kick document APIs, not reliable public RSS feeds. For Rumble, Odysee, BitChute and Bilibili no stable official route has been confirmed; support is not assumed and no scraping or third-party services are used.",
+                    "automation.learnNote": "Uses recent downloads and local history (including .info.json metadata) to suggest channels and rank RSS proposals. yt-dlp download support does not mean the platform has RSS: only channels with an identified route can be selected. Nothing is transferred without selection. Activity and learned preferences are stored encrypted in data/activity.enc.",
+                    "automation.followedChannels": "Followed RSS channels",
+                    "settings.appearance.title": "Appearance & Language",
+                    "settings.behavior.title": "Behaviour",
+                    "settings.preview.title": "Preview",
+                    "settings.libraries.title": "Third-party component updates",
+                    "settings.automation.title": "Automation & RSS",
+                    "settings.downloadsOrganization.title": "Downloads & Organisation",
+                    "settings.serverNetwork.title": "Server & Network",
+                    "settings.python.title": "Python engine",
+                    "settings.system.title": "System & Maintenance",
+                    "settings.advanced.title": "Advanced",
+                    "settings.subtitlesHelp": "Set mode, languages and automatic subtitles.",
+                    "system.updatesApp": "Application updates",
+                    "system.updatesAppHelp": "Set a GitHub repository (owner/repo) to check for new versions.",
+                    "system.repoLabel": "GitHub repository (owner/repo)",
+                    "system.saveRepo": "Save update repository",
+                    "system.checkUpdates": "Check for updates"
+                },
+                es: {
+                    "btn.restartFull": "Reiniciar aplicación",
+                    "settings.subtitlesHelp": "Definir el modo, los idiomas y los subtítulos automáticos."
+                },
+                fr: {
+                    "btn.restartFull": "Redémarrer l’application",
+                    "automation.add": "Ajouter",
+                    "automation.checkNow": "Vérifier maintenant",
+                    "automation.suggestHistory": "Suggérer depuis l’historique",
+                    "automation.proposals": "Propositions RSS",
+                    "automation.serviceBg": "Activer le service en arrière-plan",
+                    "automation.serviceBgHelp": "Vérifie périodiquement et enregistre les propositions dans la configuration",
+                    "automation.autostartWin": "Démarrer avec Windows",
+                    "automation.autostartWinHelp": "Maintient la surveillance active même lorsque l’application est fermée",
+                    "automation.mode": "Mode",
+                    "automation.modeManual": "Manuel",
+                    "automation.modeAuto": "Automatique (par défaut)",
+                    "automation.interval": "Intervalle",
+                    "automation.platforms": "Plateformes",
+                    "automation.rssCompat": "Compatibilité RSS vérifiée",
+                    "automation.rssCompatText": "Flux confirmés : YouTube (ID de chaîne), PeerTube (par instance et ID), Dailymotion (route utilisateur observée) et SoundCloud (uniquement les flux publics configurés par le créateur). Vimeo a abandonné ses anciens flux. TikTok, Instagram, Facebook, X, Twitch et Kick documentent des API, pas des flux RSS publics fiables. Pour Rumble, Odysee, BitChute et Bilibili, aucune route officielle stable n’a été confirmée ; la prise en charge n’est pas supposée et aucun scraping ni service tiers n’est utilisé.",
+                    "automation.learnNote": "Utilise les téléchargements récents et l’historique local (y compris les métadonnées .info.json) pour suggérer des chaînes et classer les propositions RSS. La prise en charge du téléchargement par yt-dlp ne signifie pas que la plateforme dispose d’un RSS : seules les chaînes avec une route identifiée peuvent être sélectionnées. Rien n’est transféré sans sélection. L’activité et les préférences apprises sont stockées chiffrées dans data/activity.enc.",
+                    "automation.followedChannels": "Chaînes RSS suivies",
+                    "settings.appearance.title": "Apparence et langue",
+                    "settings.behavior.title": "Comportement",
+                    "settings.preview.title": "Aperçu",
+                    "settings.libraries.title": "Mises à jour des composants tiers",
+                    "settings.automation.title": "Automatisation et RSS",
+                    "settings.downloadsOrganization.title": "Téléchargements et organisation",
+                    "settings.serverNetwork.title": "Serveur et réseau",
+                    "settings.python.title": "Moteur Python",
+                    "settings.system.title": "Système et maintenance",
+                    "settings.advanced.title": "Avancé",
+                    "settings.subtitlesHelp": "Définir le mode, les langues et les sous-titres automatiques.",
+                    "system.updatesApp": "Mises à jour de l’application",
+                    "system.updatesAppHelp": "Définir un dépôt GitHub (owner/repo) pour rechercher de nouvelles versions.",
+                    "system.repoLabel": "Dépôt GitHub (owner/repo)",
+                    "system.saveRepo": "Enregistrer le dépôt de mises à jour",
+                    "system.checkUpdates": "Rechercher des mises à jour"
+                },
+                de: {
+                    "btn.restartFull": "App neu starten",
+                    "automation.add": "Hinzufügen",
+                    "automation.checkNow": "Jetzt prüfen",
+                    "automation.suggestHistory": "Aus dem Verlauf vorschlagen",
+                    "automation.proposals": "RSS-Vorschläge",
+                    "automation.serviceBg": "Hintergrunddienst aktivieren",
+                    "automation.serviceBgHelp": "Prüft regelmäßig und speichert Vorschläge in der Konfiguration",
+                    "automation.autostartWin": "Mit Windows starten",
+                    "automation.autostartWinHelp": "Hält die Überwachung aktiv, auch wenn die App geschlossen ist",
+                    "automation.mode": "Modus",
+                    "automation.modeManual": "Manuell",
+                    "automation.modeAuto": "Automatisch (Standard)",
+                    "automation.interval": "Intervall",
+                    "automation.platforms": "Plattformen",
+                    "automation.rssCompat": "RSS-Kompatibilität geprüft",
+                    "automation.rssCompatText": "Bestätigte Feeds: YouTube (Kanal-ID), PeerTube (nach Instanz und ID), Dailymotion (beobachtete Benutzerroute) und SoundCloud (nur öffentliche, vom Ersteller konfigurierte Feeds). Vimeo hat die alten Feeds eingestellt. TikTok, Instagram, Facebook, X, Twitch und Kick dokumentieren APIs, keine zuverlässigen öffentlichen RSS-Feeds. Für Rumble, Odysee, BitChute und Bilibili wurde keine stabile offizielle Route bestätigt; Unterstützung wird nicht angenommen und es werden weder Scraping noch Drittanbieterdienste verwendet.",
+                    "automation.learnNote": "Nutzt aktuelle Downloads und den lokalen Verlauf (einschließlich .info.json-Metadaten), um Kanäle vorzuschlagen und RSS-Vorschläge zu ordnen. yt-dlp-Download-Unterstützung bedeutet nicht, dass die Plattform RSS hat: Nur Kanäle mit einer erkannten Route können ausgewählt werden. Ohne Auswahl wird nichts übertragen. Aktivität und gelernte Präferenzen werden verschlüsselt in data/activity.enc gespeichert.",
+                    "automation.followedChannels": "Gefolgte RSS-Kanäle",
+                    "settings.appearance.title": "Darstellung & Sprache",
+                    "settings.behavior.title": "Verhalten",
+                    "settings.preview.title": "Vorschau",
+                    "settings.libraries.title": "Updates für Fremdkomponenten",
+                    "settings.automation.title": "Automatisierung & RSS",
+                    "settings.downloadsOrganization.title": "Downloads & Organisation",
+                    "settings.serverNetwork.title": "Server & Netzwerk",
+                    "settings.python.title": "Python-Engine",
+                    "settings.system.title": "System & Wartung",
+                    "settings.advanced.title": "Erweitert",
+                    "settings.subtitlesHelp": "Modus, Sprachen und automatische Untertitel festlegen.",
+                    "system.updatesApp": "App-Updates",
+                    "system.updatesAppHelp": "GitHub-Repository (owner/repo) festlegen, um nach neuen Versionen zu suchen.",
+                    "system.repoLabel": "GitHub-Repository (owner/repo)",
+                    "system.saveRepo": "Update-Repository speichern",
+                    "system.checkUpdates": "Nach Updates suchen"
+                }
+            };
+            Object.keys(I18N_MISSING).forEach(lng => Object.assign(I18N[lng], I18N_MISSING[lng]));
             let appLang = "pt";
             function t(key, vars) {
                 const dict = I18N[appLang] || I18N.pt;
@@ -4396,6 +4641,7 @@
                 root.querySelectorAll("[data-i18n-tip]").forEach(el => { const v = t(el.dataset.i18nTip); if (v != null) el.setAttribute("data-tip", v); });
                 root.querySelectorAll("[data-i18n-aria]").forEach(el => { const v = t(el.dataset.i18nAria); if (v != null) el.setAttribute("aria-label", v); });
                 root.querySelectorAll("[data-i18n-title]").forEach(el => { const v = t(el.dataset.i18nTitle); if (v != null) el.setAttribute("title", v); });
+                if (typeof hydrateCommandTips === "function") { try { hydrateCommandTips(root); } catch(e) {} }
             }
             function setLanguage(lang, opts) {
                 opts = opts || {};
@@ -4787,13 +5033,15 @@
                     const id = escapeHtml(p.id || "");
                     const meta = [p.channel_name || p.uploader || "", p.platform || "", p.published ? rssFmtDate(p.published) : "", p.reason || ""].filter(Boolean).join(" · ");
                     const link = p.url ? `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" style="font-size:.66rem;color:var(--accent,#6c8cff)">abrir</a>` : "";
+                    const ignoreLabel = escapeHtml(t("rss.ignore"));
+                    const downloadLabel = escapeHtml(t("rss.download"));
                     return `<div style="display:flex;align-items:center;gap:.65rem;border:1px solid var(--border);border-radius:10px;padding:.55rem .65rem">
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.8rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.title || "(sem título)")}</div>
                             <div style="font-size:.66rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(meta)} ${link}</div>
                         </div>
-                        <button type="button" class="soft settings-action" onclick="rssProposalAction('${id}','reject')"><span data-icon="close"></span><span>Ignorar</span></button>
-                        <button type="button" class="secondary settings-action" onclick="rssProposalAction('${id}','accept')"><span data-icon="download"></span><span>Descarregar</span></button>
+                        <button type="button" class="soft settings-action icon-cmd" data-i18n-tip="rss.ignore" data-i18n-aria="rss.ignore" data-tip="${ignoreLabel}" aria-label="${ignoreLabel}" onclick="rssProposalAction('${id}','reject')">${icon("close")}<span class="cmd-label">${ignoreLabel}</span></button>
+                        <button type="button" class="secondary settings-action icon-cmd" data-i18n-tip="rss.download" data-i18n-aria="rss.download" data-tip="${downloadLabel}" aria-label="${downloadLabel}" onclick="rssProposalAction('${id}','accept')">${icon("download")}<span class="cmd-label">${downloadLabel}</span></button>
                     </div>`;
                 }).join("");
                 try { hydrateIcons(list); } catch (e) {}
@@ -5103,12 +5351,15 @@
                     const latest = lib.latest ? t("updates.latest", { version: lib.latest }) : "";
                     let action = "";
                     if (lib.action === "update_ytdlp") {
-                        action = `<button type="button" class="soft" onclick="updateLibrary('ytdlp')">${escapeHtml(t("updates.actionUpdateYtdlp"))}</button>`;
+                        const label = escapeHtml(t("updates.actionUpdateYtdlp"));
+                        action = `<button type="button" class="soft settings-action icon-cmd" data-i18n-tip="updates.actionUpdateYtdlp" data-i18n-aria="updates.actionUpdateYtdlp" data-tip="${label}" aria-label="${label}" onclick="updateLibrary('ytdlp')">${icon("update")}<span class="cmd-label">${label}</span></button>`;
                     } else if (lib.action === "update_ffmpeg") {
-                        action = `<button type="button" class="soft" onclick="updateLibrary('ffmpeg')">${escapeHtml(t("updates.actionUpdateFfmpeg"))}</button>`;
+                        const label = escapeHtml(t("updates.actionUpdateFfmpeg"));
+                        action = `<button type="button" class="soft settings-action icon-cmd" data-i18n-tip="updates.actionUpdateFfmpeg" data-i18n-aria="updates.actionUpdateFfmpeg" data-tip="${label}" aria-label="${label}" onclick="updateLibrary('ffmpeg')">${icon("update")}<span class="cmd-label">${label}</span></button>`;
                     } else if (lib.url) {
-                        const label = st === "missing" ? t("updates.actionOpen") : t("updates.open");
-                        action = `<button type="button" class="soft" onclick="openLibraryPage('${escapeHtml(lib.url)}')">${escapeHtml(label)}</button>`;
+                        const key = st === "missing" ? "updates.actionOpen" : "updates.open";
+                        const label = escapeHtml(t(key));
+                        action = `<button type="button" class="soft settings-action icon-cmd" data-i18n-tip="${key}" data-i18n-aria="${key}" data-tip="${label}" aria-label="${label}" onclick="openLibraryPage('${escapeHtml(lib.url)}')">${icon("external")}<span class="cmd-label">${label}</span></button>`;
                     }
                     return `<div class="lib-update-row is-${st}">
                         <div class="lib-update-name"><span class="lib-dot"></span><span>${escapeHtml(lib.name || lib.id || "")}</span></div>
@@ -5334,7 +5585,7 @@
                 const integer = (key, min, max) => !has(key) || (Number.isInteger(settings[key]) && settings[key] >= min && settings[key] <= max);
                 const boolean = key => !has(key) || typeof settings[key] === "boolean";
                 if (!oneOf("theme", ["system", "light", "dark"]) ||
-                    !oneOf("theme_palette", ["indigo", "ocean", "violet", "emerald", "amber", "graphite"]) ||
+                    !oneOf("theme_palette", ["indigo", "violet", "rose", "crimson", "amber", "blue", "graphite", "ocean", "emerald"]) ||
                     !oneOf("language", SUPPORTED_LANGS) ||
                     !oneOf("downloads_mode", ["internal", "system", "custom"]) ||
                     !oneOf("sub_mode", ["none", "separate", "embedded"]) ||
@@ -5484,7 +5735,7 @@
                     });
                 };
                 const place = (el) => {
-                    const text = el.getAttribute("data-tip");
+                    const text = el.getAttribute("data-tip") || el.getAttribute("aria-label");
                     if (!text) return;
                     cancelHide();
                     resetCopied();
@@ -5512,18 +5763,54 @@
                     tip.setAttribute("aria-hidden", "false");
                     tip.classList.add("show");
                     const r = el.getBoundingClientRect();
-                    const tr = tip.getBoundingClientRect();
-                    let top = r.bottom + 9, placement = "bottom";
-                    if (top + tr.height > window.innerHeight - 6) { top = r.top - tr.height - 9; placement = "top"; }
-                    let left = r.left + r.width / 2 - tr.width / 2;
-                    left = Math.max(8, Math.min(left, window.innerWidth - tr.width - 8));
-                    top = Math.max(6, top);
+                    // Usa as dimensões de layout (sem a transformação de escala)
+                    // para o alinhamento não variar durante a animação.
+                    const trW = tip.offsetWidth, trH = tip.offsetHeight;
+                    // Coloca o balão no lado com mais espaço e mantém a seta
+                    // sempre dentro do balão, alinhada com o centro do comando.
+                    const gap = 9, gutter = 8, arrowPad = 12;
+                    const vw = window.innerWidth, vh = window.innerHeight;
+                    const below = vh - r.bottom - gap - gutter;
+                    const above = r.top - gap - gutter;
+                    const right = vw - r.right - gap - gutter;
+                    const left = r.left - gap - gutter;
+                    const cx = r.left + r.width / 2;
+                    const cy = r.top + r.height / 2;
+                    const centeredLeft = cx - trW / 2;
+                    const centeredTop = cy - trH / 2;
+                    const fitsHCenter = centeredLeft >= gutter && centeredLeft <= vw - trW - gutter;
+                    const fitsVCenter = centeredTop >= gutter && centeredTop <= vh - trH - gutter;
+                    // Um tooltip ideal fica num lado com espaço suficiente E
+                    // consegue centrar a seta no comando, sem a encostar à margem.
+                    let placement = "";
+                    if (below >= trH && fitsHCenter) placement = "bottom";
+                    else if (above >= trH && fitsHCenter) placement = "top";
+                    else if (right >= trW && fitsVCenter) placement = "right";
+                    else if (left >= trW && fitsVCenter) placement = "left";
+                    else if (below >= trH) placement = "bottom";
+                    else if (above >= trH) placement = "top";
+                    else if (right >= trW) placement = "right";
+                    else if (left >= trW) placement = "left";
+                    else placement = below >= above ? "bottom" : "top";
+                    let top, leftPos;
+                    if (placement === "bottom" || placement === "top") {
+                        top = placement === "bottom" ? r.bottom + gap : r.top - trH - gap;
+                        leftPos = Math.max(gutter, Math.min(cx - trW / 2, vw - trW - gutter));
+                        const ax = Math.max(arrowPad, Math.min(cx - leftPos, trW - arrowPad));
+                        tip.style.setProperty("--arrow-x", ax + "px");
+                        tip.style.removeProperty("--arrow-y");
+                    } else {
+                        leftPos = placement === "right" ? r.right + gap : r.left - trW - gap;
+                        top = Math.max(gutter, Math.min(cy - trH / 2, vh - trH - gutter));
+                        const ay = Math.max(arrowPad, Math.min(cy - top, trH - arrowPad));
+                        tip.style.setProperty("--arrow-y", ay + "px");
+                        tip.style.removeProperty("--arrow-x");
+                    }
+                    top = Math.max(gutter, Math.min(top, vh - trH - gutter));
+                    leftPos = Math.max(gutter, Math.min(leftPos, vw - trW - gutter));
                     tip.setAttribute("data-placement", placement);
                     tip.style.top = top + "px";
-                    tip.style.left = left + "px";
-                    let arrowX = (r.left + r.width / 2) - left;
-                    arrowX = Math.max(12, Math.min(arrowX, tr.width - 12));
-                    tip.style.setProperty("--arrow-x", arrowX + "px");
+                    tip.style.left = leftPos + "px";
                 };
                 const hide = () => {
                     cancelHide();
@@ -5535,7 +5822,7 @@
                     tip.classList.remove("tooltip-copied");
                     tip.setAttribute("aria-hidden", "true");
                 };
-                const closest = (t) => (t && t.closest) ? t.closest("[data-tip]") : null;
+                const closest = (t) => (t && t.closest) ? (t.closest("[data-tip]") || t.closest("button[aria-label]") || t.closest("[role='button'][aria-label]")) : null;
                 document.addEventListener("pointerover", (e) => { const el = closest(e.target); if (el) place(el); }, true);
                 document.addEventListener("pointerout", (e) => { const el = closest(e.target); if (el && el === target) scheduleHide(); }, true);
                 document.addEventListener("focusin", (e) => { const el = closest(e.target); if (el) place(el); });
@@ -5558,15 +5845,78 @@
                 });
             }
 
+            // Converte os comandos marcados com data-cmd-icon em botões só com
+            // ícone: o texto do comando passa a ser a tooltip e o nome acessível.
+            function initCommandIcons(root) {
+                root = root || document;
+                root.querySelectorAll("[data-cmd-icon]").forEach(btn => {
+                    if (btn.dataset.cmdIconReady === "1") return;
+                    let label = btn.querySelector(".cmd-label");
+                    if (!label) {
+                        label = Array.from(btn.children).find(el =>
+                            el.tagName === "SPAN" &&
+                            !el.hasAttribute("data-icon") &&
+                            !el.classList.contains("icon") &&
+                            !el.classList.contains("tab-count")
+                        );
+                        if (label) label.classList.add("cmd-label");
+                    }
+                    const key = (label && label.dataset) ? (label.dataset.i18n || "") : "";
+                    if (key) {
+                        if (!btn.hasAttribute("data-i18n-aria")) btn.setAttribute("data-i18n-aria", key);
+                        if (!btn.hasAttribute("data-i18n-tip")) btn.setAttribute("data-i18n-tip", key);
+                    }
+                    const name = (key ? t(key) : (label ? label.textContent : "")).replace(/\s+/g, " ").trim()
+                        || btn.getAttribute("aria-label") || "";
+                    if (name) {
+                        if (!btn.hasAttribute("aria-label")) btn.setAttribute("aria-label", name);
+                        if (!btn.hasAttribute("data-tip")) btn.setAttribute("data-tip", name);
+                    }
+                    btn.classList.add("icon-cmd");
+                    btn.dataset.cmdIconReady = "1";
+                });
+            }
+
+            // Atualiza um comando em ícone (ícone + nome acessível/tooltip).
+            function setIconCommand(btn, iconName, key) {
+                if (!btn) return;
+                const label = t(key);
+                btn.innerHTML = `${icon(iconName)}<span class="cmd-label" data-i18n="${key}">${escapeHtml(label)}</span>`;
+                btn.setAttribute("data-i18n-aria", key);
+                btn.setAttribute("data-i18n-tip", key);
+                btn.dataset.tipSource = "auto";
+                btn.setAttribute("aria-label", label);
+                btn.setAttribute("data-tip", label);
+                btn.classList.add("icon-cmd");
+                btn.dataset.cmdIconReady = "1";
+            }
+
+            // Todos os comandos têm tooltip: usa o nome acessível ou o texto
+            // visível. As tooltips já definidas no HTML prevalecem.
+            function hydrateCommandTips(root) {
+                root = root || document;
+                root.querySelectorAll("button, [role='button']").forEach(el => {
+                    if (el.classList.contains("tooltip-copy")) return;
+                    if (el.hasAttribute("data-tip") && el.dataset.tipSource !== "auto") return;
+                    const name = (el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim();
+                    if (!name) return;
+                    el.setAttribute("data-tip", name);
+                    el.dataset.tipSource = "auto";
+                });
+            }
+
             // ==================== APARÊNCIA (MODO + PALETA) ====================
             const PALETTES = [
+                { id:"amber",    name:"Âmbar",     light:"#b45309", dark:"#fab03e" },
+                { id:"crimson",  name:"Carmesim",  light:"#cf1b2b", dark:"#ff6b6b" },
+                { id:"rose",     name:"Rosa",      light:"#c2185b", dark:"#ff6fa8" },
+                { id:"violet",   name:"Violeta",   light:"#8134af", dark:"#bb7ce8" },
                 { id:"indigo",   name:"Índigo",    light:"#4f46e5", dark:"#818cf8" },
-                { id:"ocean",    name:"Oceano",    light:"#0e7490", dark:"#22d3ee" },
-                { id:"violet",   name:"Violeta",   light:"#7c3aed", dark:"#a78bfa" },
-                { id:"emerald",  name:"Esmeralda", light:"#047857", dark:"#34d399" },
-                { id:"amber",    name:"Âmbar",     light:"#b45309", dark:"#fbbf24" },
-                { id:"graphite", name:"Grafite",   light:"#3f4652", dark:"#cbd5e1" }
+                { id:"blue",     name:"Azul",      light:"#3b46c4", dark:"#93a0ff" }
             ];
+            // Paletas antigas mantidas para importar definicoes ja exportadas.
+            const PALETTE_ALIASES = { ocean:"rose", emerald:"crimson", graphite:"blue" };
+            const PALETTE_IDS = PALETTES.map(p => p.id);
             let appMode = "system";
             let appPalette = "indigo";
             const mqlDark = window.matchMedia("(prefers-color-scheme: dark)");
@@ -5574,11 +5924,14 @@
             function resolveMode(mode) { return mode === "system" ? (mqlDark.matches ? "dark" : "light") : mode; }
             function applyAppearance(mode, palette, persist = true) {
                 if (mode) appMode = mode;
-                if (palette) appPalette = palette;
+                if (palette) {
+                    const normalized = PALETTE_ALIASES[palette] || palette;
+                    appPalette = PALETTE_IDS.includes(normalized) ? normalized : "indigo";
+                }
                 const resolved = resolveMode(appMode);
                 document.documentElement.setAttribute("data-theme", resolved);
                 document.documentElement.setAttribute("data-palette", appPalette);
-                document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", resolved === "dark" ? "#0a0a0c" : "#ffffff"));
+                document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", resolved === "dark" ? "#0a0c1a" : "#f7f8ff"));
                 const modeBtns = document.querySelectorAll("#mode-segment button");
                 modeBtns.forEach(b => b.classList.toggle("active", b.dataset.mode === appMode));
                 document.querySelectorAll("#palette-grid .palette-swatch").forEach(s => s.classList.toggle("active", s.dataset.palette === appPalette));
@@ -5600,7 +5953,7 @@
                 grid.innerHTML = PALETTES.map(p => {
                     const nm = t("palette." + p.id) || p.name;
                     return `
-                    <button class="palette-swatch" data-palette="${p.id}" aria-label="${escapeHtml(nm)}" data-tip="${escapeHtml(nm)}">
+                    <button class="palette-swatch" data-palette="${p.id}" aria-label="${escapeHtml(nm)}" data-tip="${escapeHtml(t("tip.palette", { name: nm }))}">
                         <span class="palette-dot" style="background:linear-gradient(135deg, ${p.light}, ${p.dark})" aria-hidden="true"></span>
                         <span class="palette-name">${escapeHtml(nm)}</span>
                     </button>`;
@@ -5789,10 +6142,19 @@
             });
             // ==================== SISTEMA DE VERSÃO ====================
             // VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao.
-            const APP_VERSION = "3.11.4";
-            const APP_VERSION_DATE = "2026-10-28";
-            const APP_BUILD = 2026102803;
+            const APP_VERSION = "3.12.0";
+            const APP_VERSION_DATE = "2026-11-05";
+            const APP_BUILD = 2026110502;
             const VERSION_HISTORY = [
+                {
+                    version: "3.12.0",
+                    date: "2026-11-05",
+                    groups: {
+                        "Adicionado": ["Comandos de ação passam a ser apresentados apenas com ícone, mantendo o nome da ação numa tooltip própria e no nome acessível do botão", "Nos comandos que mantêm o texto visível, a tooltip explica brevemente o efeito da ação em vez de repetir o rótulo", "Novas paletas alinhadas com o logotipo em cristal: Âmbar, Carmesim, Rosa, Violeta, Índigo e Azul, cada uma com variante clara e escura"],
+                        "Melhorado": ["Os fundos, bordas, texto, pesquisa, switches e consola dos temas passam a usar tons de azul do logotipo em vez de preto, branco ou cinzento", "As tooltips escolhem automaticamente o lado com mais espaço (baixo, topo, direita ou esquerda), nunca ficam cortadas e a seta aponta sempre para o centro do comando", "O fundo, o texto e o contorno das tooltips adaptam-se à paleta ativa e ao modo claro/escuro, com contraste elevado em todas as combinações", "A migração de definições antigas mantém a aparência escolhida (ocean → rosa, emerald → carmesim, graphite → azul) e a importação valida apenas paletas conhecidas", "O motor de versões passa a sincronizar também o cabeçalho das notas de release com a versão publicada"],
+                        "Corrigido": ["A seta das tooltips deixa de ficar desalinhada ou fora do balão quando o comando está junto às margens da janela"],
+                    }
+                },
                 {
                     version: "3.11.4",
                     date: "2026-10-28",
@@ -7811,7 +8173,7 @@ function escapeAttr(text) { return escapeHtml(text).replace(/"/g, "&quot;").repl
                         document.getElementById("start-btn").disabled = false;
                         document.getElementById("pause-btn").disabled = false;
                         document.getElementById("cancel-btn").disabled = false;
-                        const pb = document.getElementById("pause-btn"); pb.dataset.state = "running"; pb.innerHTML = `${icon("pause")} ${escapeHtml(t("btn.pause"))}`;
+                        const pb = document.getElementById("pause-btn"); pb.dataset.state = "running"; setIconCommand(pb, "pause", "btn.pause");
                         currentTotalFiles = 0;
                         updateProgressPosition(0);
                         setPhase("");
@@ -8075,6 +8437,7 @@ function escapeAttr(text) { return escapeHtml(text).replace(/"/g, "&quot;").repl
                 if (document.fonts && document.fonts.ready) { try { document.fonts.ready.then(() => { try { layoutBrandSubtitle(); } catch(e) {} }); } catch(e) {} }
                 window.addEventListener("resize", () => { try { layoutBrandSubtitle(); } catch(e) {} });
                 hydrateIcons();
+                initCommandIcons();
                 initAppearance();
                 initTooltips();
                 initWindowControls();
@@ -8151,7 +8514,7 @@ function escapeAttr(text) { return escapeHtml(text).replace(/"/g, "&quot;").repl
                         showToast(e.message || t("toast.serverError"), { type:"error" });
                     }
                 };
-                document.getElementById("pause-btn").onclick = async () => { if (!downloadActive) return; const btn = document.getElementById("pause-btn"); const isPaused = btn.dataset.state !== "paused"; await fetch("/pause_download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pause:isPaused }) }); btn.dataset.state = isPaused ? "paused" : "running"; btn.innerHTML = isPaused ? `${icon("play")} ${escapeHtml(t("btn.resume"))}` : `${icon("pause")} ${escapeHtml(t("btn.pause"))}`; showToast(isPaused ? t("toast.paused") : t("toast.resumed"), { type:"info" }); };
+                document.getElementById("pause-btn").onclick = async () => { if (!downloadActive) return; const btn = document.getElementById("pause-btn"); const isPaused = btn.dataset.state !== "paused"; await fetch("/pause_download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pause:isPaused }) }); btn.dataset.state = isPaused ? "paused" : "running"; setIconCommand(btn, isPaused ? "play" : "pause", isPaused ? "btn.resume" : "btn.pause"); showToast(isPaused ? t("toast.paused") : t("toast.resumed"), { type:"info" }); };
                 document.getElementById("cancel-btn").onclick = async () => { if (!downloadActive) return; if (await uiConfirm(t("confirm.cancelDownload"), { title:t("confirm.cancelDownload.title"), danger:true, icon:"stop", confirmText:t("confirm.cancelDownload.btn") })) { await fetch("/cancel_download", { method:"POST" }); showToast(t("toast.downloadCancelled"), { type:"info" }); } };
                 
                 document.getElementById("use-po-token").onchange = e => document.getElementById("po-token-fields").style.display = e.target.checked ? "block" : "none";

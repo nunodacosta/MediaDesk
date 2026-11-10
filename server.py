@@ -61,7 +61,7 @@ _dependencies_ready.set()
 _queue_jobs = []
 _queue_worker_running = False
 _active_download_id = None
-APP_VERSION = "3.11.4"  # gerado por tools/sync_version.ps1
+APP_VERSION = "3.12.0"  # gerado por tools/sync_version.ps1
 os.makedirs(BIN_DIR, exist_ok=True)
 
 # Tipos MIME

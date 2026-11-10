@@ -68,7 +68,7 @@ sealed class MainForm : Form
     FormWindowState prevState = FormWindowState.Normal;
     Rectangle prevBounds;
     // Ligeira borda exterior sincronizada com o tema (a janela nao tem barra nativa).
-    Color borderColor = Color.FromArgb(42, 47, 58);
+    Color borderColor = Color.FromArgb(42, 48, 80);
     const int BorderWidth = 1;
 
     public MainForm(string appDir)
@@ -82,8 +82,8 @@ sealed class MainForm : Form
         Icon = LoadAppIcon();
         KeyPreview = true;
         KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape && fullscreen) ToggleFullscreen(); };
-        BackColor = Color.FromArgb(10, 10, 12);
-        web.DefaultBackgroundColor = Color.FromArgb(10, 10, 12);
+        BackColor = Color.FromArgb(10, 12, 26);
+        web.DefaultBackgroundColor = Color.FromArgb(10, 12, 26);
         Padding = new Padding(BorderWidth);
         DoubleBuffered = true;
         Controls.Add(web);
@@ -192,18 +192,34 @@ sealed class MainForm : Form
         return null;
     }
 
-    static Color ThemeBg(bool dark) => dark ? Color.FromArgb(10, 10, 12) : Color.FromArgb(255, 255, 255);
+    static Color ThemeBg(bool dark) => dark ? Color.FromArgb(10, 12, 26) : Color.FromArgb(247, 248, 255);
 
-    // Cores de acento por paleta (light, dark) — correspondem as 6 paletas da interface web.
+    // Cores de acento por paleta (light, dark) — alinhadas com a paleta do logotipo:
+    // amarelo -> laranja -> vermelho -> rosa -> magenta -> roxo -> azul.
     static readonly Dictionary<string, (Color light, Color dark)> PaletteAccents = new()
     {
+        ["amber"] = (Color.FromArgb(0xb4, 0x53, 0x09), Color.FromArgb(0xfa, 0xb0, 0x3e)),
+        ["crimson"] = (Color.FromArgb(0xcf, 0x1b, 0x2b), Color.FromArgb(0xff, 0x6b, 0x6b)),
+        ["rose"] = (Color.FromArgb(0xc2, 0x18, 0x5b), Color.FromArgb(0xff, 0x6f, 0xa8)),
+        ["violet"] = (Color.FromArgb(0x81, 0x34, 0xaf), Color.FromArgb(0xbb, 0x7c, 0xe8)),
         ["indigo"] = (Color.FromArgb(0x4f, 0x46, 0xe5), Color.FromArgb(0x81, 0x8c, 0xf8)),
-        ["ocean"] = (Color.FromArgb(0x0e, 0x74, 0x90), Color.FromArgb(0x22, 0xd3, 0xee)),
-        ["violet"] = (Color.FromArgb(0x7c, 0x3a, 0xed), Color.FromArgb(0xa7, 0x8b, 0xfa)),
-        ["emerald"] = (Color.FromArgb(0x04, 0x78, 0x57), Color.FromArgb(0x34, 0xd3, 0x99)),
-        ["amber"] = (Color.FromArgb(0xb4, 0x53, 0x09), Color.FromArgb(0xfb, 0xbf, 0x24)),
-        ["graphite"] = (Color.FromArgb(0x3f, 0x46, 0x52), Color.FromArgb(0xcb, 0xd5, 0xe1))
+        ["blue"] = (Color.FromArgb(0x3b, 0x46, 0xc4), Color.FromArgb(0x93, 0xa0, 0xff))
     };
+
+    // Paletas antigas guardadas em configuracoes existentes -> novas equivalentes.
+    static readonly Dictionary<string, string> LegacyPalettes = new()
+    {
+        ["ocean"] = "rose",
+        ["emerald"] = "crimson",
+        ["graphite"] = "blue"
+    };
+
+    static string NormalizePalette(string? palette)
+    {
+        var id = palette ?? "";
+        if (LegacyPalettes.TryGetValue(id, out var mapped)) id = mapped;
+        return PaletteAccents.ContainsKey(id) ? id : "indigo";
+    }
 
     static Color Blend(Color a, Color b, double ratioA)
     {
@@ -217,7 +233,8 @@ sealed class MainForm : Form
 
     static Color ThemeBorder(bool dark, string palette)
     {
-        if (!PaletteAccents.TryGetValue(palette ?? "", out var c)) c = PaletteAccents["indigo"];
+        var paletteId = NormalizePalette(palette);
+        if (!PaletteAccents.TryGetValue(paletteId, out var c)) c = PaletteAccents["indigo"];
         var accent = dark ? c.dark : c.light;
         // Mistura o acento com o fundo para uma borda "ligeira", tal como na interface web.
         return Blend(accent, ThemeBg(dark), 0.55);
@@ -226,23 +243,23 @@ sealed class MainForm : Form
     void ApplyTheme(bool dark, string palette)
     {
         var background = ThemeBg(dark);
-        var accent = PaletteAccents.TryGetValue(palette ?? "", out var colors)
-            ? dark ? colors.dark : colors.light
-            : dark ? PaletteAccents["indigo"].dark : PaletteAccents["indigo"].light;
+        var paletteId = NormalizePalette(palette);
+        var colors = PaletteAccents[paletteId];
+        var accent = dark ? colors.dark : colors.light;
         try { BackColor = background; } catch { }
         try { web.DefaultBackgroundColor = background; } catch { }
         try
         {
             startupSplash.SetTheme(
                 background,
-                dark ? Color.FromArgb(20, 20, 24) : Color.FromArgb(255, 255, 255),
-                dark ? Color.FromArgb(42, 42, 48) : Color.FromArgb(228, 228, 231),
-                dark ? Color.FromArgb(237, 237, 238) : Color.FromArgb(24, 24, 27),
-                dark ? Color.FromArgb(161, 161, 170) : Color.FromArgb(95, 99, 104),
+                dark ? Color.FromArgb(17, 21, 39) : Color.FromArgb(251, 251, 255),
+                dark ? Color.FromArgb(42, 48, 80) : Color.FromArgb(221, 225, 244),
+                dark ? Color.FromArgb(238, 240, 251) : Color.FromArgb(21, 26, 54),
+                dark ? Color.FromArgb(166, 173, 207) : Color.FromArgb(86, 94, 134),
                 accent);
         }
         catch { }
-        borderColor = ThemeBorder(dark, palette ?? "indigo");
+        borderColor = ThemeBorder(dark, paletteId);
         try { if (Padding != new Padding(BorderWidth)) Padding = new Padding(BorderWidth); } catch { }
         Invalidate();
     }

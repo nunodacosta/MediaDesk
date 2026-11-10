@@ -1,10 +1,31 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.11.4",
-  "date": "2026-10-28",
-  "build": 2026102803,
+  "version": "3.12.0",
+  "date": "2026-11-05",
+  "build": 2026110502,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.12.0",
+      "date": "2026-11-05",
+      "groups": {
+        "Adicionado": [
+          "Comandos de ação passam a ser apresentados apenas com ícone, mantendo o nome da ação numa tooltip própria e no nome acessível do botão",
+          "Nos comandos que mantêm o texto visível, a tooltip explica brevemente o efeito da ação em vez de repetir o rótulo",
+          "Novas paletas alinhadas com o logotipo em cristal: Âmbar, Carmesim, Rosa, Violeta, Índigo e Azul, cada uma com variante clara e escura"
+        ],
+        "Melhorado": [
+          "Os fundos, bordas, texto, pesquisa, switches e consola dos temas passam a usar tons de azul do logotipo em vez de preto, branco ou cinzento",
+          "As tooltips escolhem automaticamente o lado com mais espaço (baixo, topo, direita ou esquerda), nunca ficam cortadas e a seta aponta sempre para o centro do comando",
+          "O fundo, o texto e o contorno das tooltips adaptam-se à paleta ativa e ao modo claro/escuro, com contraste elevado em todas as combinações",
+          "A migração de definições antigas mantém a aparência escolhida (ocean → rosa, emerald → carmesim, graphite → azul) e a importação valida apenas paletas conhecidas",
+          "O motor de versões passa a sincronizar também o cabeçalho das notas de release com a versão publicada"
+        ],
+        "Corrigido": [
+          "A seta das tooltips deixa de ficar desalinhada ou fora do balão quando o comando está junto às margens da janela"
+        ]
+      }
+    },
     {
       "version": "3.11.4",
       "date": "2026-10-28",

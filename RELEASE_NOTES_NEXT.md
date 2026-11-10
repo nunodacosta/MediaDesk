@@ -5,10 +5,51 @@
 > Editar/curtir antes de publicar. As notas automáticas do GitHub
 > (`generate_release_notes`) são substituídas por este texto no corpo da release.
 
-## Versão: `v3.9.0`
+## Versão: `v3.12.0`
 
-*Minor* (`3.8.3` → `3.9.0`): a fila de downloads passa para o painel lateral e a
-barra de progresso fica sincronizada com o trabalho real.
+*Minor* (`3.11.4` → `3.12.0`): nova identidade visual inspirada no logotipo em
+cristal, comandos só com ícone e tooltips contextuais que se adaptam a cada tema.
+
+---
+
+## YT-DLP Media Desk v3.12.0
+
+### Adicionado
+- **Paletas alinhadas com o logotipo:** seis temas — Âmbar, Carmesim, Rosa,
+  Violeta, Índigo e Azul — percorrem a gradiente do cristal (amarelo →
+  laranja → vermelho → rosa → magenta → roxo → azul), cada um com variante
+  clara e escura e contraste legível.
+- **Superfícies azuis:** os fundos, bordas, texto, pesquisa, switches e a
+  consola deixam de usar preto, branco ou cinzento e passam a tons de azul
+  retirados do logotipo, com o mesmo tratamento no modo claro e escuro.
+- **Comandos só com ícone:** as ações de download, configuração, fila, RSS,
+  propostas e atualizações da mediateca passam a mostrar apenas o ícone; o nome
+  da ação aparece na tooltip e no nome acessível do botão, mantendo a interface
+  mais limpa sem perder clareza.
+- **Tooltips explicativas nos botões de texto:** nos comandos que mantêm o
+  rótulo visível, a tooltip descreve brevemente o efeito da ação em vez de
+  repetir o texto do botão.
+- **Tooltips contextuais:** cada tooltip escolhe automaticamente o lado com mais
+  espaço (baixo, topo, direita ou esquerda), nunca fica cortada e a seta aponta
+  sempre para o centro do comando.
+- **Tooltips por tema:** o fundo, o texto e o contorno das tooltips são
+  derivados da paleta ativa, com contraste reforçado no modo claro e escuro.
+
+### Melhorado
+- **Navegação por teclado:** todos os comandos em ícone mantêm nome acessível e
+  tooltip, incluindo os controlos do carrossel da fila.
+- **Migração de definições:** as paletas antigas continuam a ser reconhecidas
+  (`ocean` → Rosa, `emerald` → Carmesim, `graphite` → Azul) e a importação
+  valida apenas paletas conhecidas.
+- **Motor de versões:** o `sync_version.ps1` passa também a sincronizar o
+  cabeçalho das notas de release e os comandos de publicação.
+
+### Corrigido
+- **Seta das tooltips:** deixa de ficar desalinhada ou fora do balão quando o
+  comando está junto às margens da janela.
+- **Fila de downloads no painel lateral:** a «Fila de downloads» mantém-se
+  visível em qualquer aba, com a barra de progresso sincronizada com o trabalho
+  real.
 
 ---
 
@@ -161,18 +202,18 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 
 # 3) fechar o código e criar a tag
 git add -A
-git commit -m "release: v3.9.0"
-git tag -a v3.9.0 -m "YT-DLP Media Desk v3.9.0"
+git commit -m "release: v3.12.0"
+git tag -a v3.12.0 -m "YT-DLP Media Desk v3.12.0"
 git push origin main
-git push origin v3.9.0      # a tag 'v*' dispara build + (se configurado) assinatura + release
+git push origin v3.12.0      # a tag 'v*' dispara build + (se configurado) assinatura + release
 
 # Alternativa sem tag (teste): Actions > "Release + SignPath" > Run workflow,
 # com publish=true para publicar a release.
 ```
 
 Antes de publicar, confirmar:
-- [x] `dist\` reconstruído: `MediaDesk-Portable\`, `MediaDesk-Portable.zip`,
-      `MediaDesk-Portable.exe` (SFX) e `MediaDesk-Setup.exe`; launcher
+- [x] `dist\` reconstruído: `Media Desk Portable\`, `Media Desk.zip`,
+      `Media Desk.exe` (SFX) e `Media Desk Setup.exe`; launcher
       `Media Desk.exe` na raiz.
 - [x] Instalador com os 5 idiomas (`installer/mediadesk.iss`, ficheiro UTF-8 com
       BOM para os acentos de `Español`/`Français`/`Deutsch`).
