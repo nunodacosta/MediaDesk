@@ -1,15 +1,15 @@
 {
-    "gerado":  "2026-11-07T02:12:13",
+    "gerado":  "2026-11-09T19:26:07",
     "algoritmo":  "SHA-256",
     "ficheiros":  {
                       "server.py":  "1570d09bd2ab751c5988fd5922f9c25e39596c8e2b18e39892f704e3ad781a5c",
                       "activity_service.py":  "136703f9b8798fc2bf7109df93030a461891534722801006554f9c07751a13b1",
                       "index.html":  "d8db9bbd408d82c7270b4bb5f9904a1c6bdb4d4c1d930fe104347e87d99f03c6",
-                      "sw.js":  "9f4b7c730ac32aedd50443bd570c6e9e4081a0946efcd27f12a03139864c3bcb",
+                      "sw.js":  "2000806cf32a16909db56d8e76625beff06915add4794eeb262a7b3541ba32b1",
                       "version.json":  "515c105bbb7cdb0ed3119b06676263361cf17394a902cb0fa27b5266a456b137",
                       "licenses.json":  "0214c99905ff20b27c405d8e0e9e2942512f09ac0b5104558696c05eeb4e6f4e",
                       "manifest.webmanifest":  "cd7620e4fe0bdabe24062c643f907dfd4e356a6cea67e9f64bbce32e93646dbc",
-                      "favicon.svg":  "fe8ea3e9fbc127f4871893e37c39a2834f24dfa9eb54b185dd873ff762d3ec6a",
+                      "favicon.svg":  "dd5b208775c5cf6e54e1f2c90659a6a2b4e726f92ac0107ee3bd89cd69715c3f",
                       "bin/yt-dlp.exe":  "f5389d3698ecde4ef06f4e6b1ce0294fe9ac1396228c8990b8d3416d6d177a7d"
                   }
 }

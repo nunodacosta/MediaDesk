@@ -4,7 +4,7 @@
  *  - App shell (HTML/CSS/JS/manifest/ícones): network-first (sempre fresco) com cache de reserva.
  *  - Tudo o resto (API, SSE /events, /downloads/*): passa direto SEM cache.
  */
-const VERSION = "v4";
+const VERSION = "v5";
 const SHELL_CACHE = `mediadesk-shell-${VERSION}`;
 const SHELL_ASSETS = [
   "/",

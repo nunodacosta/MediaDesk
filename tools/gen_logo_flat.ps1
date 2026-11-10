@@ -134,11 +134,19 @@ for ($j = 0; $j -lt $cells; $j++) {
     }
 }
 
+# Simbolo aprovado: triangulo de play do YouTube rodado a apontar para baixo,
+# inteiramente branco, e bandeja solida com "DLP" vazado. A mascara recorta as
+# letras na bandeja para o cristal aparecer atraves delas.
 $glyph = @'
-  <g fill="#fff" stroke="#fff" stroke-linejoin="round">
-    <rect x="28.25" y="9" width="7.5" height="17" rx="3.75" stroke="none"/>
-    <path d="M20.8 23.2h22.4L32 37.4Z" stroke-width="1.8"/>
-    <path d="M17 43v1.5a7 7 0 0 0 7 7h16a7 7 0 0 0 7-7V43" fill="none" stroke-width="6.5" stroke-linecap="round"/>
+  <mask id="md-dlp" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+    <rect x="15.6" y="43.3" width="32.8" height="9" rx="4.5" fill="#fff"/>
+    <path d="M24.68 45.3H22.103V50.5H24.68A3.068 2.6 0 0 0 24.68 45.3" fill="none" stroke="#000" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30.896 45.3V50.5H34.945" fill="none" stroke="#000" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M38.584 50.5V45.3H41.038A2.025 1.716 0 0 1 41.038 48.524H38.584" fill="none" stroke="#000" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+  </mask>
+  <path d="M22.6 14H41.4Q43 14 42.166 15.365L32.834 30.635Q32 32 31.166 30.635L21.834 15.365Q21 14 22.6 14Z" transform="translate(0 1.6)" fill="#fff" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+  <g mask="url(#md-dlp)">
+    <rect x="15.6" y="43.3" width="32.8" height="9" rx="4.5" fill="#fff"/>
   </g>
 '@
 
@@ -167,10 +175,8 @@ $maskable = @"
   <!-- Gerado por tools/gen_logo_flat.ps1. Versao maskable: fundo sangrado e
        glifo dentro da zona segura. -->
 $facetBlock
-  <g transform="translate(32 32) scale(.86) translate(-32 -32)" fill="#fff" stroke="#fff" stroke-linejoin="round">
-    <rect x="28.25" y="9" width="7.5" height="17" rx="3.75" stroke="none"/>
-    <path d="M20.8 23.2h22.4L32 37.4Z" stroke-width="1.8"/>
-    <path d="M17 43v1.5a7 7 0 0 0 7 7h16a7 7 0 0 0 7-7V43" fill="none" stroke-width="6.5" stroke-linecap="round"/>
+  <g transform="translate(32 32) scale(.86) translate(-32 -32)">
+$glyph
   </g>
 </svg>
 "@

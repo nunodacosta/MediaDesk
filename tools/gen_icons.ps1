@@ -73,40 +73,117 @@ function Add-Facets {
     }
 }
 
-# Desenha o glifo (seta para uma bandeja) em coordenadas 0..64.
-# Sem triangulo de play: o simbolo representa transferir media para a mesa.
+# Acrescenta um arco de elipse ao caminho, aproximado por curvas de Bezier
+# (segmentos de <= 90 graus). Angulos em graus, sentido horario no ecra.
+function Add-EllipseArc {
+    param(
+        [System.Drawing.Drawing2D.GraphicsPath]$Path,
+        [double]$Cx, [double]$Cy, [double]$Rx, [double]$Ry,
+        [double]$StartDeg, [double]$EndDeg
+    )
+    $a = $StartDeg * [Math]::PI / 180
+    $b = $EndDeg * [Math]::PI / 180
+    $segments = [int][Math]::Max(1, [Math]::Ceiling([Math]::Abs($b - $a) / ([Math]::PI / 2)))
+    $step = ($b - $a) / $segments
+    $t = $a
+    for ($i = 0; $i -lt $segments; $i++) {
+        $u = $t + $step
+        $k = 4.0 / 3.0 * [Math]::Tan($step / 4.0)
+        $p0x = $Cx + $Rx * [Math]::Cos($t); $p0y = $Cy + $Ry * [Math]::Sin($t)
+        $p3x = $Cx + $Rx * [Math]::Cos($u); $p3y = $Cy + $Ry * [Math]::Sin($u)
+        $c1x = $p0x - $k * $Rx * [Math]::Sin($t); $c1y = $p0y + $k * $Ry * [Math]::Cos($t)
+        $c2x = $p3x + $k * $Rx * [Math]::Sin($u); $c2y = $p3y - $k * $Ry * [Math]::Cos($u)
+        $Path.AddBezier(
+            [single]$p0x, [single]$p0y, [single]$c1x, [single]$c1y,
+            [single]$c2x, [single]$c2y, [single]$p3x, [single]$p3y)
+        $t = $u
+    }
+}
+
+# Desenha o glifo: triangulo de play (virado para baixo) sobre uma bandeja
+# solida com "DLP" vazado. As letras sao subtraidas da bandeja como regiao,
+# por isso o cristal aparece atraves delas.
 function Add-Glyph {
     param([System.Drawing.Graphics]$G)
 
+    # SourceOver no glifo: nas bordas o branco mistura-se com o cristal em vez
+    # de o substituir (SourceCopy deixava halos translucidos nas letras).
+    $previousMode = $G.CompositingMode
+    $G.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceOver
     $white = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::White)
-    $shaft = New-RoundedPath 28.25 9 7.5 17 3.75
-    $G.FillPath($white, $shaft)
 
-    $head = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $head.AddPolygon([System.Drawing.PointF[]]@(
-        [System.Drawing.PointF]::new([single]20.8, [single]23.2),
-        [System.Drawing.PointF]::new([single]43.2, [single]23.2),
-        [System.Drawing.PointF]::new([single]32.0, [single]37.4)
-    ))
-    $headPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]1.8)
-    $headPen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
-    $G.FillPath($white, $head)
-    $G.DrawPath($headPen, $head)
+    # Seta: triangulo do play do YouTube rodado a apontar para baixo.
+    # Quadraticas do SVG convertidas em cubicas (controlos a 2/3 do caminho).
+    $arrow = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $arrow.AddLine([single]22.6, [single]15.6, [single]41.4, [single]15.6)
+    $arrow.AddBezier(
+        [single]41.4, [single]15.6,
+        [single]42.4667, [single]15.6, [single]42.722, [single]16.055, [single]42.166, [single]16.965)
+    $arrow.AddLine([single]42.166, [single]16.965, [single]32.834, [single]32.235)
+    $arrow.AddBezier(
+        [single]32.834, [single]32.235,
+        [single]32.278, [single]33.145, [single]31.722, [single]33.145, [single]31.166, [single]32.235)
+    $arrow.AddLine([single]31.166, [single]32.235, [single]21.834, [single]16.965)
+    $arrow.AddBezier(
+        [single]21.834, [single]16.965,
+        [single]21.278, [single]16.055, [single]22.044, [single]15.6, [single]22.6, [single]15.6)
+    $arrow.CloseFigure()
+    $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]1.4)
+    $arrowPen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
+    $G.FillPath($white, $arrow)
+    $G.DrawPath($arrowPen, $arrow)
 
-    $trayPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]6.5)
-    $trayPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-    $trayPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-    $tray = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $tray.AddLine([single]17, [single]43, [single]17, [single]44.5)
-    $tray.AddArc([single]17, [single]37.5, [single]14, [single]14, [single]180, [single]-90)
-    $tray.AddLine([single]24, [single]51.5, [single]40, [single]51.5)
-    $tray.AddArc([single]33, [single]37.5, [single]14, [single]14, [single]90, [single]-90)
-    $tray.AddLine([single]47, [single]44.5, [single]47, [single]43)
-    $G.DrawPath($trayPen, $tray)
+    # Letras DLP (monolineares, mesmas coordenadas do SVG).
+    $dPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $dPath.AddLine([single]24.68, [single]45.3, [single]22.103, [single]45.3)
+    $dPath.AddLine([single]22.103, [single]45.3, [single]22.103, [single]50.5)
+    $dPath.AddLine([single]22.103, [single]50.5, [single]24.68, [single]50.5)
+    Add-EllipseArc -Path $dPath -Cx 24.68 -Cy 47.9 -Rx 3.068 -Ry 2.6 -StartDeg 90 -EndDeg -90
+    $dPath.CloseFigure()
 
-    $tray.Dispose(); $trayPen.Dispose()
-    $head.Dispose(); $headPen.Dispose()
-    $shaft.Dispose(); $white.Dispose()
+    $lPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $lPath.AddLine([single]30.896, [single]45.3, [single]30.896, [single]50.5)
+    $lPath.AddLine([single]30.896, [single]50.5, [single]34.945, [single]50.5)
+
+    $pHalf = (48.524 - 45.3) / 2.0
+    $pCy = 46.912
+    $pCx = 41.038 - 2.025 * [Math]::Sqrt(1.0 - [Math]::Pow($pHalf / 1.716, 2))
+    $pStart = [Math]::Atan2((45.3 - $pCy) / 1.716, (41.038 - $pCx) / 2.025) * 180 / [Math]::PI
+    $pEnd = [Math]::Atan2((48.524 - $pCy) / 1.716, (41.038 - $pCx) / 2.025) * 180 / [Math]::PI
+    $pPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $pPath.AddLine([single]38.584, [single]50.5, [single]38.584, [single]45.3)
+    $pPath.AddLine([single]38.584, [single]45.3, [single]41.038, [single]45.3)
+    Add-EllipseArc -Path $pPath -Cx $pCx -Cy $pCy -Rx 2.025 -Ry 1.716 -StartDeg $pStart -EndDeg $pEnd
+    $pPath.AddLine([single]41.038, [single]48.524, [single]38.584, [single]48.524)
+
+    # Contorno do traco das letras (espessura 1.35, extremidades redondas).
+    # Cada letra e widened em separado e unida como regiao: nas juncoes em T
+    # (ex.: pe da letra P) os contornos sobrepoem-se, e uma uniao com Winding
+    # preenche a sobreposicao em vez de a cancelar (como faria o modo Alternate).
+    $letterPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]1.35)
+    $letterPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $letterPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $letterPen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
+    $holes = New-Object System.Drawing.Region
+    $holes.MakeEmpty()
+    foreach ($src in @($dPath, $lPath, $pPath)) {
+        $outline = New-Object System.Drawing.Drawing2D.GraphicsPath
+        $outline.FillMode = [System.Drawing.Drawing2D.FillMode]::Winding
+        $outline.AddPath($src, $false)
+        $outline.Widen($letterPen)
+        $holes.Union($outline)
+        $outline.Dispose()
+    }
+
+    $tray = New-RoundedPath 15.6 43.3 32.8 9 4.5
+    $trayRegion = New-Object System.Drawing.Region($tray)
+    $trayRegion.Exclude($holes)
+    $G.FillRegion($white, $trayRegion)
+
+    $trayRegion.Dispose(); $tray.Dispose(); $holes.Dispose(); $letterPen.Dispose()
+    $pPath.Dispose(); $lPath.Dispose(); $dPath.Dispose()
+    $arrowPen.Dispose(); $arrow.Dispose(); $white.Dispose()
+    $G.CompositingMode = $previousMode
 }
 
 function New-LogoBitmap {
@@ -256,11 +333,19 @@ Write-Host ("[gen_icons] app.ico                  {0} frames ({1} KB)" -f $frame
 # --- Verificacao rapida -----------------------------------------------------
 $probe = [System.Drawing.Bitmap]::FromFile((Join-Path $iconsDir 'icon-512.png'))
 $corner = $probe.GetPixel(1, 1)
-$shaft = $probe.GetPixel([int](32 / 64 * 512), [int](18 / 64 * 512))
+$arrow = $probe.GetPixel([int](32 / 64 * 512), [int](18 / 64 * 512))
+$tray = $probe.GetPixel([int](17.5 / 64 * 512), [int](48 / 64 * 512))
+$hole = $probe.GetPixel([int](22.1 / 64 * 512), [int](48 / 64 * 512))
 $probe.Dispose()
 if ($corner.A -ne 0) { throw "icon-512.png: canto devia ser transparente (alpha=$($corner.A))." }
-if ($shaft.R -lt 245 -or $shaft.G -lt 245 -or $shaft.B -lt 245 -or $shaft.A -lt 245) {
-    throw "icon-512.png: a seta devia ser branca (obtido $($shaft.R),$($shaft.G),$($shaft.B),$($shaft.A))."
+if ($arrow.R -lt 245 -or $arrow.G -lt 245 -or $arrow.B -lt 245 -or $arrow.A -lt 245) {
+    throw "icon-512.png: a seta devia ser branca (obtido $($arrow.R),$($arrow.G),$($arrow.B),$($arrow.A))."
+}
+if ($tray.R -lt 245 -or $tray.G -lt 245 -or $tray.B -lt 245 -or $tray.A -lt 245) {
+    throw "icon-512.png: a bandeja devia ser branca (obtido $($tray.R),$($tray.G),$($tray.B),$($tray.A))."
+}
+if ($hole.A -lt 250 -or ($hole.R -gt 240 -and $hole.G -gt 240 -and $hole.B -gt 240)) {
+    throw "icon-512.png: o 'DLP' devia ser vazado, com o cristal visivel (obtido $($hole.R),$($hole.G),$($hole.B),$($hole.A))."
 }
 
 $probe = [System.Drawing.Bitmap]::FromFile((Join-Path $iconsDir 'icon-maskable-512.png'))
