@@ -1,15 +1,12 @@
 # YT-DLP Media Desk
 
-[![Licença: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Última versão](https://img.shields.io/github/v/release/nunodacosta/MediaDesk)](https://github.com/nunodacosta/MediaDesk/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/nunodacosta/MediaDesk/total)](https://github.com/nunodacosta/MediaDesk/releases)
-[![Plataforma](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4)](https://github.com/nunodacosta/MediaDesk/releases/latest)
+[Licença: GPL-3.0](LICENSE) [Última versão](https://github.com/nunodacosta/MediaDesk/releases/latest) [Downloads](https://github.com/nunodacosta/MediaDesk/releases) [Plataforma](https://github.com/nunodacosta/MediaDesk/releases/latest)
 
 **English** · [Português](#português)
 
-A **local** desktop interface for **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — download and organise video/audio, with no account and no telemetry.
+A **local** desktop interface for [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) — download and organise video/audio, with no account and no telemetry.
 
-![YT-DLP Media Desk interface demo](docs/screenshots/demo.gif)
+YT-DLP Media Desk interface demo
 
 - **Download** video and audio with yt-dlp, choosing format and quality.
 - **Media library** that scans and organises your downloads folder automatically.
@@ -26,29 +23,25 @@ A **local** desktop interface for **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**
 
 **Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `Media Desk.zip` (recommended), self-extracting `.exe`, or `Media Desk Setup.exe`, all with SHA-256 hashes.
 
-> **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+> **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ---
 
 ## Português
 
-Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — transferir e organizar vídeo/áudio de forma simples, sem conta e sem telemetria.
+Interface de desktop **local** para o [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) — transferir e organizar vídeo/áudio de forma simples, sem conta e sem telemetria.
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
 - **Versão:** 3.12.0
 
-> Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[Code signing policy](CODE_SIGNING_POLICY.md)** (política de assinatura de código e privacidade).
+> Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a [**Code signing policy**](CODE_SIGNING_POLICY.md) (política de assinatura de código e privacidade).
 
 ## Principais funcionalidades
 
 - **Download** de vídeo e áudio com o yt-dlp, com escolha de formato/qualidade.
 - **Mediateca** local que organiza automaticamente a pasta de downloads.
-- **Gavetas:** subpastas reais (Vídeo ou Áudio) com **cor própria**, grelha no
-  painel lateral, contagem de ficheiros e filtro por tipo. Cada ficheiro mostra a
-  sua gaveta e pode ser movido entre gavetas do mesmo tipo — ou para uma pasta
-  externa — pelo menu da carta. Uma gaveta pode ser removida da sua carta,
-  mantendo os ficheiros (movidos para «Sem gaveta») ou apagando-os.
+- **Gavetas:** subpastas reais (Vídeo ou Áudio) com **cor própria**, grelha no painel lateral, contagem de ficheiros e filtro por tipo. Cada ficheiro mostra a sua gaveta e pode ser movido entre gavetas do mesmo tipo — ou para uma pasta externa — pelo menu da carta. Uma gaveta pode ser removida da sua carta, mantendo os ficheiros (movidos para «Sem gaveta») ou apagando-os.
 - **Atividade** com o histórico dos downloads e a gaveta de cada ficheiro.
 - **Interface em 5 idiomas** (PT/EN/ES/FR/DE), temas claro/escuro e paletas de cor.
 - **Fila persistente de downloads**, com agendamento, prioridade, pausa/retoma, cancelamento e novas tentativas.
@@ -67,54 +60,51 @@ A exportação de definições inclui apenas tema, paleta, idioma, preferências
 
 **Mediateca** — os ficheiros organizados por tipo, cada um com a sua gaveta, e a grelha de gavetas no painel lateral.
 
-![Mediateca](docs/screenshots/mediateca.png)
+Mediateca
 
 **Gavetas** — mover um ficheiro entre gavetas (ou para uma pasta externa) pelo menu da carta.
 
-![Menu de gavetas](docs/screenshots/gavetas.png)
+Menu de gavetas
 
 **Atividade** — histórico dos downloads com o estado e a gaveta de cada ficheiro.
 
-![Atividade](docs/screenshots/atividade.png)
+Atividade
 
 **Configuração** — temas, idioma, gavetas e opções do yt-dlp.
 
-![Configuração](docs/screenshots/configuracao.png)
+Configuração
 
 ## Descarga
 
 Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 
 | Ficheiro | Descrição |
-|---|---|
+| --- | --- |
 | `Media Desk.zip` | Versão portátil — descompactar e executar (**recomendado**) |
 | `Media Desk.exe` | Auto-extraível (extrai e executa) |
 | `Media Desk Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
 
-> **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+> **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ### Verificar a integridade
 
-```powershell
+```
 # Windows
 Get-FileHash .\Media Desk.zip -Algorithm SHA256   # comparar com SHA256SUMS.txt
-```
-
-```bash
 # Linux / macOS
 sha256sum -c SHA256SUMS.txt
 ```
 
 ## Assinatura de código (Code signing policy)
 
-Os executáveis de release são assinados através da **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Quem assina, como verificar a assinatura e a política de privacidade estão em **[`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md)**.
+Os executáveis de release são assinados através da **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Quem assina, como verificar a assinatura e a política de privacidade estão em [**`CODE_SIGNING_POLICY.md`**](CODE_SIGNING_POLICY.md).
 
 ## Compilar a partir do código
 
 Requer Windows, **SDK do .NET 8**, **Inno Setup 6** e o runtime em `bin\` (Python, yt-dlp, FFmpeg, Deno):
 
-```powershell
+```
 .\build_portable.ps1          # gera dist\ (pasta portátil, SFX, Setup, hashes)
 .\verificar-integridade.ps1   # valida os ficheiros da aplicação
 ```
@@ -148,6 +138,14 @@ Os seus projetos abrangem aplicações desktop, aplicações móveis, aplicaçõ
 
 A ALDACO procura criar software útil, simples e acessível, concebido para responder a necessidades reais e proporcionar uma experiência de utilização clara e intuitiva.
 
+Os projetos atuais incluem:
+
+YT-DLP MediaDesk
+
+GeoProject
+
+AI CLI Manager
+
 ## Licença
 
 Software livre — **GNU GPL-3.0** (ver [`LICENSE`](LICENSE)). © 2026 Alexandre da Costa / ALDACO. Créditos: conceito, design e direção de Alexandre da Costa / ALDACO; implementação técnica assistida por IA, sob direção do autor. Ver [`licenses/ALDACO-IP-NOTICE.txt`](licenses/ALDACO-IP-NOTICE.txt) e [`licenses.json`](licenses.json).
@@ -161,3 +159,7 @@ Cada distribuição inclui, na pasta [`licenses/`](licenses), os textos integrai
 - [`licenses/THIRD-PARTY-NOTICES.txt`](licenses/THIRD-PARTY-NOTICES.txt) — avisos de terceiros.
 
 O gerador é [`tools/gen_licenses_notice.ps1`](tools/gen_licenses_notice.ps1) e corre automaticamente no `build_portable.ps1`.
+
+---
+
+**Nota final — ALDACO.** A ALDACO é uma identidade independente de software criada por Alexandre da Costa. Os projetos atuais incluem o YT-DLP Media Desk, o GeoProject e o AI CLI Manager.
