@@ -14,8 +14,8 @@
 #      signpath/artifact-configuration.xml). Estrutura: carrega-se a PASTA
 #      stage\ (os 3 executaveis crus), NAO o ZIP. O actions/upload-artifact
 #      empacota-a num ZIP de transporte, por isso o elemento raiz da config e
-#      <zip-file> e os .exe ficam a um nivel (MediaDesk-Portable.exe,
-#      MediaDesk-Setup.exe, MediaDesk-Portable\YT-DLP-Media-Desk.exe). Subir o
+#      <zip-file> e os .exe ficam a um nivel (Media Desk.exe,
+#      Media Desk Setup.exe, Media Desk Portable\Media Desk.exe). Subir o
 #      ZIP criaria um ZIP aninhado que a SignPath nao desce.
 #
 #  RUNTIME: bin\ (Python, yt-dlp, FFmpeg, Deno) NAO esta no repositorio (e
@@ -167,9 +167,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/MediaDesk-Portable.zip
-            dist/MediaDesk-Portable.exe
-            dist/MediaDesk-Setup.exe
+            dist/Media Desk.zip
+            dist/Media Desk.exe
+            dist/Media Desk Setup.exe
             dist/SHA256SUMS.txt
             pad/mediadesk.xml
           generate_release_notes: true

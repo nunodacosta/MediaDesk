@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Media Desk — do gradiente às faixas</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; font-family: Inter, "Segoe UI", system-ui, sans-serif;
+         background: #0b0b0f; color: #e8e8ee; }
+  h1 { font-size: 1.35rem; letter-spacing: -.02em; margin: 0 0 6px; }
+  p.sub { margin: 0 0 30px; color: #9b9baa; font-size: .92rem; max-width: 900px; line-height: 1.55; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 22px; align-items: start; }
+  .grid.two-one { grid-template-columns: minmax(320px, 460px) 1fr; }
+  .card { background: #14141b; border: 1px solid #262633; border-radius: 18px; padding: 22px; }
+  .card h2 { font-size: .68rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase;
+             color: #8b8b9c; margin: 0 0 16px; }
+  .compare { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 18px 0 6px; }
+  .compare figure { margin: 0; text-align: center; }
+  .compare img, .compare svg { width: 220px; height: 220px; display: block; }
+  .compare figcaption { margin-top: 10px; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: #8b8b9c; }
+  .hero { display: flex; align-items: center; justify-content: center; min-height: 400px;
+          background: radial-gradient(120% 90% at 50% 0%, rgba(214,41,118,.16), #101016 70%); }
+  .hero img { width: 300px; height: 300px; filter: drop-shadow(0 24px 42px rgba(20,20,30,.65)); }
+  .sizes { display: flex; align-items: end; gap: 30px; flex-wrap: wrap; }
+  .size { text-align: center; color: #8b8b9c; font-size: .66rem; letter-spacing: .06em; }
+  .size img { display: block; margin: 0 auto 8px; }
+  .light { background: #f4f4f7; color: #17171f; border-color: #e2e2ea; }
+  .light h2 { color: #6b6b7b; }
+  .brandmock { display: flex; align-items: center; gap: 11px; }
+  .brandmock img { width: 34px; height: 34px; }
+  .brandmock .name { font-size: 1.15rem; font-weight: 750; letter-spacing: -.02em; line-height: 1; }
+  .brandmock .tag { font-size: .58rem; letter-spacing: .16em; color: #6b6b7b; margin-top: 4px; }
+  .splashmock { display: flex; flex-direction: column; align-items: center; gap: 16px;
+                padding: 30px 20px; border-radius: 14px; background: #0a0a0c; border: 1px solid #232330; }
+  .splashmock img { width: 150px; height: 150px; filter: drop-shadow(0 18px 34px rgba(214,41,118,.18)); }
+  .splashmock .t { font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+  .splashmock .bar { width: 190px; height: 4px; border-radius: 99px; background: #262633; overflow: hidden; }
+  .splashmock .bar span { display: block; width: 62%; height: 100%; border-radius: 99px; background: #D62976; }
+  .mono { filter: grayscale(1); }
+  .row { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+  .note { color: #8b8b9c; font-size: .76rem; line-height: 1.55; margin: 14px 0 0; }
+  code { color: #d9d9e6; }
+  .palette { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .sw { border-radius: 9px; padding: 8px 10px; font-size: .6rem; font-weight: 650; letter-spacing: .04em; }
+  .circle { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; background: #000;
+            display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .circle img { width: 100%; height: 100%; }
+  .hairline { height: 1px; background: #262633; margin: 16px 0; }
+</style>
+</head>
+<body>
+  <h1>Media Desk — do gradiente às faixas</h1>
+  <p class="sub">O mesmo gradiente da primeira solução (amarelo → laranja → rosa → roxo → azul, do canto
+  inferior esquerdo para o superior direito), desconstruído em quinze faixas de cor sólida perpendiculares
+  ao eixo original: as cinco cores, nove tons intermédios e o vermelho do YouTube na passagem quente. As
+  fronteiras são ondas suaves (seno) com fase própria, o que dá o efeito de ondas cromáticas. As faixas
+  claras ficaram no canto inferior esquerdo e o glifo branco assenta nas faixas escuras — sem gradientes,
+  sem verde e sem triângulo de play.</p>
+
+  <div class="card" style="margin-bottom:22px">
+    <h2>Antes → depois</h2>
+    <div class="compare">
+      <figure>
+        <svg viewBox="0 0 64 64" role="img" aria-label="Primeira solução, com gradiente">
+          <defs>
+            <linearGradient id="oldGrad" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stop-color="#FEDA75"/>
+              <stop offset=".22" stop-color="#F58529"/>
+              <stop offset=".48" stop-color="#DD2A7B"/>
+              <stop offset=".74" stop-color="#8134AF"/>
+              <stop offset="1" stop-color="#515BD4"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#oldGrad)"/>
+          <g fill="#fff" stroke="#fff" stroke-linejoin="round">
+            <rect x="28.25" y="9" width="7.5" height="17" rx="3.75" stroke="none"/>
+            <path d="M20.8 23.2h22.4L32 37.4Z" stroke-width="1.8"/>
+            <path d="M17 43v1.5a7 7 0 0 0 7 7h16a7 7 0 0 0 7-7V43" fill="none" stroke-width="6.5" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <figcaption>1.ª solução · gradiente</figcaption>
+      </figure>
+      <figure>
+        <img src="logo-flat.svg" alt="Nova versão, em faixas planas">
+        <figcaption>Faixas planas · agora</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="grid two-one">
+    <div class="card hero"><img src="logo-flat.svg" alt="Media Desk"></div>
+
+    <div style="display:grid; gap:22px">
+      <div class="card">
+        <h2>Tamanhos reais</h2>
+        <div class="sizes">
+          <div class="size"><img src="logo-flat.svg" width="128" height="128" alt="">128</div>
+          <div class="size"><img src="logo-flat.svg" width="64" height="64" alt="">64</div>
+          <div class="size"><img src="logo-flat.svg" width="32" height="32" alt="">32</div>
+          <div class="size"><img src="logo-flat.svg" width="16" height="16" alt="">16</div>
+        </div>
+        <div class="palette">
+          <span class="sw" style="background:#FEDA75;color:#3a2a00">#FEDA75</span>
+          <span class="sw" style="background:#FCC657;color:#3a2200">#FCC657</span>
+          <span class="sw" style="background:#FAB03E;color:#3a2200">#FAB03E</span>
+          <span class="sw" style="background:#F79627;color:#3a1a00">#F79627</span>
+          <span class="sw" style="background:#F47B14;color:#3a1a00">#F47B14</span>
+          <span class="sw" style="background:#F0521A;color:#3a0d00">#F0521A</span>
+          <span class="sw" style="background:#EF2A1F;color:#fff">#EF2A1F</span>
+          <span class="sw" style="background:#FF0000;color:#fff">#FF0000</span>
+          <span class="sw" style="background:#E6003D;color:#fff">#E6003D</span>
+          <span class="sw" style="background:#D62976;color:#fff">#D62976</span>
+          <span class="sw" style="background:#B92C87;color:#fff">#B92C87</span>
+          <span class="sw" style="background:#9B2E9C;color:#fff">#9B2E9C</span>
+          <span class="sw" style="background:#8134AF;color:#fff">#8134AF</span>
+          <span class="sw" style="background:#6A3FBF;color:#fff">#6A3FBF</span>
+          <span class="sw" style="background:#515BD4;color:#fff">#515BD4</span>
+        </div>
+        <p class="note">Quinze faixas planas: cinco cores do gradiente original, nove tons intermédios e o
+        vermelho do YouTube (#FF0000) na passagem quente. O lado quente fica comprimido no canto inferior
+        esquerdo, para o glifo branco assentar no rosa, roxo e azul.</p>
+      </div>
+
+      <div class="card light">
+        <h2>Barra da aplicação</h2>
+        <div class="brandmock">
+          <img src="logo-flat.svg" alt="">
+          <div>
+            <div class="name">Media Desk</div>
+            <div class="tag">YT-DLP INTERFACE</div>
+          </div>
+        </div>
+        <div class="hairline" style="background:#e2e2ea"></div>
+        <h2 style="margin-bottom:10px">Sobre fundo claro</h2>
+        <div class="row">
+          <img src="logo-flat.svg" width="64" height="64" alt="">
+          <img src="logo-flat.svg" width="32" height="32" alt="">
+          <img src="logo-flat.svg" width="16" height="16" alt="">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Preto e branco</h2>
+        <div class="row">
+          <img class="mono" src="logo-flat.svg" width="96" height="96" alt="">
+          <img class="mono" src="logo-flat.svg" width="48" height="48" alt="">
+          <img class="mono" src="logo-flat.svg" width="24" height="24" alt="">
+          <img class="mono" src="logo-flat.svg" width="16" height="16" alt="">
+        </div>
+        <p class="note">Em grayscale as faixas mantêm níveis distintos (amarelo claro → laranja → rosa →
+        roxo → azul) e o glifo continua legível.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Splash</h2>
+      <div class="splashmock">
+        <img src="logo-flat.svg" alt="">
+        <div class="t">Media Desk</div>
+        <div class="bar"><span></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ícone adaptativo (recorte circular)</h2>
+      <div class="row">
+        <div class="circle"><img src="logo-flat-maskable.svg" alt=""></div>
+        <p class="note" style="max-width:260px">A versão maskable usa o fundo sangrado até às bordas e
+        mantém o glifo dentro da zona segura de 80%. O recorte pode esconder parte do canto amarelo/azul;
+        é o comportamento esperado de um ícone adaptativo.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

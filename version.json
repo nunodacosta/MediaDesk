@@ -1,10 +1,90 @@
 {
   "name": "YT-DLP Media Desk",
-  "version": "3.9.0",
-  "date": "2026-10-19",
-  "build": 2026101902,
+  "version": "3.11.4",
+  "date": "2026-10-28",
+  "build": 2026102803,
   "nota": "Fonte unica de verdade da versao. Gerido por tools/sync_version.ps1",
   "history": [
+    {
+      "version": "3.11.4",
+      "date": "2026-10-28",
+      "groups": {
+        "Corrigido": [
+          "O splash é iniciado antes da restante inicialização da página e tem um mecanismo de recuperação independente que o remove se ocorrer um erro JavaScript ou se o arranque exceder 12 segundos"
+        ]
+      }
+    },
+    {
+      "version": "3.11.3",
+      "date": "2026-10-28",
+      "groups": {
+        "Corrigido": [
+          "O splash deixa de esperar indefinidamente por configuração, categorias, mediateca, fila ou verificação; etapas lentas expiram e a interface abre mesmo quando uma verificação falha"
+        ]
+      }
+    },
+    {
+      "version": "3.11.2",
+      "date": "2026-10-28",
+      "groups": {
+        "Adicionado": [
+          "A compatibilidade RSS é comparada com os canais do histórico, distinguindo feeds identificados, condicionais e não confirmados; canais sem feed fiável não são adicionados automaticamente",
+          "Monitorização opcional da área de transferência no launcher Windows: deteta e deduplica URLs HTTP(S), sem iniciar downloads nem guardar ou enviar o texto copiado"
+        ],
+        "Melhorado": [
+          "A lista de canais RSS tem scroll delimitado, apresentação compacta e ações de remoção apenas com ícone"
+        ]
+      }
+    },
+    {
+      "version": "3.11.1",
+      "date": "2026-10-27",
+      "groups": {
+        "Melhorado": [
+          "Sugestões de canais e propostas RSS passam a aproveitar também os downloads do histórico local, juntando-os à atividade cifrada e ponderando frequência, recência e preferências por canal/uploader",
+          "A barra de progresso agrega a percentagem real comunicada pelo yt-dlp entre formatos e itens de playlists, em vez de avançar apenas pela contagem de itens"
+        ],
+        "Corrigido": [
+          "Os endereços são limpos da caixa de entrada quando o trabalho é aceite pela fila e restaurados se falhar ou for cancelado",
+          "O histórico de downloads falhados deixa de impedir que o mesmo conteúdo seja sugerido novamente",
+          "A conclusão e a atualização da mediateca/histórico só são anunciadas após o registo do trabalho inteiro; a barra só chega a 100% nesse momento"
+        ]
+      }
+    },
+    {
+      "version": "3.11.0",
+      "date": "2026-10-27",
+      "groups": {
+        "Adicionado": [
+          "Registo cifrado da atividade em data/activity.enc, com plataforma, canal, uploader, data, tamanho, tema e metadados; o primeiro registo integra também o histórico local existente",
+          "Serviço RSS opcional em segundo plano, com seleção de plataformas e canais, sugestões no arranque e opção de início automático com o Windows"
+        ],
+        "Melhorado": [
+          "O WebView2 inicializa em paralelo com o servidor; verificações e transferências de dependências continuam disponíveis, mas decorrem em segundo plano e a fila aguarda a sua conclusão"
+        ],
+        "Corrigido": [
+          "O pacote portátil inclui e verifica o serviço de atividade; transferências repetidas são registadas separadamente e metadados de ficheiros anteriores são recuperados com maior consistência",
+          "O serviço impede instâncias simultâneas e interrompe a criação da chave se a proteção do Windows falhar, sem guardar uma chave desprotegida"
+        ]
+      }
+    },
+    {
+      "version": "3.10.0",
+      "date": "2026-10-23",
+      "groups": {
+        "Adicionado": [
+          "Splash screen de arranque com barra de progresso: carrega as definições completas (incluindo tema e idioma), verifica atualizações online do yt-dlp e confirma os hashes dos media e a versão antes de abrir a interface",
+          "Branding do arranque com o logotipo ampliado em perspetiva isométrica num plano horizontal e a marca «YT-DLP INTERFACE» a atravessar o ecrã",
+          "A capa incorporada passa a aparecer como miniatura na lista de descarregados e na Atividade",
+          "Motor de versão compara os ficheiros em cada arranque, aplica o nível de atualização definido e sincroniza o número da versão, o modal de ajuda e as notas de versão"
+        ],
+        "Melhorado": [
+          "As opções avançadas passam a estar numa única secção «Avançadas», ordenada por complexidade crescente, com o proxy no topo como opção mais avançada",
+          "Nova secção «Edição» para recorte de vídeo e de áudio no mesmo local",
+          "Os hashes dos ficheiros de media ficam guardados nas definições para verificação rápida em cada arranque"
+        ]
+      }
+    },
     {
       "version": "3.9.0",
       "date": "2026-10-19",

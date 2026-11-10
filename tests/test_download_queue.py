@@ -142,6 +142,25 @@ class DownloadRequestTests(unittest.TestCase):
         self.assertNotIn("proxy", persisted["options"])
         self.assertTrue(persisted["proxy_requires_reentry"])
 
+    def test_progress_aggregates_real_transfer_percentage_across_formats_and_playlist(self):
+        first_format = server._aggregate_transfer_progress(
+            50, format_index=1, format_count=2, playlist_index=1, playlist_count=4
+        )
+        second_format = server._aggregate_transfer_progress(
+            0, format_index=2, format_count=2, playlist_index=1, playlist_count=4
+        )
+        later_item = server._aggregate_transfer_progress(
+            60, format_index=1, format_count=1, playlist_index=3, playlist_count=4
+        )
+
+        self.assertEqual(first_format, 6.25)
+        self.assertEqual(second_format, 12.5)
+        self.assertEqual(later_item, 65.0)
+        self.assertEqual(
+            server._aggregate_transfer_progress(130, playlist_index=8, playlist_count=4),
+            100.0,
+        )
+
     def test_command_includes_selected_output_options(self):
         commands = []
         options = {
@@ -192,6 +211,68 @@ class DownloadRequestTests(unittest.TestCase):
 
 
 class QueueWorkerTests(unittest.TestCase):
+    def test_dependency_check_runs_in_background_and_signals_readiness(self):
+        ready = threading.Event()
+        started = threading.Event()
+        release = threading.Event()
+
+        with patch.object(server, "_dependencies_ready", ready), patch.object(
+            server,
+            "check_dependencies",
+            side_effect=lambda: (started.set(), release.wait(1)),
+        ) as check:
+            server._start_dependency_check()
+            self.assertTrue(started.wait(1))
+            self.assertFalse(ready.is_set())
+            release.set()
+            self.assertTrue(ready.wait(1))
+
+        check.assert_called_once_with()
+
+    def test_worker_waits_for_dependency_check_before_processing_jobs(self):
+        ready = threading.Event()
+        jobs = [
+            {
+                "id": "queued",
+                "status": "queued",
+                "priority": 0,
+                "created_at": "2026-01-01T00:00:00",
+                "scheduled_at": "",
+                "urls": ["https://example.com/video"],
+                "completed": 0,
+            },
+        ]
+        completed = []
+        done = threading.Event()
+
+        with tempfile.TemporaryDirectory() as temp:
+            with patch.multiple(
+                server,
+                _dependencies_ready=ready,
+                _queue_jobs=jobs,
+                QUEUE_FILE=str(Path(temp) / "queue.json"),
+                PAUSE_FILE=str(Path(temp) / ".pause"),
+                CANCEL_FILE=str(Path(temp) / ".cancel"),
+                _queue_worker_running=True,
+                _active_download_id=None,
+                download_cancel_requested=False,
+            ), patch.object(
+                server,
+                "_process_queue_job",
+                side_effect=lambda job: (completed.append(job["id"]) or ("completed", "")),
+            ):
+                worker = threading.Thread(target=lambda: (server._queue_worker(), done.set()))
+                worker.start()
+                try:
+                    self.assertFalse(done.wait(0.1))
+                    self.assertEqual(completed, [])
+                finally:
+                    ready.set()
+                    worker.join(2)
+
+        self.assertTrue(done.is_set())
+        self.assertEqual(completed, ["queued"])
+
     def test_worker_runs_high_priority_jobs_first(self):
         with tempfile.TemporaryDirectory() as temp:
             jobs = [

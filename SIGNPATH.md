@@ -30,7 +30,7 @@ público — o `.gitignore` na raiz já os exclui.
 
 ## 2. Como a assinatura interage com o auto-extraível
 
-O auto-extraível `MediaDesk-Portable.exe` = *launcher* + payload anexado + um
+O auto-extraível `Media Desk.exe` = *launcher* + payload anexado + um
 **rodapé `MDPL`** de 32 bytes. O `signtool`/SignPath anexam a **tabela de
 certificados ao FIM do ficheiro** — ou seja, **depois** do rodapé.
 
@@ -55,8 +55,8 @@ powershell -ExecutionPolicy Bypass -File build_portable.ps1
 # --- Passo 1: empacotar os ficheiros finais ---------------------------------
 powershell -ExecutionPolicy Bypass -File tools\prep_signpath.ps1
 #   -> build\signpath\signpath-<versao>-<build>.zip
-#      (contem: MediaDesk-Portable.exe, MediaDesk-Setup.exe,
-#               MediaDesk-Portable\YT-DLP-Media-Desk.exe)
+#      (contem: Media Desk.exe, Media Desk Setup.exe,
+#               Media Desk Portable\Media Desk.exe)
 
 # --- Passo 2: submeter / aprovar / descarregar ------------------------------
 #   Interface do SignPath (ou API/CI): submeter o ZIP, aprovar o pedido,
@@ -65,11 +65,11 @@ powershell -ExecutionPolicy Bypass -File tools\prep_signpath.ps1
 # --- Passo 3: aplicar e publicar --------------------------------------------
 powershell -ExecutionPolicy Bypass -File tools\apply_signed.ps1 -Source <zip assinado>
 #   - substitui os 3 executaveis em dist\
-#   - recria o dist\MediaDesk-Portable.zip (com o launcher assinado)
+#   - recria o dist\Media Desk.zip (com o launcher assinado)
 #   - regenera o dist\SHA256SUMS.txt
 ```
 
-No fim, **publicar**: `MediaDesk-Portable.zip` (recomendado), o auto-extraível,
+No fim, **publicar**: `Media Desk.zip` (recomendado), o auto-extraível,
 o Setup e o **`SHA256SUMS.txt`** (fora do ZIP, na página de release).
 
 ## 4. Preparar o repositório público (uma vez)
@@ -112,9 +112,9 @@ git push -u origin main
 
 ```powershell
 # cada executavel deve dar Status = Valid
-Get-AuthenticodeSignature dist\MediaDesk-Portable\YT-DLP-Media-Desk.exe | Format-List
-Get-AuthenticodeSignature dist\MediaDesk-Setup.exe | Format-List
-Get-AuthenticodeSignature dist\MediaDesk-Portable.exe | Format-List
+Get-AuthenticodeSignature dist\Media Desk Portable\Media Desk.exe | Format-List
+Get-AuthenticodeSignature dist\Media Desk Setup.exe | Format-List
+Get-AuthenticodeSignature dist\Media Desk.exe | Format-List
 ```
 
 O `SignerCertificate.Subject` deve corresponder à SignPath Foundation (é a
@@ -132,8 +132,8 @@ $env:MEDIADESK_PFX = 'build\certs\mediadesk-teste.pfx'
 $env:MEDIADESK_PFX_PASSWORD = 'mediadesk'
 powershell -File build_portable.ps1
 # confirme que o auto-extraivel continua a extrair e que:
-Get-AuthenticodeSignature dist\MediaDesk-Portable.exe | Format-List
-Get-AuthenticodeSignature dist\MediaDesk-Setup.exe | Format-List
+Get-AuthenticodeSignature dist\Media Desk.exe | Format-List
+Get-AuthenticodeSignature dist\Media Desk Setup.exe | Format-List
 ```
 
 O `Try-Sign` do build **não re-assina** ficheiros já assinados (guarda incluída),
@@ -200,8 +200,8 @@ A configuração de artefacto versionada é
 
 - **Root `<zip-file>`** — o GitHub entrega sempre um ZIP de transporte; o root
   descreve esse ZIP e os `<pe-file>` ficam a **um nível**
-  (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe`,
-  `MediaDesk-Portable/YT-DLP-Media-Desk.exe`).
+  (`Media Desk.exe`, `Media Desk Setup.exe`,
+  `Media Desk Portable/Media Desk.exe`).
 - **Um só nível de ZIP** — por isso o CI carrega a **pasta**, não o nosso ZIP.
 - **Restrições de metadados** em cada `<pe-file>`:
   `product-name`, `product-version="${version}"` e `company-name`.
@@ -225,14 +225,14 @@ A configuração de artefacto versionada é
 > a estrutura do PE** (nada se desloca; o payload do instalador fica intacto — ao
 > contrário de reescrever o recurso com o Resource Hacker, que corrompe o
 > instalador). É chamado automaticamente por `tools/prep_signpath.ps1` só na
-> **cópia** que vai para assinatura; o `dist\MediaDesk-Setup.exe` original
+> **cópia** que vai para assinatura; o `dist\Media Desk Setup.exe` original
 > mantém-se como saiu do Inno.
 >
 > Os executáveis `.NET` (launcher e auto-extraível) **não** têm padding
 > (`ProductName` com 17 chars), logo não precisam de normalização.
 >
 > Nota: não se restringe `file-version` (o Inno escreve `3.6.0`, o .NET escreve
-> `3.6.0.0`) nem `original-filename` (herdado como `YT-DLP-Media-Desk.dll`). As
+> `3.6.0.0`) nem `original-filename` (herdado como `Media Desk.dll`). As
 > restrições obrigatórias nos termos OSS são `product-name` e `product-version`,
 > ambas cumpridas.
 

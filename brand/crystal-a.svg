@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Media Desk">
+  <defs>
+    <clipPath id="md-squircle-a">
+      <rect x="2" y="2" width="60" height="60" rx="16.5"/>
+    </clipPath>
+  </defs>
+  <!-- Opcao A: leque de lascas a partir do canto inferior esquerdo (a luz
+       entra nesse canto e reparte-se em planos de cor solida). -->
+  <g clip-path="url(#md-squircle-a)">
+    <rect width="64" height="64" fill="#6A3FBF"/>
+    <path d="M4 60L0 64L0 34Z" fill="#FEDA75"/>
+    <path d="M4 60L0 34L0 14Z" fill="#FAB03E"/>
+    <path d="M4 60L0 14L10 0Z" fill="#F47B14"/>
+    <path d="M4 60L10 0L34 0Z" fill="#FF0000"/>
+    <path d="M4 60L34 0L56 0Z" fill="#E6003D"/>
+    <path d="M4 60L56 0L64 14Z" fill="#D62976"/>
+    <path d="M4 60L64 14L64 40Z" fill="#B92C87"/>
+    <path d="M4 60L64 40L64 64Z" fill="#8134AF"/>
+    <path d="M4 60L64 64L30 64Z" fill="#515BD4"/>
+    <path d="M4 60L30 64L0 64Z" fill="#9B2E9C"/>
+  </g>
+  <g fill="#fff" stroke="#fff" stroke-linejoin="round">
+    <rect x="28.25" y="9" width="7.5" height="17" rx="3.75" stroke="none"/>
+    <path d="M20.8 23.2h22.4L32 37.4Z" stroke-width="1.8"/>
+    <path d="M17 43v1.5a7 7 0 0 0 7 7h16a7 7 0 0 0 7-7V43" fill="none" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -2,8 +2,10 @@
     build_portable.ps1
     -----------------------------------------------------------------------------
     Cria a versao portatil do YT-DLP Media Desk:
-      dist\MediaDesk-Portable\      -> pasta pronta a executar (sem instalacao)
-      dist\MediaDesk-Portable.exe   -> executavel auto-extraivel (tudo incluido)
+      dist\Media Desk Portable\      -> pasta pronta a executar (sem instalacao)
+      dist\Media Desk.exe            -> executavel auto-extraivel (tudo incluido)
+      dist\Media Desk Setup.exe      -> instalador (Inno Setup)
+      dist\Media Desk.zip            -> ZIP da pasta portatil
 
     Sem dependencias externas: Python, yt-dlp, FFmpeg e Deno viajam no pacote.
 
@@ -19,7 +21,7 @@
     Sem certificado, o pacote e criado na mesma (nao assinado) e imprime-se um
     aviso. Guia completo em ASSINATURA.md.
 
-    Por omissao cria-se tambem o ZIP da pasta portatil (dist\MediaDesk-Portable.zip),
+    Por omissao cria-se tambem o ZIP da pasta portatil (dist\Media Desk.zip),
     que e a descarga recomendada (gera menos avisos do SmartScreen do que um
     auto-extraivel novo). No fim gera-se dist\SHA256SUMS.txt com os hashes de
     release. Usa -NoZip para omitir o ZIP.
@@ -52,18 +54,36 @@ function Human($b) {
     elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b / 1MB) }
     else { "{0:N0} KB" -f ($b / 1KB) }
 }
-function Copy-Tree($src, $dst, [int]$Tries = 5) {
-    # O disco F: (KINGSTON) tem falhas I/O intermitentes; tenta de novo.
+function Remove-Tree($path, [int]$Tries = 3) {
+    # Remove-Item -Recurse falha em discos USB quando o antivirus/indexador
+    # mantem uma pasta aberta por instantes ("O diretorio nao esta vazio").
+    # Nao e um erro do build: tenta-se algumas vezes e, como ultimo recurso,
+    # esvazia-se a arvore com robocopy /MIR a partir de uma pasta vazia.
+    if (-not (Test-Path $path)) { return }
     for ($i = 1; $i -le $Tries; $i++) {
-        try {
-            Copy-Item $src $dst -Recurse -Force -ErrorAction Stop
-            return
-        } catch {
-            if ($i -eq $Tries) { throw }
-            Warn "I/O falhou a copiar '$src' (tentativa $i/$Tries); a repetir..."
-            Start-Sleep -Milliseconds 1500
-        }
+        Remove-Item $path -Recurse -Force -ErrorAction SilentlyContinue
+        if (-not (Test-Path $path)) { return }
+        Start-Sleep -Milliseconds (400 * $i)
     }
+    $empty = Join-Path ([System.IO.Path]::GetTempPath()) ("md-empty-" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $empty -Force | Out-Null
+    try {
+        & robocopy $empty $path /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    } finally {
+        Remove-Item $empty -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Remove-Item $path -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path $path) { Warn "Nao foi possivel remover por completo: $path" }
+}
+
+function Copy-Tree($src, $dst, [int]$Tries = 5) {
+    # O disco F: (KINGSTON) tem falhas I/O intermitentes. O robocopy copia por
+    # blocos, repete cada ficheiro falhado (sem recomecar a arvore toda como o
+    # Copy-Item fazia) e ignora os que ja estao iguais, o que torna o build
+    # muito mais rapido e resistente em discos USB lentos.
+    New-Item -ItemType Directory -Path $dst -Force | Out-Null
+    & robocopy $src $dst /E /COPY:DAT /R:$Tries /W:1 /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy falhou (codigo $LASTEXITCODE) ao copiar '$src' -> '$dst'." }
 }
 
 # -- Assinatura de codigo (opcional) -----------------------------------------
@@ -121,14 +141,15 @@ function Try-Sign($path) {
 }
 
 $dist        = Join-Path $root 'dist'
-$outFolder   = Join-Path $dist 'MediaDesk-Portable'
-$folderZip   = Join-Path $dist 'MediaDesk-Portable.zip'
+$outFolder   = Join-Path $dist 'Media Desk Portable'
+$folderZip   = Join-Path $dist 'Media Desk.zip'
 $build       = Join-Path $root 'build\portable'
 $payloadDir  = Join-Path $build 'payload'
 $zipPath     = Join-Path $build 'payload.zip'
 $publishDir  = Join-Path $build 'launcher'
-$sfxPath     = Join-Path $dist 'MediaDesk-Portable.exe'
-$launcherExe = 'YT-DLP-Media-Desk.exe'
+$sfxPath     = Join-Path $dist 'Media Desk.exe'
+$installerExe = Join-Path $dist 'Media Desk Setup.exe'
+$launcherExe = 'Media Desk.exe'
 $makeZip = -not $NoZip
 $releaseSums = Join-Path $dist 'SHA256SUMS.txt'
 
@@ -138,13 +159,28 @@ Write-Host " YT-DLP Media Desk - Pacote portatil" -ForegroundColor Magenta
 Write-Host "===============================================" -ForegroundColor Magenta
 
 # --- 0. Validacoes -----------------------------------------------------------
-foreach ($f in @('bin\python\python.exe', 'bin\yt-dlp.exe', 'bin\ffmpeg.exe')) {
+foreach ($f in @('activity_service.py', 'bin\python\python.exe', 'bin\yt-dlp.exe', 'bin\ffmpeg.exe')) {
     if (-not (Test-Path (Join-Path $root $f))) { Die "Dependencia em falta: $f" }
 }
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { Die "dotnet (SDK 8.0+) nao encontrado no PATH." }
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
 New-Item -ItemType Directory -Path $build -Force | Out-Null
 if (Test-Path $sfxPath) { try { Remove-Item $sfxPath -Force } catch { Die "Nao foi possivel substituir $sfxPath (pode estar em execucao)." } }
+
+# Remove artefactos com os nomes antigos (MediaDesk-*) para que dist\ contenha
+# apenas a release atual e nao duas nomenclaturas misturadas.
+foreach ($legacy in @(
+    (Join-Path $dist 'MediaDesk-Portable'),
+    (Join-Path $dist 'MediaDesk-Portable.zip'),
+    (Join-Path $dist 'MediaDesk-Portable.exe'),
+    (Join-Path $dist 'MediaDesk-Setup.exe'),
+    (Join-Path $dist 'Media Desk Portable.exe')
+)) {
+    if (Test-Path $legacy) {
+        try { Remove-Tree $legacy }
+        catch { Warn "Nao foi possivel remover o artefacto antigo: $legacy" }
+    }
+}
 
 # --- 0.b Versao + checksums (fonte unica) ------------------------------------
 if (-not $SkipVersion) {
@@ -160,7 +196,7 @@ if (-not $SkipVersion) {
 $launcher = Join-Path $publishDir $launcherExe
 if (-not $SkipPublish) {
     Info "A publicar o launcher (self-contained, single-file)..."
-    if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
+    if (Test-Path $publishDir) { Remove-Tree $publishDir }
     & dotnet publish (Join-Path $root 'MediaDeskLauncher.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=none -o $publishDir -v q -nologo
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $launcher)) { Die "dotnet publish falhou." }
 }
@@ -169,10 +205,10 @@ Ok ("Launcher publicado (" + (Human (Get-Item $launcher).Length) + ")")
 
 # --- 2. Staging do payload (sem o launcher) ----------------------------------
 Info "A preparar os ficheiros da aplicacao..."
-if (Test-Path $payloadDir) { Remove-Item $payloadDir -Recurse -Force }
+if (Test-Path $payloadDir) { Remove-Tree $payloadDir }
 New-Item -ItemType Directory -Path $payloadDir -Force | Out-Null
 
-foreach ($f in 'server.py', 'index.html', 'manifest.webmanifest', 'sw.js', 'favicon.svg') {
+foreach ($f in 'server.py', 'activity_service.py', 'index.html', 'manifest.webmanifest', 'sw.js', 'favicon.svg') {
     $src = Join-Path $root $f
     if (Test-Path $src) { Copy-Item $src (Join-Path $payloadDir $f) -Force } else { Warn "Interface em falta: $f" }
 }
@@ -206,21 +242,8 @@ foreach ($b in 'yt-dlp.exe', 'ffmpeg.exe', 'deno.exe') {
     if (Test-Path $src) { Copy-Item $src (Join-Path $payloadBin $b) -Force } else { Warn "Ferramenta em falta: bin\$b" }
 }
 
-# config.json limpo (valores por omissao, sem dados do utilizador)
-$pyExe = Join-Path $root 'bin\python\python.exe'
-$gen = "import json,os,sys`nsys.path.insert(0, os.environ['MD_STAGE'])`nimport server`njson.dump(server.default_config, open(os.path.join(os.environ['MD_STAGE'],'config.json'),'w',encoding='utf-8'), indent=4, ensure_ascii=False)"
-$env:MD_STAGE = $payloadDir
-Push-Location $payloadDir
-try { & $pyExe -c $gen } catch { } finally { Pop-Location }
-# remover artefactos de importacao do Python
-Get-ChildItem -Path $payloadDir -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue |
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-if (-not (Test-Path (Join-Path $payloadDir 'config.json'))) {
-    Warn "A usar config.json minimo (nao foi possivel ler os valores por omissao)."
-    [System.IO.File]::WriteAllText((Join-Path $payloadDir 'config.json'),
-        '{ "server_port": 8181, "theme": "system", "theme_palette": "indigo" }',
-        (New-Object System.Text.UTF8Encoding($false)))
-}
+# As definicoes sao inicializadas e cifradas por DPAPI no primeiro arranque.
+# Nao incluir config.enc no pacote: a cifra e especifica da conta Windows.
 
 # LEIA-ME
 $leia = @'
@@ -232,13 +255,15 @@ Deno viajam aqui dentro). Pode ser copiada para um pendrive, disco externo ou
 cartao de memoria e executada em qualquer PC Windows x64.
 
 COMO USAR
-  1. Execute "YT-DLP-Media-Desk.exe".
+  1. Execute "Media Desk.exe".
   2. Os downloads ficam na pasta "downloads".
   3. Ao fechar a janela, o servidor interno e encerrado automaticamente.
 
 NOTAS
   - Ajuste legendas, cookies e PO Token em "Configuracao".
   - Se mover a pasta, mantenha todos os ficheiros juntos.
+  - As definicoes sao cifradas por DPAPI e vinculadas a esta conta Windows.
+    Nao e possivel transferir o ficheiro cifrado para outro PC ou utilizador.
 
 VERIFICAR A INTEGRIDADE (opcional)
   - Para confirmar que os ficheiros sao originais, execute:
@@ -250,10 +275,10 @@ Set-Content (Join-Path $payloadDir 'LEIA-ME.txt') -Value $leia -Encoding UTF8
 
 # --- 3. Pasta portatil -------------------------------------------------------
 Info "A montar a pasta portatil..."
-if (Test-Path $outFolder) { Remove-Item $outFolder -Recurse -Force }
+if (Test-Path $outFolder) { Remove-Tree $outFolder }
 New-Item -ItemType Directory -Path $outFolder -Force | Out-Null
 Copy-Item $launcher (Join-Path $outFolder $launcherExe) -Force
-Copy-Tree (Join-Path $payloadDir '*') $outFolder
+Copy-Tree $payloadDir $outFolder
 Ok "Pasta portatil criada: $outFolder"
 
 if (-not $SkipSfx) {
@@ -311,10 +336,9 @@ if (-not $SkipInstaller) {
         Info "A gerar o instalador (Inno Setup)..."
         $iss = Join-Path $root 'installer\mediadesk.iss'
         & $iscc $iss
-        if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $dist 'MediaDesk-Setup.exe'))) {
-            $setup = Join-Path $dist 'MediaDesk-Setup.exe'
-            Ok ("Instalador criado: $setup  (" + (Human (Get-Item $setup).Length) + ")")
-            Try-Sign $setup
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $installerExe)) {
+            Ok ("Instalador criado: $installerExe  (" + (Human (Get-Item $installerExe).Length) + ")")
+            Try-Sign $installerExe
         } else { Warn "Inno Setup falhou ao compilar o instalador." }
     } else {
         Warn "Inno Setup (ISCC.exe) nao encontrado; instalador nao gerado."
@@ -343,8 +367,8 @@ if ($LASTEXITCODE -ne 0) { Warn "gen_pad.ps1 falhou; o PAD nao foi atualizado." 
 
 # --- 8. Limpeza --------------------------------------------------------------
 if (-not $KeepBuild) {
-    if (Test-Path $payloadDir) { Remove-Item $payloadDir -Recurse -Force }
-    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+    Remove-Tree $payloadDir
+    if (Test-Path $zipPath) { Remove-Item $zipPath -Force -ErrorAction SilentlyContinue }
 }
 
 # --- 9. Resumo ---------------------------------------------------------------

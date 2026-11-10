@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Media Desk">
+  <defs>
+    <clipPath id="arrowClip">
+      <rect x="28.5" y="6" width="7" height="17" rx="3.5"/>
+      <path d="M21 21h22L32 35Z"/>
+    </clipPath>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#14141C"/>
+  <g clip-path="url(#arrowClip)">
+    <rect x="0" y="0" width="64" height="64" fill="#FFD23F"/>
+    <path d="M0 20L64 14L64 64L0 64Z" fill="#FF4D6D"/>
+    <path d="M0 34L64 40L64 64L0 64Z" fill="#7C5CFF"/>
+  </g>
+  <path d="M18 41v2a7 7 0 0 0 7 7h14a7 7 0 0 0 7-7v-2" fill="none" stroke="#F7F7FB" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -14,7 +15,27 @@ static class Program
     static void Main()
     {
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm(Payload.Prepare()));
+
+        // Uma sojanela por sessao. A segunda entrada (o .exe e o iniciar.bat
+        // sao ambos pontos de entrada) ativa a janela que ja esta aberta em vez
+        // de criar outra instancia com outro servidor Python e outro splash.
+        if (!SingleInstance.Acquire(out var instanceMutex))
+        {
+            SingleInstance.DebugAttach();
+            SingleInstance.LogSecondLaunch();
+            SingleInstance.ActivateExisting();
+            return;
+        }
+
+        try
+        {
+            Application.Run(new MainForm(Payload.Prepare()));
+        }
+        finally
+        {
+            try { instanceMutex.ReleaseMutex(); } catch { }
+            instanceMutex.Dispose();
+        }
     }
 }
 
@@ -25,12 +46,24 @@ static class Program
 sealed class MainForm : Form
 {
     readonly WebView2 web = new() { Dock = DockStyle.Fill };
+    readonly SplashView startupSplash = new() { Dock = DockStyle.Fill };
+    readonly System.Windows.Forms.Timer splashFallback = new() { Interval = 15000 };
+    LauncherSettings settings = new();
+    bool splashHiding;
+    const int StepConfig = 0, StepComponents = 1, StepIntegrity = 2, StepServer = 3, StepUpdates = 4, StepInterface = 5;
     readonly Job job = new();
+    // Todos os servidores arrancados por esta instancia. A lista existe para que
+    // o encerramento mate SEMPRE todos (e nao apenas o ultimo/principal), mesmo
+    // que no futuro a aplicacao passe a arrancar servidores auxiliares.
+    readonly List<Process> servers = new();
+    readonly object serversGate = new();
     Process? server;
-    readonly string appDir;
-    readonly string dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "YTDLP-MediaDesk");
+    bool shuttingDown;
+    string appDir;
+    readonly string dataRoot = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath ?? Application.ExecutablePath) ?? AppDomain.CurrentDomain.BaseDirectory, "data");
     int port = 8181;
     bool fullscreen;
+    ClipboardMonitorWindow? clipboardMonitor;
     FormBorderStyle prevBorder = FormBorderStyle.None;
     FormWindowState prevState = FormWindowState.Normal;
     Rectangle prevBounds;
@@ -54,10 +87,103 @@ sealed class MainForm : Form
         Padding = new Padding(BorderWidth);
         DoubleBuffered = true;
         Controls.Add(web);
+        Controls.Add(startupSplash);
+        startupSplash.BringToFront();
+        splashFallback.Tick += (_, _) => HideStartupSplash();
+        PrepareStartupSplash();
         Shown += async (_, _) => await StartAsync();
         FormClosing += (_, _) => Shutdown();
+        // Redes de seguranca: mesmo que o fecho nao venha do botao da interface
+        // (Alt+F4, encerramento do Windows, Environment.Exit), os servidores sao
+        // terminados. Shutdown() e idempotente.
+        Application.ApplicationExit += (_, _) => Shutdown();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
         Resize += (_, _) => SendWindowState();
     }
+
+    string L(string pt, string en) => settings.Portuguese ? pt : en;
+
+    // Antes do primeiro paint: resolve a pasta da aplicacao, le data/config.enc
+    // e aplica o tema guardado. Assim o splash nunca aparece com cores erradas.
+    void PrepareStartupSplash()
+    {
+        appDir = ResolveBaseDir();
+        settings = LauncherSettings.Load(appDir);
+        ApplySettings();
+        startupSplash.SetSteps(new[]
+        {
+            L("Ler as definições cifradas", "Read encrypted settings"),
+            L("Verificar bibliotecas e componentes", "Check libraries and components"),
+            L("Verificar a integridade do sistema (servidor)", "Verify system integrity (server)"),
+            L("Iniciar o servidor local", "Start the local server"),
+            L("Procurar atualizações", "Look for updates"),
+            L("Preparar a interface", "Prepare the interface"),
+        });
+        startupSplash.Subtitle = L("A preparar o sistema...", "Preparing the system...");
+        startupSplash.Version = "v" + StartupChecks.ReadAppVersion(appDir);
+        if (settings.Error == null)
+            startupSplash.SetStep(StepConfig, SplashStepState.Done, settings.Source);
+        else
+        {
+            startupSplash.SetStep(StepConfig, SplashStepState.Warning, L("predefinições", "defaults"));
+            startupSplash.Detail = settings.Error;
+            LogText("Não foi possível ler as definições cifradas: " + settings.Error);
+        }
+        startupSplash.SetProgress(6, L("Definições aplicadas.", "Settings applied."));
+    }
+
+    void ApplySettings()
+    {
+        bool dark = settings.Theme switch
+        {
+            "dark" => true,
+            "light" => false,
+            _ => IsSystemDarkTheme()
+        };
+        ApplyTheme(dark, settings.Palette);
+        port = settings.ServerPort;
+    }
+
+    string ResolveBaseDir()
+    {
+        string exeDir = Path.GetDirectoryName(Environment.ProcessPath ?? Application.ExecutablePath) ?? appDir;
+        string curDir = Directory.GetCurrentDirectory();
+        if (File.Exists(Path.Combine(exeDir, "server.py"))) return exeDir;
+        if (File.Exists(Path.Combine(curDir, "server.py"))) return curDir;
+        if (!string.IsNullOrEmpty(appDir) && File.Exists(Path.Combine(appDir, "server.py"))) return appDir;
+        return exeDir;
+    }
+
+    void UpdateStartupStatus(string status)
+    {
+        if (!startupSplash.IsDisposed && startupSplash.Visible)
+            startupSplash.Status = status;
+    }
+
+    void SplashProgress(double percent, string? status = null)
+    {
+        if (!startupSplash.IsDisposed && startupSplash.Visible)
+            startupSplash.SetProgress(percent, status);
+    }
+
+    async void HideStartupSplash()
+    {
+        splashFallback.Stop();
+        if (splashHiding || startupSplash.IsDisposed || !startupSplash.Visible) return;
+        splashHiding = true;
+        startupSplash.SetStep(StepInterface, SplashStepState.Done);
+        startupSplash.SetProgress(100, L("Tudo pronto. A abrir a interface...", "All set. Opening the interface..."));
+        await Task.Delay(350);
+        if (startupSplash.IsDisposed) return;
+        startupSplash.Visible = false;
+        SendWindowState();
+    }
+
+    // Registo em disco (em %LOCALAPPDATA%) dos servidores arrancados por cada
+    // instancia do launcher. Permite limpar orfaos depois de um fecho abrupto
+    // (Task Manager, corte de energia) sem tocar em servidores de OUTRA
+    // instancia que ainda esteja viva.
+    string ServersFile => Path.Combine(dataRoot, "servers.json");
 
     Icon? LoadAppIcon()
     {
@@ -99,11 +225,68 @@ sealed class MainForm : Form
 
     void ApplyTheme(bool dark, string palette)
     {
-        try { BackColor = ThemeBg(dark); } catch { }
-        try { web.DefaultBackgroundColor = ThemeBg(dark); } catch { }
-        borderColor = ThemeBorder(dark, palette);
+        var background = ThemeBg(dark);
+        var accent = PaletteAccents.TryGetValue(palette ?? "", out var colors)
+            ? dark ? colors.dark : colors.light
+            : dark ? PaletteAccents["indigo"].dark : PaletteAccents["indigo"].light;
+        try { BackColor = background; } catch { }
+        try { web.DefaultBackgroundColor = background; } catch { }
+        try
+        {
+            startupSplash.SetTheme(
+                background,
+                dark ? Color.FromArgb(20, 20, 24) : Color.FromArgb(255, 255, 255),
+                dark ? Color.FromArgb(42, 42, 48) : Color.FromArgb(228, 228, 231),
+                dark ? Color.FromArgb(237, 237, 238) : Color.FromArgb(24, 24, 27),
+                dark ? Color.FromArgb(161, 161, 170) : Color.FromArgb(95, 99, 104),
+                accent);
+        }
+        catch { }
+        borderColor = ThemeBorder(dark, palette ?? "indigo");
         try { if (Padding != new Padding(BorderWidth)) Padding = new Padding(BorderWidth); } catch { }
         Invalidate();
+    }
+
+    void ApplySavedStartupTheme(string configJson)
+    {
+        try
+        {
+            using var config = System.Text.Json.JsonDocument.Parse(configJson);
+            var root = config.RootElement;
+            string mode = root.TryGetProperty("theme", out var modeElement)
+                ? modeElement.GetString() ?? "system"
+                : "system";
+            string palette = root.TryGetProperty("theme_palette", out var paletteElement)
+                ? paletteElement.GetString() ?? "indigo"
+                : "indigo";
+            bool dark = mode switch
+            {
+                "dark" => true,
+                "light" => false,
+                _ => IsSystemDarkTheme()
+            };
+            ApplyTheme(dark, palette);
+        }
+        catch (Exception ex)
+        {
+            LogText("Não foi possível aplicar o tema guardado ao splash: " + ex.Message);
+        }
+    }
+
+    static bool IsSystemDarkTheme()
+    {
+        try
+        {
+            var value = Microsoft.Win32.Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+                "AppsUseLightTheme",
+                1);
+            return Convert.ToInt32(value) == 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -117,17 +300,63 @@ sealed class MainForm : Form
 
     async Task StartAsync()
     {
+        Task? webViewInitialization = null;
+        bool webViewInitializationAwaited = false;
+        // Tempos por fase no launcher.log: permite ver o que atrasa o arranque
+        // sem instrumentacao externa (o Python regista os seus proprios tempos).
+        var startupClock = Stopwatch.StartNew();
+        void Phase(string name) => LogText($"Arranque: {name} aos {startupClock.ElapsedMilliseconds} ms");
         try
         {
+            try
+            {
+                var procStart = Process.GetCurrentProcess().StartTime;
+                LogText($"Arranque: janela pronta (inclui extração do executável) em {Math.Round((DateTime.Now - procStart).TotalMilliseconds)} ms");
+            }
+            catch { }
+            string baseDir = ResolveBaseDir();
+            if (!string.Equals(baseDir, appDir, StringComparison.OrdinalIgnoreCase))
+            {
+                appDir = baseDir;
+                settings = LauncherSettings.Load(appDir);
+                ApplySettings();
+            }
+            if (settings.ClipboardMonitor) SetClipboardMonitor(true);
+
+            startupSplash.SetStep(StepComponents, SplashStepState.Active);
+            SplashProgress(8, L("A verificar bibliotecas e componentes...", "Checking libraries and components..."));
+            var components = await Task.Run(() => StartupChecks.CheckComponents(baseDir));
+            var missingCritical = components.Where(c => c.Critical && !c.Present).Select(c => c.Name).ToList();
+            var missingOptional = components.Where(c => !c.Critical && !c.Present).Select(c => c.Name).ToList();
+            if (missingCritical.Count > 0)
+                throw new FileNotFoundException(
+                    L("Componentes essenciais em falta: ", "Missing essential components: ") +
+                    string.Join(", ", missingCritical) + "\n" + baseDir);
+            startupSplash.SetStep(StepComponents,
+                missingOptional.Count == 0 ? SplashStepState.Done : SplashStepState.Warning,
+                $"{components.Count(c => c.Present)}/{components.Count}");
+            Phase("componentes verificados");
+            if (missingOptional.Count > 0)
+            {
+                startupSplash.Detail = L("Em falta: ", "Missing: ") + string.Join(", ", missingOptional);
+                LogText("Arranque: componentes em falta: " + string.Join(", ", missingOptional));
+            }
+            SplashProgress(16);
+
             port = ReadPort();
-            var exe = Path.Combine(appDir, "bin", "python", "python.exe");
+            var exe = Path.Combine(baseDir, "bin", "python", "python.exe");
             if (!File.Exists(exe)) exe = "python.exe";
-            var script = Path.Combine(appDir, "server.py");
-            if (!File.Exists(script)) throw new FileNotFoundException("server.py não encontrado ao lado do launcher.");
+            var script = Path.Combine(baseDir, "server.py");
 
             // Pasta de dados do utilizador num local gravável (necessária também
             // para o ficheiro de resposta do servidor e para o WebView2).
             Directory.CreateDirectory(dataRoot);
+
+            // Antes de arrancar: terminar servidores que ficaram registados por
+            // uma sessao anterior que morreu sem fechar (senao o novo servidor
+            // ia para a porta seguinte e o orfao continuava a consumir recursos).
+            await Task.Run(CleanupOrphanServers);
+            if (shuttingDown) return;
 
             // O servidor escreve a porta REAL (ou {error}) neste ficheiro.
             // Sem isto, se a porta configurada estiver ocupada por outra
@@ -135,12 +364,39 @@ sealed class MainForm : Form
             var respFile = Path.Combine(dataRoot, "server.port");
             try { File.Delete(respFile); } catch { }
 
-            server = Process.Start(new ProcessStartInfo(exe, $"\"{script}\"") { WorkingDirectory = appDir, UseShellExecute = false, CreateNoWindow = true, Environment = { ["PYTHONUNBUFFERED"] = "1", ["PYTHONIOENCODING"] = "utf-8", ["PYTHONUTF8"] = "1", ["MEDIADESK_NO_BROWSER"] = "1", ["MEDIADESK_RESPONSE_FILE"] = respFile } }) ?? throw new Exception("Não foi possível iniciar o servidor.");
-            job.Add(server);
+            // Perfil do WebView2 no disco local do utilizador (NVMe/SSD). Na
+            // pasta da aplicacao (que pode estar num disco USB lento) cada
+            // arranque obrigava o WebView2 a ler/gravar centenas de ficheiros
+            // pequenos, atrasando o primeiro paint.
+            string webCache = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "YTDLP-MediaDesk", "WebView2");
+            Directory.CreateDirectory(webCache);
+            webViewInitialization = InitializeWebViewAsync(webCache);
 
+            var proc = Process.Start(new ProcessStartInfo(exe, $"\"{script}\"") { WorkingDirectory = appDir, UseShellExecute = false, CreateNoWindow = true, Environment = { ["PYTHONUNBUFFERED"] = "1", ["PYTHONIOENCODING"] = "utf-8", ["PYTHONUTF8"] = "1", ["MEDIADESK_NO_BROWSER"] = "1", ["MEDIADESK_RESPONSE_FILE"] = respFile } }) ?? throw new Exception("Não foi possível iniciar o servidor.");
+            server = proc;
+            RegisterServer(proc);
+
+            // A integridade dos ficheiros e verificada pelo servidor Python
+            // (integrity_worker em server.py) em segundo plano, com o mesmo
+            // manifesto checksums.json; o resultado aparece em "Acerca" e no
+            // registo da interface. O launcher nao repete a leitura dos ficheiros
+            // aqui: era o mesmo trabalho feito duas vezes e, num disco lento,
+            // prendia o splash ate 12 s antes de abrir o servidor.
+            startupSplash.SetStep(StepIntegrity, SplashStepState.Done, L("em segundo plano", "in background"));
+            SplashProgress(34, L("Integridade verificada pelo servidor.", "Integrity verified by the server."));
+            Phase("integridade delegada no servidor");
+
+            startupSplash.SetStep(StepServer, SplashStepState.Active);
+            SplashProgress(36, L("A iniciar o servidor local...", "Starting the local server..."));
             int actualPort = 0;
             bool gotPort = false;
-            for (int i = 0; i < 200 && !gotPort; i++)
+            // Num disco USB lento o arranque a frio do Python pode levar dezenas
+            // de segundos (milhares de ficheiros da stdlib). O limite e o tempo
+            // real e nao o numero de ciclos, para nao falhar por causa do I/O.
+            var portDeadline = DateTime.UtcNow.AddSeconds(90);
+            while (!gotPort && DateTime.UtcNow < portDeadline)
             {
                 if (File.Exists(respFile))
                 {
@@ -163,31 +419,77 @@ sealed class MainForm : Form
                 }
                 if (!gotPort)
                 {
-                    if (server.HasExited) throw new Exception($"Servidor terminou com código {server.ExitCode}.");
+                    if (proc.HasExited) throw new Exception($"Servidor terminou com código {proc.ExitCode}.");
                     await Task.Delay(100);
                 }
             }
             if (!gotPort) throw new TimeoutException("O servidor não comunicou a porta a tempo.");
             port = actualPort;
+            UpdateRegisteredServerPort(actualPort);
+            Phase($"servidor Python ligado (porta {actualPort})");
 
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(1) };
-            var url = $"http://127.0.0.1:{port}/";
-            for (int i = 0; i < 20; i++)
+            SplashProgress(42, L("A verificar o servidor local...", "Checking the local server..."));
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            var appUrl = $"http://127.0.0.1:{port}/";
+            var readinessUrl = appUrl + "get_config";
+            var readinessDeadline = Stopwatch.StartNew();
+            bool serverReady = false;
+            string? lastReadinessError = null;
+            string startupConfig = "";
+            while (readinessDeadline.Elapsed < TimeSpan.FromSeconds(20))
             {
-                try { using var r = await http.GetAsync(url); if (r.IsSuccessStatusCode) break; } catch { }
-                await Task.Delay(250);
+                try
+                {
+                    using var response = await http.GetAsync(readinessUrl, HttpCompletionOption.ResponseHeadersRead);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        startupConfig = await response.Content.ReadAsStringAsync();
+                        serverReady = true;
+                        break;
+                    }
+                    lastReadinessError = $"HTTP {(int)response.StatusCode} ({response.StatusCode})";
+                }
+                catch (HttpRequestException ex) { lastReadinessError = ex.Message; }
+                catch (TaskCanceledException ex) { lastReadinessError = ex.Message; }
+                if (proc.HasExited) throw new Exception($"Servidor terminou com código {proc.ExitCode}.");
+                await Task.Delay(100);
             }
+            if (!serverReady)
+                throw new TimeoutException(
+                    "O servidor local não respondeu a tempo." +
+                    (lastReadinessError == null ? "" : "\nÚltimo erro: " + lastReadinessError));
+            ApplySavedStartupTheme(startupConfig);
+            startupSplash.SetStep(StepServer, SplashStepState.Done, $":{port}");
+            SplashProgress(48);
+            Phase("servidor local pronto");
+
+            // As verificacoes online (binarios via servidor, pacotes Python no
+            // PyPI, pacotes JavaScript no npm e versao da app no GitHub) usam a
+            // rede e podem demorar dezenas de segundos. Executam-se em segundo
+            // plano e registam-se no launcher.log; a interface abre de imediato
+            // com o painel de atualizacoes alimentado pelo proprio servidor
+            // Python (/check_libraries). Nada e saltado: as verificacoes
+            // continuam a correr, apenas deixam de bloquear o arranque.
+            startupSplash.SetStep(StepUpdates, SplashStepState.Done,
+                settings.OnlineChecks ? L("em segundo plano", "in background") : L("desativado", "disabled"));
+            SplashProgress(50, settings.OnlineChecks
+                ? L("Verificações online em segundo plano.", "Online checks running in background.")
+                : L("Verificações online desativadas nas definições.", "Online checks disabled in settings."));
+            if (settings.OnlineChecks) _ = CheckUpdatesInBackgroundAsync(appUrl, baseDir);
 
             // Pasta de dados do WebView2 num local gravavel do utilizador.
             // Isto evita a "restricao" quando o executavel corre numa pasta so de
             // leitura (pendrive protegida, Program Files, etc.).
-            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(dataRoot, "WebView2"));
-            await web.EnsureCoreWebView2Async(env);
+            startupSplash.SetStep(StepInterface, SplashStepState.Active);
+            SplashProgress(90, L("A preparar a interface...", "Preparing the interface..."));
+            await (webViewInitialization ?? throw new InvalidOperationException("WebView2 não foi inicializado."));
+            webViewInitializationAwaited = true;
             var s = web.CoreWebView2.Settings;
             s.AreDefaultContextMenusEnabled = false;
             s.AreDevToolsEnabled = false;
             s.IsStatusBarEnabled = false;
             s.IsWebMessageEnabled = true;
+            Phase("WebView2 inicializado");
 
             web.CoreWebView2.WebMessageReceived += OnWebMessage;
             web.CoreWebView2.NewWindowRequested += (_, e) =>
@@ -195,12 +497,55 @@ sealed class MainForm : Form
                 e.Handled = true;
                 try { Process.Start(new ProcessStartInfo(e.Uri) { UseShellExecute = true }); } catch { }
             };
-            web.CoreWebView2.NavigationCompleted += (_, _) => SendWindowState();
+            web.CoreWebView2.NavigationCompleted += (_, e) =>
+            {
+                if (e.IsSuccess)
+                {
+                    Phase("interface carregada");
+                    SplashProgress(94, L("A carregar a mediateca...", "Loading the media library..."));
+                    // O splash nativo continua visivel ate a interface web
+                    // terminar o arranque e enviar "app-ready". Assim so existe
+                    // UM splash: o nativo cobre o Python/WebView2 e a carga dos
+                    // dados (config, mediateca, fila, verificacao). O splash
+                    // HTML nao aparece dentro do launcher.
+                }
+                else
+                {
+                    UpdateStartupStatus($"Não foi possível carregar a interface ({e.WebErrorStatus}).");
+                    LogText($"A navegação da interface falhou: {e.WebErrorStatus}.");
+                }
+                SendWindowState();
+            };
 
-            web.Source = new Uri(url);
+            SplashProgress(92, L("A abrir a interface...", "Opening the interface..."));
+            // Rede de seguranca: se a pagina nunca concluir a navegacao, o
+            // splash nativo nao pode ficar para sempre no ecra.
+            splashFallback.Start();
+            // "host=launcher" diz a interface web que o splash nativo ja esta a
+            // cobrir o arranque: a pagina nao mostra o seu proprio splash e
+            // avisa o launcher quando estiver pronta ("app-ready").
+            web.Source = new Uri(appUrl + (appUrl.Contains('?') ? "&" : "?") + "host=launcher");
+
+            // Vigiar o servidor depois de a UI estar pronta: se ele morrer, a
+            // janela fica inutil (sem backend) — avisa e fecha em vez de deixar
+            // a aplicacao "congelada". Durante o encerramento e ignorado.
+            try
+            {
+                proc.EnableRaisingEvents = true;
+                proc.Exited += (_, _) => OnServerExited(proc);
+            }
+            catch (Exception ex) { Log(ex); }
         }
         catch (Exception ex)
         {
+            if (webViewInitialization != null && !webViewInitializationAwaited)
+            {
+                _ = webViewInitialization.ContinueWith(
+                    task => Log(task.Exception!.GetBaseException()),
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted,
+                    TaskScheduler.Default);
+            }
             Log(ex);
             MessageBox.Show(
                 "Não foi possível iniciar a aplicação.\n\n" + ex.Message +
@@ -210,13 +555,64 @@ sealed class MainForm : Form
         }
     }
 
-    void Log(Exception ex)
+    // Verificacoes online em segundo plano. Correm depois de a interface abrir e
+    // nunca tocam nos controlos do splash (sao executadas fora da thread de UI);
+    // o resultado fica no launcher.log. O painel "Atualizacoes" da interface e
+    // alimentado pelo servidor Python (/check_libraries), que usa cache em disco
+    // e refresca em segundo plano.
+    async Task CheckUpdatesInBackgroundAsync(string appUrl, string baseDir)
+    {
+        try
+        {
+            var clock = Stopwatch.StartNew();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            string version = StartupChecks.ReadAppVersion(baseDir);
+            var checks = new (string Label, Task<UpdateCheckResult> Task)[]
+            {
+                ("Python, FFmpeg, Deno, yt-dlp, .NET", StartupChecks.CheckBinariesAsync(appUrl, cts.Token)),
+                (L("bibliotecas Python", "Python libraries"), StartupChecks.CheckPythonPackagesAsync(baseDir, cts.Token)),
+                (L("bibliotecas JavaScript", "JavaScript libraries"), StartupChecks.CheckJavaScriptPackagesAsync(baseDir, cts.Token)),
+                ("YT-DLP Media Desk", StartupChecks.CheckAppUpdateAsync(settings.ReleaseRepo, version, cts.Token)),
+            };
+
+            var results = new List<UpdateCheckResult>();
+            foreach (var check in checks)
+            {
+                try { results.Add(await check.Task); }
+                catch (Exception ex) { LogText($"Arranque: verificação de atualizações ({check.Label}) falhou: {ex.Message}"); }
+            }
+
+            var findings = results.SelectMany(r => r.Findings).ToList();
+            bool incomplete = results.Count < checks.Length || results.Any(r => r.Offline);
+            foreach (var f in findings)
+                LogText($"Arranque: atualização disponível [{f.Group}] {f.Name}: {f.Installed ?? "-"} -> {f.Latest ?? "-"} ({f.Status})");
+
+            string summary = findings.Count > 0
+                ? $"{findings.Count} atualização(ões) disponível(eis)"
+                : incomplete ? "sem ligação" : "tudo atualizado";
+            LogText($"Arranque: verificações online concluídas em {clock.ElapsedMilliseconds} ms ({summary}).");
+        }
+        catch (Exception ex)
+        {
+            LogText("Arranque: verificações online falharam: " + ex.Message);
+        }
+    }
+
+    async Task InitializeWebViewAsync(string userDataFolder)
+    {
+        var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
+        await web.EnsureCoreWebView2Async(env);
+    }
+
+    void Log(Exception ex) => LogText(ex.ToString());
+
+    void LogText(string message)
     {
         try
         {
             Directory.CreateDirectory(dataRoot);
             File.AppendAllText(Path.Combine(dataRoot, "launcher.log"),
-                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\r\n\r\n");
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
         }
         catch { }
     }
@@ -234,6 +630,19 @@ sealed class MainForm : Form
 
             switch (typeEl.GetString())
             {
+                case "app-ready":
+                    // A interface web terminou o arranque (config, mediateca,
+                    // fila e verificacao). So agora o splash nativo desaparece.
+                    string webSplash = root.TryGetProperty("webSplash", out var ws) ? (ws.GetString() ?? "?") : "?";
+                    LogText($"Arranque: interface pronta (sinal da pagina; splash web={webSplash})");
+                    HideStartupSplash();
+                    break;
+                case "splash-progress":
+                    // Progresso do arranque web (6-100%) mapeado para a ultima
+                    // parte do splash nativo (94-100%), sem recuar a barra.
+                    if (root.TryGetProperty("percent", out var pc) && pc.TryGetDouble(out var pct))
+                        SplashProgress(94 + Math.Clamp(pct, 0, 100) * 0.06);
+                    break;
                 case "window":
                     if (!root.TryGetProperty("action", out var act)) return;
                     switch (act.GetString())
@@ -242,6 +651,17 @@ sealed class MainForm : Form
                         case "maximize": ToggleMaximize(); break;
                         case "fullscreen": ToggleFullscreen(); break;
                         case "close": Close(); break;
+                        case "restart":
+                            try { Shutdown(); }
+                            catch { }
+                            try
+                            {
+                                string exe = Environment.ProcessPath ?? Application.ExecutablePath;
+                                Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
+                            }
+                            catch { }
+                            try { Environment.Exit(0); } catch { Application.Exit(); }
+                            break;
                         case "drag":
                             ReleaseCapture();
                             SendMessage(Handle, 0xA1, 0x2, 0); // WM_NCLBUTTONDOWN + HTCAPTION
@@ -252,6 +672,10 @@ sealed class MainForm : Form
                     bool dark = root.TryGetProperty("mode", out var m) && m.GetString() == "dark";
                     string palette = root.TryGetProperty("palette", out var p) ? (p.GetString() ?? "indigo") : "indigo";
                     ApplyTheme(dark, palette);
+                    break;
+                case "clipboard-monitor":
+                    if (!root.TryGetProperty("enabled", out var clipboardEnabled)) return;
+                    SetClipboardMonitor(clipboardEnabled.ValueKind == System.Text.Json.JsonValueKind.True);
                     break;
                 case "browse-downloads":
                     using (var dlg = new FolderBrowserDialog())
@@ -268,6 +692,94 @@ sealed class MainForm : Form
     }
 
     static string JsonEscape(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    void SetClipboardMonitor(bool enabled)
+    {
+        try
+        {
+            if (!enabled)
+            {
+                clipboardMonitor?.Dispose();
+                clipboardMonitor = null;
+                return;
+            }
+            if (clipboardMonitor != null) return;
+            clipboardMonitor = new ClipboardMonitorWindow();
+            clipboardMonitor.TextChanged += text =>
+            {
+                try
+                {
+                    if (shuttingDown || web.CoreWebView2 == null) return;
+                    web.CoreWebView2.PostWebMessageAsJson(
+                        System.Text.Json.JsonSerializer.Serialize(new { type = "clipboard-text", text }));
+                }
+                catch (Exception ex) { Log(ex); }
+            };
+        }
+        catch (Exception ex)
+        {
+            clipboardMonitor?.Dispose();
+            clipboardMonitor = null;
+            Log(ex);
+            try
+            {
+                web.CoreWebView2?.PostWebMessageAsJson(
+                    System.Text.Json.JsonSerializer.Serialize(new { type = "clipboard-error", message = ex.Message }));
+            }
+            catch { }
+        }
+    }
+
+    sealed class ClipboardMonitorWindow : NativeWindow, IDisposable
+    {
+        const int WmClipboardUpdate = 0x031D;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+
+        public event Action<string>? TextChanged;
+
+        public ClipboardMonitorWindow()
+        {
+            CreateHandle(new CreateParams { Caption = "YT-DLP Media Desk Clipboard Monitor" });
+            if (!AddClipboardFormatListener(Handle))
+            {
+                var error = Marshal.GetLastWin32Error();
+                DestroyHandle();
+                throw new System.ComponentModel.Win32Exception(error, "Não foi possível iniciar a monitorização da área de transferência.");
+            }
+        }
+
+        protected override void WndProc(ref Message message)
+        {
+            if (message.Msg == WmClipboardUpdate)
+            {
+                try
+                {
+                    if (Clipboard.ContainsText(TextDataFormat.UnicodeText))
+                        TextChanged?.Invoke(Clipboard.GetText(TextDataFormat.UnicodeText));
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+            base.WndProc(ref message);
+        }
+
+        public void Dispose()
+        {
+            if (Handle != IntPtr.Zero)
+            {
+                RemoveClipboardFormatListener(Handle);
+                DestroyHandle();
+            }
+            TextChanged = null;
+        }
+    }
 
     void ToggleMaximize()
     {
@@ -320,29 +832,270 @@ sealed class MainForm : Form
 
     int ReadPort()
     {
-        try
-        {
-            var p = Path.Combine(appDir, "config.json");
-            if (File.Exists(p))
-            {
-                using var j = System.Text.Json.JsonDocument.Parse(File.ReadAllText(p));
-                if (j.RootElement.TryGetProperty("server_port", out var x) && x.TryGetInt32(out var n)) return n;
-            }
-        }
-        catch { }
         return 8181;
     }
 
     void Shutdown()
     {
-        try { web.Dispose(); } catch { }
-        try { if (server is { HasExited: false }) server.Kill(entireProcessTree: true); } catch { }
+        if (shuttingDown) return;
+        shuttingDown = true;
+        try { clipboardMonitor?.Dispose(); } catch { }
+        clipboardMonitor = null;
+
+        // 1) Todos os servidores arrancados nesta sessao. Mata a arvore inteira
+        //    (yt-dlp, ffmpeg, ...) e espera que saiam.
+        Process[] started;
+        lock (serversGate) { started = servers.ToArray(); servers.Clear(); }
+        foreach (var p in started) KillTree(p);
+
+        // 2) Tudo o que ficou registado para ESTE launcher — cobre processos cujo
+        //    objeto Process se perdeu (reinicio interno do servidor, falha do
+        //    Job Object) e servidores arrancados fora da lista em uso.
+        int me = Environment.ProcessId;
+        var entries = ReadServerRegistry();
+        var remaining = new List<ServerEntry>();
+        foreach (var e in entries)
+        {
+            if (e.Launcher != me) { remaining.Add(e); continue; }  // outra instancia
+            if (!KillTree(e.Pid)) remaining.Add(e);
+        }
+        WriteServerRegistry(remaining);
+
+        // 3) Fechar o Job Object: KILL_ON_JOB_CLOSE garante que netos que tenham
+        //    escapado a arvore tambem terminam.
         try { job.Dispose(); } catch { }
+
+        // 4) Estado efemero (a UI nao deve reutilizar uma porta morta) e WebView.
+        //    So apaga o server.port se ele pertencer a um servidor desta sessao
+        //    (uma segunda instancia viva pode ter escrito o mesmo ficheiro).
+        try
+        {
+            var respFile = Path.Combine(dataRoot, "server.port");
+            if (File.Exists(respFile))
+            {
+                var mine = new HashSet<int>(started.Select(p => p.Id));
+                foreach (var e in entries) if (e.Launcher == me) mine.Add(e.Pid);
+                bool ours = true;
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(respFile));
+                    if (doc.RootElement.TryGetProperty("pid", out var pidEl) && pidEl.TryGetInt32(out var pid))
+                        ours = mine.Contains(pid);
+                }
+                catch { }
+                if (ours) File.Delete(respFile);
+            }
+        }
+        catch { }
+        try { web.Dispose(); } catch { }
+    }
+
+    // ==================== REGISTO DE SERVIDORES ====================
+
+    sealed class ServerEntry
+    {
+        public int Launcher { get; set; }
+        public int Pid { get; set; }
+        public int Port { get; set; }
+        public string Started { get; set; } = "";
+    }
+
+    static readonly System.Text.Json.JsonSerializerOptions RegistryJson = new() { WriteIndented = true };
+
+    List<ServerEntry> ReadServerRegistry()
+    {
+        try
+        {
+            if (!File.Exists(ServersFile)) return new();
+            var raw = File.ReadAllText(ServersFile);
+            if (string.IsNullOrWhiteSpace(raw)) return new();
+            return System.Text.Json.JsonSerializer.Deserialize<List<ServerEntry>>(raw) ?? new();
+        }
+        catch { return new(); }
+    }
+
+    void WriteServerRegistry(List<ServerEntry> entries)
+    {
+        try
+        {
+            Directory.CreateDirectory(dataRoot);
+            var tmp = ServersFile + ".tmp";
+            File.WriteAllText(tmp, System.Text.Json.JsonSerializer.Serialize(entries, RegistryJson));
+            File.Move(tmp, ServersFile, true);
+        }
+        catch (Exception ex) { Log(ex); }
+    }
+
+    void RegisterServer(Process p)
+    {
+        lock (serversGate)
+        {
+            servers.Add(p);
+            // Se o Job Object falhar (ex.: ambiente com jobs restritos) o
+            // encerramento manual continua a matar o servidor e os seus filhos.
+            try { job.Add(p); }
+            catch (Exception ex) { LogText("Aviso: servidor nao associado ao Job Object: " + ex.Message); }
+
+            var entries = ReadServerRegistry();
+            entries.RemoveAll(e => e.Pid == p.Id);
+            entries.Add(new ServerEntry
+            {
+                Launcher = Environment.ProcessId,
+                Pid = p.Id,
+                Started = DateTime.Now.ToString("o"),
+            });
+            WriteServerRegistry(entries);
+        }
+    }
+
+    void UpdateRegisteredServerPort(int port)
+    {
+        lock (serversGate)
+        {
+            var entries = ReadServerRegistry();
+            var entry = entries.FirstOrDefault(e => e.Launcher == Environment.ProcessId && e.Pid == server?.Id);
+            if (entry == null || entry.Port == port) return;
+            entry.Port = port;
+            WriteServerRegistry(entries);
+        }
+    }
+
+    // Arranque: mata servidores orfaos de sessoes anteriores (launcher ja morto)
+    // e descarta registos obsoletos. Nunca toca em servidores de outra instancia
+    // que ainda esteja a correr.
+    void CleanupOrphanServers()
+    {
+        try
+        {
+            var entries = ReadServerRegistry();
+            if (entries.Count == 0) return;
+            var keep = new List<ServerEntry>();
+            foreach (var e in entries)
+            {
+                if (e.Pid <= 0) continue;
+                if (!ProcessAlive(e.Pid)) continue;                 // registo obsoleto
+                if (e.Launcher == Environment.ProcessId) { keep.Add(e); continue; }
+                if (ProcessAlive(e.Launcher)) { keep.Add(e); continue; }  // outra instancia viva
+                if (!IsOurServerProcess(e.Pid)) continue;           // PID reutilizado por outro programa
+                LogText($"A encerrar servidor orfao (PID {e.Pid}, porta {e.Port}) de uma sessao anterior.");
+                if (!KillTree(e.Pid)) keep.Add(e);                  // tenta novamente no fecho
+            }
+            WriteServerRegistry(keep);
+        }
+        catch (Exception ex) { Log(ex); }
+    }
+
+    static bool ProcessAlive(int pid)
+    {
+        if (pid <= 0) return false;
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            return !p.HasExited;
+        }
+        catch { return false; }
+    }
+
+    // So mata um PID se for realmente o python empacotado com a aplicacao —
+    // evita matar um processo alheio que tenha herdado o mesmo PID.
+    bool IsOurServerProcess(int pid)
+    {
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            if (p.HasExited) return false;
+            string? exePath = null;
+            try { exePath = p.MainModule?.FileName; } catch { }
+            if (string.IsNullOrEmpty(exePath)) return false;
+            var bundled = Path.Combine(appDir, "bin", "python", "python.exe");
+            if (File.Exists(bundled))
+                return string.Equals(Path.GetFullPath(exePath), Path.GetFullPath(bundled), StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Path.GetFileName(exePath), "python.exe", StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
+    }
+
+    bool KillTree(int pid)
+    {
+        if (pid <= 0) return true;
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            return KillTree(p);
+        }
+        catch (ArgumentException) { return true; }   // ja nao existe
+        catch (Exception ex) { Log(ex); return false; }
+    }
+
+    bool KillTree(Process p)
+    {
+        try
+        {
+            if (p.HasExited) return true;
+            p.Kill(entireProcessTree: true);
+            try { p.WaitForExit(3000); } catch { }
+            return p.HasExited;
+        }
+        catch (InvalidOperationException) { return true; }
+        catch (Exception ex) { Log(ex); return false; }
+    }
+
+    void OnServerExited(Process p)
+    {
+        if (shuttingDown) return;
+        int code = -1;
+        try { code = p.ExitCode; } catch { }
+        LogText($"O servidor terminou inesperadamente (PID {p.Id}, codigo {code}).");
+        try
+        {
+            BeginInvoke(new Action(() =>
+            {
+                if (shuttingDown) return;
+                MessageBox.Show(this,
+                    "O servidor local terminou inesperadamente e a aplicação vai fechar.\n\n" +
+                    "Detalhes em:\n" + Path.Combine(dataRoot, "launcher.log"),
+                    "YT-DLP Media Desk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+            }));
+        }
+        catch { }
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            CreateParams cp = base.CreateParams;
+            // Permite redimensionar janela sem barra nativa
+            cp.Style |= 0x00040000; // WS_THICKFRAME
+            cp.Style &= ~0x00C00000; // WS_CAPTION
+            return cp;
+        }
     }
 
     protected override void WndProc(ref Message m)
     {
+        // Outra entrada (exe/atalho/iniciar.bat) pediu para mostrar ESTA janela.
+        if (m.Msg == SingleInstance.ActivationMessage)
+        {
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+            Show();
+            Activate();
+            BringToFront();
+            SingleInstance.BringToForeground(Handle);
+            return;
+        }
+
         const int WM_GETMINMAXINFO = 0x0024;
+        const int WM_NCHITTEST = 0x0084;
+        const int HTLEFT = 10;
+        const int HTRIGHT = 11;
+        const int HTTOP = 12;
+        const int HTTOPLEFT = 13;
+        const int HTTOPRIGHT = 14;
+        const int HTBOTTOM = 15;
+        const int HTBOTTOMLEFT = 16;
+        const int HTBOTTOMRIGHT = 17;
         if (m.Msg == WM_GETMINMAXINFO)
         {
             var mmi = Marshal.PtrToStructure<MINMAXINFO>(m.LParam);
@@ -357,6 +1110,27 @@ sealed class MainForm : Form
                 mmi.ptMaxSize.y = wa.bottom - wa.top;
                 Marshal.StructureToPtr(mmi, m.LParam, false);
             }
+            base.WndProc(ref m);
+            return;
+        }
+        if (m.Msg == WM_NCHITTEST && WindowState != FormWindowState.Maximized && !fullscreen)
+        {
+            int x = (short)(m.LParam.ToInt32() & 0xFFFF);
+            int y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
+            Point pt = PointToClient(new Point(x, y));
+            int grip = 10;
+            bool left = pt.X <= grip;
+            bool right = pt.X >= ClientSize.Width - grip;
+            bool top = pt.Y <= grip;
+            bool bottom = pt.Y >= ClientSize.Height - grip;
+            if (left && top) { m.Result = (IntPtr)HTTOPLEFT; return; }
+            if (right && top) { m.Result = (IntPtr)HTTOPRIGHT; return; }
+            if (left && bottom) { m.Result = (IntPtr)HTBOTTOMLEFT; return; }
+            if (right && bottom) { m.Result = (IntPtr)HTBOTTOMRIGHT; return; }
+            if (left) { m.Result = (IntPtr)HTLEFT; return; }
+            if (right) { m.Result = (IntPtr)HTRIGHT; return; }
+            if (top) { m.Result = (IntPtr)HTTOP; return; }
+            if (bottom) { m.Result = (IntPtr)HTBOTTOM; return; }
         }
         base.WndProc(ref m);
     }
@@ -446,7 +1220,8 @@ static class Payload
 
     static string ChooseTarget(string exeDir)
     {
-        string preferred = Path.Combine(exeDir, "MediaDesk-Portable");
+        // Nome da pasta portatil (igual ao artefacto dist\Media Desk Portable).
+        string preferred = Path.Combine(exeDir, "Media Desk Portable");
         if (CanWrite(exeDir))
         {
             try { Directory.CreateDirectory(preferred); return preferred; } catch { }

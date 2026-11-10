@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Media Desk">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#14141C"/>
+  <rect x="28.5" y="6" width="7" height="16" rx="3.5" fill="#F7F7FB"/>
+  <path d="M21 21h22L32 34Z" fill="#F7F7FB" stroke="#F7F7FB" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M32 36L50 45L32 54L14 45Z" fill="#FFD23F"/>
+  <path d="M32 36L50 45L32 54Z" fill="#FF8A3D"/>
+  <path d="M14 45L32 54L32 58L14 49Z" fill="#FF4D6D"/>
+  <path d="M50 45L32 54L32 58L50 49Z" fill="#7C5CFF"/>
+</svg>

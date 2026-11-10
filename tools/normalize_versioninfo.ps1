@@ -18,7 +18,7 @@
     Este passo corre so na copia preparada para o SignPath (tools/prep_signpath.ps1).
 
     Uso:
-      powershell -ExecutionPolicy Bypass -File tools\normalize_versioninfo.ps1 -Path dist\MediaDesk-Setup.exe
+      powershell -ExecutionPolicy Bypass -File tools\normalize_versioninfo.ps1 -Path dist\Media Desk Setup.exe
 #>
 [CmdletBinding()]
 param(

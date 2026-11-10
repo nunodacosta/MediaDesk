@@ -2,10 +2,10 @@
     tools/gen_release_hashes.ps1
     -----------------------------------------------------------------------------
     Gera dist\SHA256SUMS.txt com os hashes SHA-256 dos artefactos de release:
-      - MediaDesk-Portable.zip   (descarga recomendada)
-      - MediaDesk-Portable.exe   (auto-extraivel)
-      - MediaDesk-Setup.exe      (instalador)
-      - MediaDesk-Portable\YT-DLP-Media-Desk.exe (launcher da pasta)
+      - Media Desk.zip                       (descarga recomendada)
+      - Media Desk.exe                       (auto-extraivel)
+      - Media Desk Setup.exe                 (instalador)
+      - Media Desk Portable\Media Desk.exe   (launcher da pasta)
 
     Deve ser corrido no FIM do build (a assinatura altera os ficheiros).
     Formato compativel com "sha256sum -c":  <hash>  <nome>
@@ -20,12 +20,12 @@ $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist'
 
 $candidatos = @(
-    'MediaDesk-Portable.zip',
-    'MediaDesk-Portable.exe',
-    'MediaDesk-Setup.exe'
+    'Media Desk.zip',
+    'Media Desk.exe',
+    'Media Desk Setup.exe'
 ) | ForEach-Object { Join-Path $dist $_ }
 
-$pastaLauncher = Join-Path $dist 'MediaDesk-Portable\YT-DLP-Media-Desk.exe'
+$pastaLauncher = Join-Path $dist 'Media Desk Portable\Media Desk.exe'
 if (Test-Path $pastaLauncher) { $candidatos += $pastaLauncher }
 
 $count = 0
@@ -42,7 +42,7 @@ foreach ($p in $candidatos) {
     $h = (Get-FileHash $p -Algorithm SHA256).Hash.ToLower()
     $name = $p.Substring($dist.Length + 1)
     [void]$sb.AppendLine("$h  $name")
-    Write-Host ("  {0,-30} {1}..." -f $name, $h.Substring(0, 16)) -ForegroundColor DarkGray
+    Write-Host ("  {0,-34} {1}..." -f $name, $h.Substring(0, 16)) -ForegroundColor DarkGray
     $count++
 }
 

@@ -17,6 +17,7 @@ import unicodedata
 import uuid
 import webbrowser
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
@@ -30,12 +31,14 @@ def get_app_dir():
 
 APP_DIR = get_app_dir()
 BIN_DIR = os.path.join(APP_DIR, "bin")
-CONFIG_FILE = os.path.join(APP_DIR, "config.json")
+CONFIG_FILE = os.path.join(APP_DIR, "data", "config.enc")
 HISTORY_FILE = os.path.join(APP_DIR, "history.json")
 DEFAULT_DOWNLOADS_DIR = os.path.join(APP_DIR, "downloads")
 PAUSE_FILE = os.path.join(APP_DIR, ".pause")
 CANCEL_FILE = os.path.join(APP_DIR, ".cancel")
 QUEUE_FILE = os.path.join(APP_DIR, "download_queue.json")
+RSS_FILE = os.path.join(APP_DIR, "rss_channels.json")
+RSS_PROPOSALS_FILE = os.path.join(APP_DIR, "rss_proposals.json")
 COOKIES_FILE = os.path.join(APP_DIR, "cookies.txt")
 PYTHON_PREF_FILE = os.path.join(APP_DIR, "python_pref.txt")
 VERSION_FILE = os.path.join(APP_DIR, "version.json")
@@ -53,11 +56,12 @@ download_paused = False
 download_cancel_requested = False
 _queue_lock = threading.RLock()
 _queue_wakeup = threading.Event()
+_dependencies_ready = threading.Event()
+_dependencies_ready.set()
 _queue_jobs = []
 _queue_worker_running = False
 _active_download_id = None
-APP_VERSION = "3.9.0"  # gerado por tools/sync_version.ps1
-
+APP_VERSION = "3.11.4"  # gerado por tools/sync_version.ps1
 os.makedirs(BIN_DIR, exist_ok=True)
 
 # Tipos MIME
@@ -99,6 +103,363 @@ def load_json(path, default):
 def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
+    return True
+
+
+def load_rss_channels():
+    try:
+        if os.path.exists(RSS_FILE):
+            with open(RSS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+    except Exception:
+        pass
+    return []
+
+
+def save_rss_channels(channels):
+    try:
+        return save_json(RSS_FILE, channels)
+    except Exception:
+        return False
+
+
+def load_rss_proposals():
+    try:
+        if os.path.exists(RSS_PROPOSALS_FILE):
+            with open(RSS_PROPOSALS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+    except Exception:
+        pass
+    return {"proposed": [], "seen": []}
+
+
+def save_rss_proposals(data):
+    try:
+        return save_json(RSS_PROPOSALS_FILE, data)
+    except Exception:
+        return False
+
+
+def analyze_user_focus():
+    history = load_json(HISTORY_FILE, [])
+    if not isinstance(history, list):
+        return {"channels": [], "platforms": []}
+    counts = {}
+    for h in history:
+        if h.get("status") != "success":
+            continue
+        plat = h.get("platform") or (detect_platform(h.get("url")) if h.get("url") else None)
+        if not plat:
+            continue
+        key = plat
+        counts[key] = counts.get(key, 0) + 1
+    platforms = [p for p,_ in sorted(counts.items(), key=lambda x: x[1], reverse=True)[:5]]
+    return {"channels": [], "platforms": platforms}
+
+
+def suggest_rss_from_history():
+    focus = analyze_user_focus()
+    channels = []
+    seen = set()
+    for p in focus.get("platforms", []):
+        ch = {"name": p, "platform": p, "source": "history", "enabled": True}
+        k = (ch["name"].lower(), ch["platform"])
+        if k not in seen:
+            channels.append(ch)
+            seen.add(k)
+    return channels
+
+
+# ========== SERVICO DE ATIVIDADE / AUTOMATISMO ==========
+# O servico vive num processo Python separado (activity_service.py), para
+# continuar a monitorizar os feeds mesmo com a interface fechada. Estas
+# funcoes sao a ponte entre o servidor HTTP e esse processo.
+_activity_module = None
+_activity_import_error = None
+_activity_lock = threading.Lock()
+
+_PLATFORM_BY_EXTRACTOR = {
+    "youtube": "youtube",
+    "youtube:tab": "youtube",
+    "youtube:playlist": "youtube",
+    "tiktok": "tiktok",
+    "instagram": "instagram",
+    "facebook": "facebook",
+    "twitter": "x",
+    "twitter:broadcast": "x",
+    "vimeo": "vimeo",
+    "twitch": "twitch",
+    "twitch:vod": "twitch",
+    "soundcloud": "soundcloud",
+    "rumble": "rumble",
+    "odysee": "odysee",
+    "dailymotion": "dailymotion",
+    "bitchute": "bitchute",
+    "kick": "kick",
+    "bilibili": "bilibili",
+}
+
+
+def activity_module():
+    """Importa activity_service.py de forma preguicosa e segura."""
+    global _activity_module, _activity_import_error
+    if _activity_module is not None:
+        return _activity_module
+    with _activity_lock:
+        if _activity_module is not None:
+            return _activity_module
+        if _activity_import_error is not None:
+            return None
+        try:
+            if APP_DIR not in sys.path:
+                sys.path.insert(0, APP_DIR)
+            import activity_service as module  # noqa: WPS433 (import tardio propositado)
+            _activity_module = module
+        except Exception as exc:
+            _activity_import_error = str(exc)
+            print(f"[AVISO] Servico de atividade indisponivel: {exc}")
+        return _activity_module
+
+
+def load_config():
+    module = activity_module()
+    if module is None:
+        raise RuntimeError(f"Servico de configuracao indisponivel: {_activity_import_error}")
+    return module.load_config(APP_DIR)
+
+
+def save_config(data):
+    module = activity_module()
+    if module is None:
+        raise RuntimeError(f"Servico de configuracao indisponivel: {_activity_import_error}")
+    module.save_config(data, APP_DIR)
+
+
+def _resolve_download_path(file_path):
+    """Converte '/downloads/x/y.mp4' (ou caminho absoluto) em caminho real.
+
+    Nunca devolve ficheiros fora da pasta de downloads, mesmo que o pedido
+    traga um caminho absoluto (ex.: C:/Windows/...).
+    """
+    raw = str(file_path or "").strip()
+    if not raw:
+        return None
+    base = os.path.normpath(get_downloads_dir())
+    candidate = resolve_download_file(raw)
+    if candidate and os.path.isfile(candidate):
+        return candidate
+    if os.path.isabs(raw):
+        full = os.path.normpath(raw)
+        if os.path.normcase(full).startswith(os.path.normcase(base + os.sep)) and os.path.isfile(full):
+            return full
+    return None
+
+
+def _read_info_json(file_path):
+    """Le o sidecar <media>.info.json, se o yt-dlp o tiver escrito."""
+    path = _resolve_download_path(file_path)
+    if not path:
+        return {}
+    sidecar = os.path.splitext(path)[0] + ".info.json"
+    try:
+        with open(sidecar, "r", encoding="utf-8-sig") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _meta_platform(info, url):
+    extractor = str(info.get("extractor_key") or info.get("extractor") or "").strip().lower()
+    if extractor in _PLATFORM_BY_EXTRACTOR:
+        return _PLATFORM_BY_EXTRACTOR[extractor]
+    for candidate in (info.get("webpage_url"), info.get("original_url"), url):
+        if candidate:
+            detected = detect_platform(candidate)
+            if detected and detected != "web":
+                return detected
+    return detect_platform(url) if url else "web"
+
+
+def _safe_int(value):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _activity_entry(url, file_path, media_type=None, title=None, platform=None, meta=None):
+    """Normaliza metadados de um download para o formato de activity.enc."""
+    info = dict(meta or {})
+    for key, value in _read_info_json(file_path).items():
+        if info.get(key) in (None, "", 0, [], {}):
+            info[key] = value
+    path = _resolve_download_path(file_path)
+    info_url = info.get("webpage_url") or info.get("original_url") or url
+    info_platform = (platform or "").lower() or _meta_platform(info, info_url)
+    entry = {
+        "url": info_url,
+        "original_url": url,
+        "title": title or info.get("title") or (os.path.basename(path) if path else None),
+        "platform": info_platform,
+        "channel": info.get("channel") or info.get("uploader") or info.get("creator") or "",
+        "channel_id": info.get("channel_id") or "",
+        "channel_url": info.get("channel_url") or "",
+        "uploader": info.get("uploader") or info.get("channel") or info.get("artist") or "",
+        "uploader_id": info.get("uploader_id") or "",
+        "uploader_url": info.get("uploader_url") or "",
+        "date": datetime.now().astimezone().isoformat(timespec="microseconds"),
+        "file_path": file_path,
+        "file_name": os.path.basename(path) if path else None,
+        "file_size": os.path.getsize(path) if path else _safe_int(info.get("filesize")),
+        "media_type": media_type or info.get("ext") or None,
+        "theme": config.get("theme_palette") or "indigo",
+        "theme_mode": config.get("theme") or "system",
+        "duration": _safe_int(info.get("duration")),
+        "view_count": _safe_int(info.get("view_count")),
+        "upload_date": info.get("upload_date") or info.get("release_date"),
+        "ext": info.get("ext"),
+        "width": _safe_int(info.get("width")),
+        "height": _safe_int(info.get("height")),
+        "tags": [str(t)[:60] for t in (info.get("tags") or [])][:20],
+        "thumbnail": info.get("thumbnail"),
+        "description": (info.get("description") or "")[:500],
+        "extractor": info.get("extractor"),
+        "source": "yt-dlp",
+    }
+    return {key: value for key, value in entry.items() if value not in (None, "", [], {})}
+
+
+def record_activity_entry(entry):
+    """Regista um download em activity.enc. Nunca interrompe o download."""
+    svc = activity_module()
+    if not svc:
+        return None
+    try:
+        return svc.record_download(entry, APP_DIR)
+    except Exception as exc:
+        print(f"[AVISO] Falha ao registar atividade: {exc}")
+        return None
+
+
+def _automation_status():
+    svc = activity_module()
+    status = {
+        "available": bool(svc),
+        "enabled": bool(config.get("automation_enabled")),
+        "mode": config.get("automation_mode", "manual"),
+        "interval": int(config.get("automation_interval") or 30),
+        "autostart": bool(config.get("automation_autostart")),
+        "platforms": list(config.get("automation_platforms") or []),
+        "running": False,
+        "pid": None,
+        "last_check": None,
+        "next_check": None,
+        "proposals": len(load_rss_proposals().get("proposed") or []),
+        "channels": len(load_rss_channels()),
+        "errors": [],
+    }
+    if svc:
+        try:
+            status.update(svc.service_status(APP_DIR))
+            status["available"] = True
+        except Exception as exc:
+            status["error"] = str(exc)
+    return status
+
+
+def _start_automation_service(delay=2.5):
+    """Lanca o servico em segundo plano, sem atrasar o arranque do servidor."""
+    if not config.get("automation_enabled"):
+        return
+
+    def _launch():
+        if delay:
+            time.sleep(delay)
+        svc = activity_module()
+        if not svc:
+            return
+        try:
+            ok = svc.start_service(APP_DIR)
+            print(f"[INFO] Servico de atividade: {'iniciado' if ok else 'indisponivel'}")
+        except Exception as exc:
+            print(f"[AVISO] Nao foi possivel iniciar o servico de atividade: {exc}")
+
+    threading.Thread(target=_launch, name="activity-launcher", daemon=True).start()
+
+
+def _rss_check_background():
+    """Corre uma verificacao unica de feeds sem bloquear o pedido HTTP."""
+    def _run():
+        svc = activity_module()
+        if not svc:
+            return
+        try:
+            svc.check_feeds(APP_DIR, force=True)
+        except Exception as exc:
+            print(f"[AVISO] Verificacao de feeds falhou: {exc}")
+
+    threading.Thread(target=_run, name="rss-check", daemon=True).start()
+
+
+def _normalize_channel(req):
+    name = str(req.get("name") or "").strip()[:120]
+    url = str(req.get("url") or "").strip()[:2048]
+    if url and "://" not in url:
+        url = "https://" + url
+    if url:
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").strip().lower()
+        valid_host = (
+            bool(host)
+            and re.fullmatch(r"[a-z0-9.\-]+", host) is not None
+            and ("." in host or host == "localhost" or re.fullmatch(r"\d{1,3}(\.\d{1,3}){3}", host))
+        )
+        if parsed.scheme not in ("http", "https") or not valid_host:
+            raise ValueError("URL do canal inválida (use http:// ou https:// com um domínio válido).")
+        if any(ch.isspace() for ch in url):
+            raise ValueError("URL do canal inválida.")
+    if not name and not url:
+        raise ValueError("Indique um nome ou uma URL de canal.")
+    platform = str(req.get("platform") or "").strip().lower()
+    if not platform and url:
+        platform = detect_platform(url)
+    # Identificador simples: nunca aceitar texto livre vindo do cliente.
+    platform = re.sub(r"[^a-z0-9_.\-]+", "", platform or "")[:40] or "web"
+    return {
+        "name": name or platform or "Canal",
+        "url": url,
+        "platform": platform,
+        "enabled": bool(req.get("enabled", True)),
+    }
+
+
+def _json_reply(handler, code, payload):
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    try:
+        handler.send_response(code)
+        handler.send_header("Content-Type", "application/json; charset=utf-8")
+        handler.send_header("Cache-Control", "no-store")
+        handler.send_header("Content-Length", str(len(body)))
+        handler.end_headers()
+        handler.wfile.write(body)
+    except Exception:
+        pass
+
+
+def _activity_suggestions():
+    """Canais reais observados nos downloads (para adicionar ao RSS)."""
+    svc = activity_module()
+    if not svc or not hasattr(svc, "suggestion_channels"):
+        return []
+    try:
+        return svc.suggestion_channels(APP_DIR) or []
+    except Exception:
+        return []
 
 
 # ========== LICENÇAS DE TERCEIROS ==========
@@ -191,6 +552,937 @@ def integrity_worker():
         pass
 
 
+# ========== MOTOR DE VERSAO (COMPARACAO DE FICHEIROS EM CADA ARRANQUE) ==========
+# Ficheiros cujo conteudo define a versao da aplicacao. O binario do yt-dlp
+# fica de fora: e atualizado em runtime (-U) e nao faz parte desta versao.
+VERSION_TRACKED = (
+    "index.html",
+    "server.py",
+    "activity_service.py",
+    "sw.js",
+    "licenses.json",
+    "manifest.webmanifest",
+    "favicon.svg",
+)
+_version_lock = threading.Lock()
+_updates_cache = {"quando": 0.0, "dados": None}
+_libraries_cache = {"quando": 0.0, "dados": None, "running": False, "loaded": False, "done": threading.Event()}
+_libraries_cache["done"].set()
+_libraries_lock = threading.Lock()
+# O splash nunca deve esperar pela rede nem por executaveis externos. O ultimo
+# resultado fica em memoria e em disco; quando expira, e refrescado em segundo
+# plano e a interface usa imediatamente o valor conhecido.
+LIBRARIES_CACHE_FILE = os.path.join(APP_DIR, "data", "libraries_cache.json")
+LIBRARIES_TTL = 600
+LIBRARIES_SPLASH_TTL = 6 * 3600
+_ytdlp_version_cache = {"key": None, "version": None}
+WEBVIEW2_CLIENT_GUID = "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+
+
+def _js(value):
+    """Literal JavaScript seguro (aspas e escapes) para o bloco VERSION."""
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def _read_text(path):
+    # utf-8-sig remove o BOM se existir (e comporta-se como utf-8 se nao).
+    with open(path, "r", encoding="utf-8-sig", newline="") as fh:
+        return fh.read()
+
+
+def _write_text(path, text, bom=False):
+    with open(path, "w", encoding="utf-8-sig" if bom else "utf-8", newline="") as fh:
+        fh.write(text)
+
+
+def _has_bom(path):
+    try:
+        with open(path, "rb") as fh:
+            return fh.read(3) == b"\xef\xbb\xbf"
+    except Exception:
+        return False
+
+
+def _bump_semver(version, level):
+    parts = str(version or "0.0.0").split(".")
+    while len(parts) < 3:
+        parts.append("0")
+    try:
+        major, minor, patch = (int(p) for p in parts[:3])
+    except ValueError:
+        major, minor, patch = 0, 0, 0
+    if level == "major":
+        return f"{major + 1}.0.0"
+    if level == "minor":
+        return f"{major}.{minor + 1}.0"
+    return f"{major}.{minor}.{patch + 1}"
+
+
+def _next_build(date, previous):
+    code = int(str(date).replace("-", ""))
+    try:
+        prev = int(previous)
+    except (TypeError, ValueError):
+        prev = 0
+    return prev + 1 if prev // 100 == code else code * 100 + 1
+
+
+def _version_block(vj):
+    """Gera o bloco // VERSION:BEGIN ... END a partir de version.json."""
+    pad = " " * 12
+    lines = ["// VERSION:BEGIN - gerado por tools/sync_version.ps1; nao editar a mao."]
+    lines.append(f"{pad}const APP_VERSION = {_js(vj.get('version'))};")
+    lines.append(f"{pad}const APP_VERSION_DATE = {_js(vj.get('date'))};")
+    lines.append(f"{pad}const APP_BUILD = {int(vj.get('build') or 0)};")
+    lines.append(f"{pad}const VERSION_HISTORY = [")
+    entries = []
+    for entry in vj.get("history") or []:
+        if not isinstance(entry, dict):
+            continue
+        e = ["                {"]
+        e.append(f"                    version: {_js(entry.get('version'))},")
+        e.append(f"                    date: {_js(entry.get('date'))},")
+        groups = entry.get("groups")
+        if isinstance(groups, dict) and groups:
+            e.append("                    groups: {")
+            for name, items in groups.items():
+                items = [str(i) for i in (items or [])]
+                e.append(
+                    f"                        {_js(name)}: [{', '.join(_js(i) for i in items)}],"
+                )
+            e.append("                    }")
+        else:
+            changes = [str(c) for c in (entry.get("changes") or [])]
+            e.append(f"                    changes: [{', '.join(_js(c) for c in changes)}]")
+        e.append("                }")
+        entries.append("\n".join(e))
+    if entries:
+        lines.append(",\n".join(entries))
+    lines.append("            ];")
+    lines.append(f"{pad}const CURRENT_VERSION_CHANGES = VERSION_HISTORY[0].groups")
+    lines.append(f"{pad}    ? Object.values(VERSION_HISTORY[0].groups).flat()")
+    lines.append(f"{pad}    : (VERSION_HISTORY[0].changes || []);")
+    lines.append(f"{pad}// VERSION:END")
+    return "\n".join(lines)
+
+
+def sync_version_files(vj):
+    """Propaga a versao de version.json para index.html, server.py, csproj, .iss e README."""
+    version = str(vj.get("version") or APP_VERSION)
+    updated = []
+
+    idx = os.path.join(APP_DIR, "index.html")
+    if os.path.isfile(idx):
+        html = _read_text(idx)
+        begin, end = "// VERSION:BEGIN", "// VERSION:END"
+        bi, ei = html.find(begin), html.find(end)
+        if bi >= 0 and ei >= 0:
+            html = html[:bi] + _version_block(vj) + html[ei + len(end):]
+            pattern = r'(<span class="brand-version" id="app-version"[^>]*>)v[^<]*(</span>)'
+            html = re.sub(pattern, lambda m: f"{m.group(1)}v{version}{m.group(2)}", html)
+            _write_text(idx, html)
+            updated.append("index.html")
+
+    srv = os.path.join(APP_DIR, "server.py")
+    if os.path.isfile(srv):
+        text = _read_text(srv)
+        new_text = re.sub(
+            r'(?m)^APP_VERSION\s*=\s*"[^"]*".*$',
+            f'APP_VERSION = "{version}"  # gerado por tools/sync_version.ps1',
+            text,
+        )
+        if new_text != text:
+            _write_text(srv, new_text)
+            updated.append("server.py")
+
+    csproj = os.path.join(APP_DIR, "MediaDeskLauncher.csproj")
+    if os.path.isfile(csproj):
+        text = _read_text(csproj)
+        text = re.sub(r"<Version>[^<]*</Version>", f"<Version>{version}</Version>", text)
+        text = re.sub(r"<FileVersion>[^<]*</FileVersion>", f"<FileVersion>{version}.0</FileVersion>", text)
+        text = re.sub(
+            r"<InformationalVersion>[^<]*</InformationalVersion>",
+            f"<InformationalVersion>{version}</InformationalVersion>",
+            text,
+        )
+        _write_text(csproj, text, bom=_has_bom(csproj))
+        updated.append("MediaDeskLauncher.csproj")
+
+    iss = os.path.join(APP_DIR, "installer", "mediadesk.iss")
+    if os.path.isfile(iss):
+        text = _read_text(iss)
+        new_text = re.sub(
+            r'(?m)^(#define AppVersion\s*)"[^"]*"', rf'\g<1>"{version}"', text
+        )
+        if new_text != text:
+            _write_text(iss, new_text, bom=_has_bom(iss))
+            updated.append("installer/mediadesk.iss")
+
+    readme = os.path.join(APP_DIR, "README.md")
+    if os.path.isfile(readme):
+        text = _read_text(readme)
+        new_text = re.sub(r"(?m)^(- \*\*Versão:\*\* ).*$", rf"\g<1>{version}", text)
+        if new_text != text:
+            _write_text(readme, new_text, bom=_has_bom(readme))
+            updated.append("README.md")
+
+    return updated
+
+
+def _refresh_checksums():
+    """Recalcula os hashes dos ficheiros de versao em checksums.json."""
+    manifest = load_json(CHECKSUMS_FILE, {})
+    if not isinstance(manifest, dict):
+        manifest = {}
+    files = manifest.get("ficheiros")
+    if not isinstance(files, dict):
+        files = {}
+    for rel in VERSION_TRACKED + ("version.json",):
+        full = os.path.join(APP_DIR, rel.replace("/", os.sep))
+        if os.path.isfile(full):
+            files[rel] = _sha256_file(full)
+    manifest["ficheiros"] = files
+    manifest["algoritmo"] = manifest.get("algoritmo") or "SHA-256"
+    manifest["gerado"] = datetime.now().isoformat(timespec="seconds")
+    save_json(CHECKSUMS_FILE, manifest)
+
+
+def ensure_version_current():
+    """Compara os ficheiros com checksums.json e aplica o nivel de atualizacao.
+
+    O nivel e as notas vem do bloco "unreleased" de version.json, escrito
+    quando existem alteracoes por publicar. Depois de aplicar, propaga a nova
+    versao para todos os ficheiros e atualiza os hashes. Sem "unreleased" nao
+    ha bump (evita versoes falsas quando so se corre o sincronizador).
+    """
+    global APP_VERSION
+    with _version_lock:
+        vj = load_json(VERSION_FILE, None)
+        if not isinstance(vj, dict):
+            return {"available": False, "changed": [], "bumped": False}
+        manifest = load_json(CHECKSUMS_FILE, {})
+        stored = (manifest.get("ficheiros") if isinstance(manifest, dict) else None) or {}
+        changed = []
+        for rel in VERSION_TRACKED:
+            full = os.path.join(APP_DIR, rel.replace("/", os.sep))
+            if not os.path.isfile(full):
+                continue
+            previous = str(stored.get(rel) or "").lower()
+            if not previous or _sha256_file(full) != previous:
+                changed.append(rel)
+        pending = vj.get("unreleased")
+        pending = pending if isinstance(pending, dict) else None
+        result = {
+            "available": True,
+            "changed": changed,
+            "bumped": False,
+            "version": str(vj.get("version") or APP_VERSION),
+            "date": vj.get("date"),
+            "build": vj.get("build"),
+            "level": str((pending or {}).get("level") or "none"),
+        }
+        if not pending or not changed:
+            return result
+
+        level = str(pending.get("level") or "patch").lower()
+        if level not in ("major", "minor", "patch"):
+            level = "patch"
+        previous_version = str(vj.get("version") or APP_VERSION)
+        new_version = _bump_semver(previous_version, level)
+        today = datetime.now().strftime("%Y-%m-%d")
+        groups = pending.get("groups")
+        if not isinstance(groups, dict) or not groups:
+            groups = {"Melhorado": [f"Atualização automática: {', '.join(changed)}"]}
+        entry = {"version": new_version, "date": today, "groups": groups}
+        history = [h for h in (vj.get("history") or []) if isinstance(h, dict)]
+        vj["history"] = [entry] + [h for h in history if h.get("version") != new_version]
+        vj["version"] = new_version
+        vj["date"] = today
+        vj["build"] = _next_build(today, vj.get("build"))
+        vj.pop("unreleased", None)
+        save_json(VERSION_FILE, vj)
+        updated = sync_version_files(vj)
+        _refresh_checksums()
+        APP_VERSION = new_version
+        result.update({
+            "bumped": True,
+            "previous": previous_version,
+            "version": new_version,
+            "date": today,
+            "build": vj["build"],
+            "level": level,
+            "updated_files": updated,
+        })
+        try:
+            broadcast_log(
+                f"[OK] Versao atualizada para v{new_version} ({level}): "
+                f"{len(changed)} ficheiro(s) comparado(s)."
+            )
+        except Exception:
+            pass
+        return result
+
+
+# ========== VERIFICACAO ONLINE E HASHES DO HISTORICO ==========
+def _local_ytdlp_version():
+    exe = os.path.join(BIN_DIR, "yt-dlp.exe")
+    if not os.path.isfile(exe):
+        return None
+    # Arrancar o yt-dlp custa ~1.3 s; repetir a cada verificacao atrasava o
+    # splash e o painel de atualizacoes. A chave (tamanho + mtime) invalida o
+    # cache quando o executavel e substituido.
+    try:
+        st = os.stat(exe)
+        key = (st.st_size, st.st_mtime_ns)
+    except Exception:
+        key = None
+    with _libraries_lock:
+        if key is not None and _ytdlp_version_cache["key"] == key:
+            return _ytdlp_version_cache["version"]
+    try:
+        proc = subprocess.run(
+            [exe, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        version = (proc.stdout or "").strip() or None
+    except Exception:
+        return None
+    with _libraries_lock:
+        _ytdlp_version_cache.update({"key": key, "version": version})
+    return version
+
+
+def _latest_ytdlp_version():
+    req = Request(
+        "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest",
+        headers={
+            "User-Agent": "YT-DLP-Media-Desk",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    with urlopen(req, timeout=5) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return str(data.get("tag_name") or "").lstrip("v") or None
+
+
+def check_updates(force=False):
+    """Le a versao local do yt-dlp e compara com a ultima release (com cache)."""
+    now = time.time()
+    if not force and _updates_cache["dados"] and now - _updates_cache["quando"] < 600:
+        return _updates_cache["dados"]
+
+    current = _local_ytdlp_version()
+    latest = None
+    error = None
+    try:
+        latest = _latest_ytdlp_version()
+    except Exception as exc:
+        error = str(exc)
+    update_available = None
+    if current and latest:
+        update_available = current != latest
+    result = {
+        "app": {"current": APP_VERSION},
+        "ytdlp": {
+            "current": current,
+            "latest": latest,
+            "update_available": update_available,
+        },
+        "ffmpeg": {"present": os.path.isfile(os.path.join(BIN_DIR, "ffmpeg.exe"))},
+        "python": {"version": platform.python_version()},
+        "checked_at": datetime.now().isoformat(timespec="seconds"),
+        "offline": bool(error),
+        "error": error,
+    }
+    _updates_cache.update({"quando": now, "dados": result})
+    return result
+
+
+def _run_version_command(cmd, pattern, timeout=8):
+    """Executa um comando de versao e extrai a versao com uma expressao regular."""
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        output = (proc.stdout or "") + "\n" + (proc.stderr or "")
+        match = re.search(pattern, output, re.I)
+        if match:
+            return match.group(1).strip()
+    except Exception:
+        pass
+    return None
+
+
+def _version_tuple(value):
+    nums = re.findall(r"\d+", str(value or ""))
+    return tuple(int(n) for n in nums[:4]) if nums else ()
+
+
+def _is_newer(latest, installed):
+    a, b = _version_tuple(latest), _version_tuple(installed)
+    if not a or not b:
+        return False
+    size = max(len(a), len(b))
+    return a + (0,) * (size - len(a)) > b + (0,) * (size - len(b))
+
+
+def _github_latest_release(repo):
+    req = Request(
+        f"https://api.github.com/repos/{repo}/releases/latest",
+        headers={
+            "User-Agent": "YT-DLP-Media-Desk",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    with urlopen(req, timeout=6) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return str(data.get("tag_name") or "").lstrip("v") or None
+
+
+def _latest_cycle(product, cycle=None):
+    """Ultima versao publicada no endoflife.date (Python, FFmpeg, .NET).
+
+    Quando ``cycle`` e indicado (por exemplo ``8.0``), a comparacao fica
+    limitada a essa linha de suporte. Isto evita anunciar .NET 10 como
+    atualizacao de uma aplicacao publicada para .NET 8.
+    """
+    req = Request(
+        f"https://endoflife.date/api/{product}.json",
+        headers={"User-Agent": "YT-DLP-Media-Desk", "Accept": "application/json"},
+    )
+    try:
+        with urlopen(req, timeout=6) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+        candidates = []
+        if isinstance(rows, list):
+            for row in rows:
+                if not isinstance(row, dict) or not row.get("latest"):
+                    continue
+                if cycle and str(row.get("cycle")) != str(cycle):
+                    continue
+                candidates.append(str(row["latest"]))
+        if candidates:
+            return max(candidates, key=_version_tuple)
+    except Exception:
+        pass
+    # Em algumas maquinas a cadeia de certificados do sistema esta
+    # desatualizada. O GitHub usa a mesma CA do yt-dlp e serve de fallback.
+    if product == "python":
+        return _latest_github_tag("python/cpython", r"v?(3\.\d+\.\d+)")
+    if product == "ffmpeg":
+        return _latest_github_tag("FFmpeg/FFmpeg", r"n?(\d+\.\d+(?:\.\d+)?)")
+    if product == "dotnet":
+        pattern = rf"v?({re.escape(str(cycle))}\.\d+)" if cycle else r"v?(\d+\.\d+\.\d+)"
+        return _latest_github_tag("dotnet/runtime", pattern)
+    return None
+
+
+def _latest_github_tag(repo, pattern):
+    req = Request(
+        f"https://api.github.com/repos/{repo}/tags?per_page=100",
+        headers={
+            "User-Agent": "YT-DLP-Media-Desk",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    with urlopen(req, timeout=6) as resp:
+        rows = json.loads(resp.read().decode("utf-8"))
+    versions = []
+    for row in rows if isinstance(rows, list) else []:
+        name = str((row or {}).get("name") or "")
+        match = re.fullmatch(pattern, name)
+        if match:
+            versions.append(match.group(1))
+    if not versions:
+        return None
+    versions.sort(key=_version_tuple)
+    return versions[-1]
+
+
+def _ffmpeg_local():
+    candidates = []
+    custom = str(config.get("custom_ffmpeg_path", "") or "").strip()
+    if custom:
+        candidates.append(custom)
+    candidates.append(os.path.join(BIN_DIR, "ffmpeg.exe"))
+    found = shutil.which("ffmpeg")
+    if found:
+        candidates.append(found)
+    for exe in candidates:
+        if exe and os.path.isfile(exe):
+            raw = _run_version_command(
+                [exe, "-version"], r"ffmpeg version\s+(\S+)"
+            )
+            if raw:
+                if raw.lower().startswith("n-"):
+                    # Builds nightly do BtbN usam N-<build>-g<hash>-<AAAAMMDD>.
+                    date = re.search(r"(\d{8})$", raw)
+                    if date:
+                        day = date.group(1)
+                        return exe, f"nightly {day[:4]}-{day[4:6]}-{day[6:]}"
+                return exe, raw.split("-")[0]
+            return exe, None
+    return None, None
+
+
+def _deno_local():
+    candidates = [os.path.join(BIN_DIR, "deno.exe")]
+    found = shutil.which("deno")
+    if found:
+        candidates.append(found)
+    for exe in candidates:
+        if exe and os.path.isfile(exe):
+            return exe, _run_version_command([exe, "--version"], r"deno\s+(\d+\.\d+\.\d+)")
+    return None, None
+
+
+def _webview2_local():
+    try:
+        import winreg
+    except Exception:
+        return None
+    guid = WEBVIEW2_CLIENT_GUID
+    paths = (
+        ("SOFTWARE\\Microsoft\\EdgeUpdate\\Clients\\" + guid, winreg.HKEY_LOCAL_MACHINE),
+        ("SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\" + guid, winreg.HKEY_LOCAL_MACHINE),
+        ("SOFTWARE\\Microsoft\\EdgeUpdate\\Clients\\" + guid, winreg.HKEY_CURRENT_USER),
+    )
+    for path, root in paths:
+        try:
+            with winreg.OpenKey(root, path) as key:
+                value, _ = winreg.QueryValueEx(key, "pv")
+                if value:
+                    return str(value)
+        except Exception:
+            continue
+    return None
+
+
+def _dotnet_target_cycle():
+    """Linha de .NET alvo do launcher (net8.0-windows no projeto atual)."""
+    csproj = os.path.join(APP_DIR, "MediaDeskLauncher.csproj")
+    try:
+        if os.path.isfile(csproj):
+            with open(csproj, "r", encoding="utf-8-sig") as fh:
+                match = re.search(r"<TargetFramework>net(\d+\.\d+)", fh.read())
+                if match:
+                    return match.group(1)
+    except Exception:
+        pass
+    return "8.0"
+
+
+def _dotnet_system_runtime(target=None):
+    """Maior runtime .NET do sistema, opcionalmente limitado a uma linha."""
+    try:
+        proc = subprocess.run(
+            ["dotnet", "--list-runtimes"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        output = (proc.stdout or "") + "\n" + (proc.stderr or "")
+        versions = []
+        for match in re.finditer(
+            r"Microsoft\.(?:WindowsDesktop|NETCore)\.App\s+(\d+\.\d+\.\d+)",
+            output,
+        ):
+            version = match.group(1)
+            if target and not version.startswith(str(target) + "."):
+                continue
+            versions.append(version)
+        return max(versions, key=_version_tuple) if versions else None
+    except Exception:
+        return None
+
+
+def _dotnet_bundled_version():
+    """Versao incluida no build auto-contido, quando o runtimeconfig existe."""
+    candidates = (
+        os.path.join(APP_DIR, "Media Desk.runtimeconfig.json"),
+        os.path.join(APP_DIR, "build", "portable", "launcher", "Media Desk.runtimeconfig.json"),
+        os.path.join(
+            APP_DIR, "bin", "Release", "net8.0-windows", "win-x64",
+            "Media Desk.runtimeconfig.json",
+        ),
+        # Nomes antigos (pacotes anteriores a renomeacao).
+        os.path.join(APP_DIR, "YT-DLP-Media-Desk.runtimeconfig.json"),
+        os.path.join(APP_DIR, "build", "portable", "launcher", "YT-DLP-Media-Desk.runtimeconfig.json"),
+    )
+    for path in candidates:
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            frameworks = (data.get("runtimeOptions") or {}).get("includedFrameworks") or []
+            for framework in frameworks:
+                if not isinstance(framework, dict):
+                    continue
+                name = str(framework.get("name") or "")
+                version = str(framework.get("version") or "")
+                if name in ("Microsoft.WindowsDesktop.App", "Microsoft.NETCore.App") and version:
+                    return version
+        except Exception:
+            continue
+    return None
+
+
+def _dotnet_local():
+    """Devolve (versao, incluido, linha) para o runtime que o launcher executa."""
+    bundled = _dotnet_bundled_version()
+    if bundled:
+        return bundled, True, ".".join(bundled.split(".")[:2])
+
+    csproj = os.path.join(APP_DIR, "MediaDeskLauncher.csproj")
+    target = None
+    self_contained = False
+    try:
+        if os.path.isfile(csproj):
+            with open(csproj, "r", encoding="utf-8-sig") as fh:
+                text = fh.read()
+            match = re.search(r"<TargetFramework>net(\d+\.\d+)", text)
+            if match:
+                target = match.group(1)
+            self_contained = bool(re.search(
+                r"<SelfContained>\s*true\s*</SelfContained>", text, re.I
+            ))
+    except Exception:
+        pass
+
+    if target and self_contained:
+        # O launcher viaja com o runtime incluido; a versao exata do patch
+        # nao fica exposta no pacote portatil, por isso nao inventamos uma.
+        return target + " (incluído)", True, target
+    if target:
+        version = _dotnet_system_runtime(target)
+        if version:
+            return version, False, target
+        return target + " (incluído)", True, target
+
+    version = _dotnet_system_runtime()
+    if version:
+        return version, False, ".".join(version.split(".")[:2])
+    exe = os.path.join(APP_DIR, "Media Desk.exe")
+    if os.path.isfile(exe):
+        return "8.0 (incluído)", True, "8.0"
+    return None, False, None
+
+
+def _library_entry(lib_id, name, installed, latest, present, url,
+                   auto=False, status_override=None):
+    if status_override:
+        status = status_override
+    elif auto:
+        status = "auto"
+    elif not present or not installed:
+        status = "missing"
+    elif latest and _is_newer(latest, installed):
+        status = "update"
+    elif latest:
+        status = "ok"
+    else:
+        status = "unknown"
+    action = ""
+    if status in ("update", "missing"):
+        if lib_id == "ytdlp":
+            action = "update_ytdlp"
+        elif lib_id == "ffmpeg":
+            action = "update_ffmpeg"
+        else:
+            action = "open"
+    elif url and status == "unknown":
+        action = "open"
+    return {
+        "id": lib_id,
+        "name": name,
+        "installed": installed,
+        "latest": latest,
+        "present": bool(present),
+        "status": status,
+        "action": action,
+        "url": url,
+    }
+
+
+def _compute_libraries():
+    """Verificacao completa (locais + rede). Pode demorar varios segundos."""
+    now = time.time()
+
+    def safe(fn, *args):
+        try:
+            return fn(*args)
+        except Exception:
+            return None
+
+    dotnet_cycle = _dotnet_target_cycle()
+    # As deteções locais e as consultas online correm em paralelo. Assim o
+    # splash nao espera primeiro pela rede e depois por cada executavel.
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        latest_futures = {
+            "ytdlp": pool.submit(safe, _github_latest_release, "yt-dlp/yt-dlp"),
+            "deno": pool.submit(safe, _github_latest_release, "denoland/deno"),
+            "python": pool.submit(safe, _latest_cycle, "python"),
+            "ffmpeg": pool.submit(safe, _latest_cycle, "ffmpeg"),
+            "dotnet": pool.submit(safe, _latest_cycle, "dotnet", dotnet_cycle),
+        }
+        local_futures = {
+            "ytdlp": pool.submit(safe, _local_ytdlp_version),
+            "ffmpeg": pool.submit(safe, _ffmpeg_local),
+            "deno": pool.submit(safe, _deno_local),
+            "webview2": pool.submit(safe, _webview2_local),
+            "dotnet": pool.submit(safe, _dotnet_local),
+        }
+        latest = {name: future.result() for name, future in latest_futures.items()}
+        ytdlp_current = local_futures["ytdlp"].result()
+        ffmpeg_exe, ffmpeg_current = local_futures["ffmpeg"].result() or (None, None)
+        deno_exe, deno_current = local_futures["deno"].result() or (None, None)
+        webview2_current = local_futures["webview2"].result()
+        dotnet_current, dotnet_bundled, _dotnet_cycle = (
+            local_futures["dotnet"].result() or (None, False, None)
+        )
+
+    ffmpeg_nightly = str(ffmpeg_current or "").startswith("nightly")
+    libraries = [
+        _library_entry(
+            "ytdlp", "yt-dlp", ytdlp_current, latest["ytdlp"],
+            bool(ytdlp_current), "https://github.com/yt-dlp/yt-dlp/releases/latest",
+        ),
+        _library_entry(
+            "ffmpeg", "FFmpeg", ffmpeg_current, latest["ffmpeg"],
+            bool(ffmpeg_exe), "https://github.com/BtbN/FFmpeg-Builds/releases/latest",
+            status_override="nightly" if ffmpeg_nightly else None,
+        ),
+        _library_entry(
+            "python", "Python", platform.python_version(), latest["python"],
+            True, "https://www.python.org/downloads/",
+        ),
+        _library_entry(
+            "deno", "Deno", deno_current, latest["deno"],
+            bool(deno_exe), "https://github.com/denoland/deno/releases/latest",
+        ),
+        _library_entry(
+            "webview2", "Microsoft Edge WebView2", webview2_current, None,
+            bool(webview2_current), "https://developer.microsoft.com/microsoft-edge/webview2/",
+            auto=True,
+        ),
+        _library_entry(
+            "dotnet", ".NET", dotnet_current, latest["dotnet"],
+            bool(dotnet_current), "https://dotnet.microsoft.com/download",
+            status_override="bundled" if (dotnet_bundled and dotnet_current) else None,
+        ),
+    ]
+    offline = not any((latest["ytdlp"], latest["python"], latest["ffmpeg"], latest["dotnet"], latest["deno"]))
+    result = {
+        "libraries": libraries,
+        "checked_at": datetime.now().isoformat(timespec="seconds"),
+        "offline": bool(offline),
+        "updates_available": sum(1 for lib in libraries if lib["status"] in ("update", "missing")),
+    }
+    _libraries_cache.update({"quando": now, "dados": result})
+    return result
+
+
+def _libraries_placeholder():
+    """Resposta minima e instantanea enquanto a verificacao corre em segundo plano."""
+    return {
+        "libraries": [],
+        "checked_at": None,
+        "offline": False,
+        "updates_available": 0,
+        "pending": True,
+    }
+
+
+def _libraries_disk_cache():
+    """Carrega (uma vez) o ultimo resultado guardado em data/libraries_cache.json."""
+    with _libraries_lock:
+        if _libraries_cache["loaded"]:
+            return
+        _libraries_cache["loaded"] = True
+    data = load_json(LIBRARIES_CACHE_FILE, None)
+    if not isinstance(data, dict) or not isinstance(data.get("libraries"), list):
+        return
+    try:
+        when = float(data.get("_cached_at") or 0)
+    except Exception:
+        when = 0.0
+    data = {key: value for key, value in data.items() if key != "_cached_at"}
+    with _libraries_lock:
+        if not _libraries_cache["dados"]:
+            _libraries_cache["quando"] = when
+            _libraries_cache["dados"] = data
+
+
+def _libraries_refresh_async():
+    """Arranca (se ainda nao correr) uma verificacao completa em segundo plano."""
+    with _libraries_lock:
+        if _libraries_cache["running"]:
+            return False
+        _libraries_cache["running"] = True
+        _libraries_cache["done"].clear()
+
+    def worker():
+        try:
+            result = _compute_libraries()
+            with _libraries_lock:
+                _libraries_cache["dados"] = result
+                _libraries_cache["quando"] = time.time()
+            try:
+                os.makedirs(os.path.dirname(LIBRARIES_CACHE_FILE), exist_ok=True)
+                save_json(LIBRARIES_CACHE_FILE, dict(result, _cached_at=time.time()))
+            except Exception:
+                pass
+        except Exception as exc:
+            try:
+                print(f"[AVISO] Verificacao de bibliotecas falhou: {exc}")
+            except Exception:
+                pass
+        finally:
+            with _libraries_lock:
+                _libraries_cache["running"] = False
+            _libraries_cache["done"].set()
+
+    thread = threading.Thread(target=worker, daemon=True, name="libraries-refresh")
+    _libraries_cache["thread"] = thread
+    thread.start()
+    return True
+
+
+def check_libraries(force=False, background=False):
+    """Verifica as bibliotecas instaladas e compara-as com as versoes mais recentes.
+
+    background=True devolve imediatamente o ultimo resultado conhecido (mesmo
+    que antigo) e atualiza-o em segundo plano. E o modo usado pelo splash: o
+    arranque nunca fica preso a rede, ao GitHub ou ao `yt-dlp --version`.
+    """
+    _libraries_disk_cache()
+    now = time.time()
+    with _libraries_lock:
+        dados = _libraries_cache["dados"]
+        quando = _libraries_cache["quando"] or 0.0
+        running = _libraries_cache["running"]
+        done = _libraries_cache["done"]
+    age = (now - quando) if quando else None
+
+    if background:
+        if dados is None or age is None or age > LIBRARIES_SPLASH_TTL:
+            _libraries_refresh_async()
+        return dados or _libraries_placeholder()
+
+    if not force and dados is not None and age is not None and age < LIBRARIES_TTL:
+        return dados
+
+    # Pedido explicito de dados atuais: espera pela verificacao em curso (se
+    # existir) em vez de lancar outra em paralelo.
+    if running:
+        done.wait(timeout=60)
+        with _libraries_lock:
+            if _libraries_cache["dados"] is not None:
+                return _libraries_cache["dados"]
+
+    _libraries_refresh_async()
+    done.wait(timeout=60)
+    with _libraries_lock:
+        if _libraries_cache["dados"] is not None:
+            return _libraries_cache["dados"]
+    return dados or _libraries_placeholder()
+
+
+def _quick_hash(path, chunk=256 * 1024):
+    """Hash rapido (tamanho + inicio + fim) para verificar media sem ler GB."""
+    size = os.path.getsize(path)
+    h = hashlib.sha256()
+    h.update(str(size).encode("ascii"))
+    with open(path, "rb") as fh:
+        h.update(fh.read(chunk))
+        if size > chunk * 2:
+            fh.seek(-chunk, os.SEEK_END)
+            h.update(fh.read(chunk))
+    return h.hexdigest()
+
+
+def verify_media_history():
+    """Verifica os media com os hashes guardados nas definicoes cifradas."""
+    stored = config.get("media_hashes")
+    if not isinstance(stored, dict):
+        stored = {}
+    library = scan_downloads()
+    seen = set()
+    verified = new = 0
+    changed = []
+    for kind in ("video", "audio"):
+        for item in library.get(kind, []):
+            url_path = item.get("path") or ""
+            rel = url_path[len("/downloads/"):] if url_path.startswith("/downloads/") else url_path
+            full = os.path.join(get_downloads_dir(), rel.replace("/", os.sep))
+            if not os.path.isfile(full):
+                continue
+            seen.add(url_path)
+            try:
+                digest = _quick_hash(full)
+            except Exception:
+                continue
+            previous = stored.get(url_path)
+            if not previous:
+                new += 1
+            elif previous != digest:
+                changed.append(rel)
+            else:
+                verified += 1
+            stored[url_path] = digest
+    missing = [key for key in list(stored) if key not in seen]
+    for key in missing:
+        stored.pop(key, None)
+
+    history = load_json(HISTORY_FILE, [])
+    history_missing = 0
+    if isinstance(history, list):
+        for entry in history:
+            fp = str((entry or {}).get("file_path") or "")
+            if not fp:
+                continue
+            if fp.startswith("/downloads/"):
+                rel = fp[len("/downloads/"):]
+                full = os.path.join(get_downloads_dir(), rel.replace("/", os.sep))
+            else:
+                full = fp
+            if not os.path.isfile(full):
+                history_missing += 1
+
+    if config.get("media_hashes") != stored:
+        config["media_hashes"] = stored
+        try:
+            save_config(config)
+        except Exception:
+            pass
+    return {
+        "total": len(seen),
+        "ok": verified,
+        "new": new,
+        "changed": changed,
+        "missing": missing,
+        "history_missing": history_missing,
+        "version": APP_VERSION,
+    }
+
+
+# Posicoes validas da pre-visualizacao (grelha 3x3 das definicoes).
+PREVIEW_POSITIONS = (
+    "top-left", "top-center", "top-right",
+    "middle-left", "center", "middle-right",
+    "bottom-left", "bottom-center", "bottom-right",
+)
+
+
 default_config = {
     "theme": "system",
     "language": "pt",
@@ -205,6 +1497,10 @@ default_config = {
     "downloads_mode": "internal",
     "downloads_custom_dir": "",
     "group_by_uploader": False,
+    "embed_metadata": False,
+    "embed_thumbnail": False,
+    "embed_chapters": False,
+    "write_info_json": False,
     "download_delay": 8,
     "download_retries": 2,
     "auto_quality_recommendation": True,
@@ -213,7 +1509,20 @@ default_config = {
     "sub_auto": True,
     "library_filter": "all",
     "categories_per_row": 3,
+    "preview_position": "bottom-center",
     "categories": [],
+    "tooltip_copy_enabled": True,
+    "settings_autosave_enabled": True,
+    "settings_autosave_interval": 30,
+    "online_checks_enabled": True,
+    "automation_enabled": False,
+    "automation_mode": "manual",
+    "automation_interval": 30,
+    "automation_autostart": False,
+    "automation_platforms": [],
+    "clipboard_monitor_enabled": False,
+    "automation_max_age_days": 30,
+    "rss_proposals_max": 12,
     "app_version": APP_VERSION,
     "theme_palette": "indigo",
     "changelog": [
@@ -276,9 +1585,80 @@ default_config = {
         }
     ],
 }
-config = load_json(CONFIG_FILE, default_config)
+config = dict(default_config)
+config.update(load_config())
+if not os.path.exists(CONFIG_FILE):
+    save_config(config)
+APP_RELEASE_REPO = config.get("app_release_repo", "")
+APP_UPDATE_URL = config.get("app_update_url", "")
 if not isinstance(config.get("categories"), list):
     config["categories"] = []
+for _new_key in (
+    "tooltip_copy_enabled",
+    "settings_autosave_enabled",
+    "settings_autosave_interval",
+    "online_checks_enabled",
+    "automation_enabled",
+    "automation_mode",
+    "automation_interval",
+    "automation_autostart",
+    "automation_platforms",
+    "automation_max_age_days",
+    "rss_proposals_max",
+    "embed_metadata",
+    "embed_thumbnail",
+    "embed_chapters",
+    "write_info_json",
+):
+    config.setdefault(_new_key, default_config[_new_key])
+
+
+# Chaves que a interface pode escrever nas definicoes. Tudo o resto e
+# rejeitado: /save_config e alcancavel pelo browser e nao pode servir para
+# injetar chaves internas (versao, changelog, hashes, etc.).
+CONFIG_WRITABLE_KEYS = frozenset({
+    "auto_quality_recommendation",
+    "automation_autostart",
+    "automation_enabled",
+    "automation_interval",
+    "automation_max_age_days",
+    "automation_mode",
+    "automation_platforms",
+    "app_release_repo",
+    "categories",
+    "categories_per_row",
+    "clipboard_monitor_enabled",
+    "cookies_browser",
+    "cookies_method",
+    "custom_ffmpeg_path",
+    "download_delay",
+    "download_retries",
+    "downloads_custom_dir",
+    "downloads_mode",
+    "embed_chapters",
+    "embed_metadata",
+    "embed_thumbnail",
+    "group_by_uploader",
+    "language",
+    "library_filter",
+    "online_checks_enabled",
+    "po_token",
+    "preview_position",
+    "rss_proposals_max",
+    "server_port",
+    "settings_autosave_enabled",
+    "settings_autosave_interval",
+    "sub_auto",
+    "sub_langs",
+    "sub_mode",
+    "theme",
+    "theme_palette",
+    "tooltip_copy_enabled",
+    "use_cookies",
+    "use_po_token",
+    "visitor_data",
+    "write_info_json",
+})
 
 
 def get_downloads_dir():
@@ -573,7 +1953,7 @@ def clean_media_title(file_path):
     name = os.path.basename(file_path)
     return os.path.splitext(name)[0]
 
-def save_history_entry(url, download_type, status="success", file_path=None, title=None, platform=None, media_type=None):
+def save_history_entry(url, download_type, status="success", file_path=None, title=None, platform=None, media_type=None, metadata=None):
     """Regista uma entrada no histórico com associação ao ficheiro."""
     history = load_json(HISTORY_FILE, [])
     entry = {
@@ -590,6 +1970,22 @@ def save_history_entry(url, download_type, status="success", file_path=None, tit
     if len(history) > 1000:
         history = history[:1000]
     save_json(HISTORY_FILE, history)
+    if status == "success":
+        # Efeito secundario: alimenta o ficheiro cifrado de atividade. Falhas
+        # aqui nunca podem marcar o download como falhado.
+        try:
+            record_activity_entry(
+                _activity_entry(
+                    url,
+                    file_path,
+                    media_type=media_type,
+                    title=title,
+                    platform=entry["platform"],
+                    meta=metadata,
+                )
+            )
+        except Exception as exc:
+            print(f"[AVISO] Atividade nao registada: {exc}")
 
 
 def get_folder_size(path):
@@ -714,7 +2110,15 @@ def scan_downloads():
                     return entry_platform(cand[1])
         return "local"
 
+    thumb_exts = (".jpg", ".jpeg", ".png", ".webp")
     for root, _, files in os.walk(ddir):
+        # Capas guardadas ao lado do media (sidecar) para usar como miniatura
+        # na mediateca e na Atividade.
+        thumbnails = {}
+        for name in files:
+            stem, sext = os.path.splitext(name)
+            if sext.lower() in thumb_exts:
+                thumbnails.setdefault(stem.lower(), name)
         for f in files:
             ext = os.path.splitext(f)[1].lower()
             if ext not in video_exts and ext not in audio_exts:
@@ -722,6 +2126,11 @@ def scan_downloads():
             full = os.path.join(root, f)
             rel = os.path.relpath(full, ddir).replace("\\", "/")
             url_path = f"/downloads/{rel}"
+            thumb_name = thumbnails.get(os.path.splitext(f)[0].lower())
+            thumb_url = None
+            if thumb_name:
+                thumb_rel = os.path.relpath(os.path.join(root, thumb_name), ddir).replace("\\", "/")
+                thumb_url = f"/downloads/{thumb_rel}"
             parts = rel.split("/")
             # O primeiro nivel pode ser uma gaveta: nesse caso a origem
             # (uploader) passa a ser o nivel seguinte.
@@ -734,6 +2143,7 @@ def scan_downloads():
             item = {
                 "name": f,
                 "path": url_path,
+                "thumbnail": thumb_url,
                 "size": os.path.getsize(full),
                 "uploader": folder,
                 "category": category,
@@ -966,7 +2376,7 @@ def remove_category(name, dissolve=True):
                 pass
 
     config["categories"] = [c for c in get_categories_full() if c["name"] != clean]
-    save_json(CONFIG_FILE, config)
+    save_config(config)
     return True, None, moved
 
 
@@ -1011,6 +2421,65 @@ def check_dependencies():
                 os.remove(zip_path)
             except Exception as e:
                 broadcast_log(f"[ERRO] FFmpeg: {e}")
+
+
+def _start_dependency_check():
+    _dependencies_ready.clear()
+
+    def worker():
+        try:
+            check_dependencies()
+        except Exception as exc:
+            message = f"[ERRO] Verificação de dependências: {exc}"
+            print(message)
+            broadcast_log(message)
+        finally:
+            _dependencies_ready.set()
+
+    try:
+        threading.Thread(target=worker, daemon=True, name="dependency-check").start()
+    except Exception as exc:
+        _dependencies_ready.set()
+        message = f"[ERRO] Não foi possível iniciar a verificação de dependências: {exc}"
+        print(message)
+        broadcast_log(message)
+
+
+def update_ffmpeg_worker():
+    """Descarrega a build mais recente do FFmpeg e substitui o executavel."""
+    custom = str(config.get("custom_ffmpeg_path", "") or "").strip()
+    target = custom if custom and os.path.isabs(custom) and os.path.isfile(custom) else os.path.join(BIN_DIR, "ffmpeg.exe")
+    os.makedirs(os.path.dirname(target) or BIN_DIR, exist_ok=True)
+    temp_zip = os.path.join(BIN_DIR, "ffmpeg-update.zip")
+    temp_exe = target + ".new"
+    broadcast_log("[UPDATE] A descarregar a versao mais recente do FFmpeg...")
+    try:
+        if not download_file(FFMPEG_URL, temp_zip):
+            broadcast_log("[ERRO] Nao foi possivel descarregar o FFmpeg.")
+            return
+        with zipfile.ZipFile(temp_zip, "r") as archive:
+            member = next((n for n in archive.namelist() if n.lower().endswith("ffmpeg.exe")), None)
+            if not member:
+                broadcast_log("[ERRO] O pacote do FFmpeg nao contem ffmpeg.exe.")
+                return
+            with archive.open(member) as src, open(temp_exe, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+        os.replace(temp_exe, target)
+        broadcast_log(f"[OK] FFmpeg atualizado em {target}.")
+        _libraries_cache.update({"quando": 0.0, "dados": None})
+    except Exception as exc:
+        broadcast_log(f"[ERRO] FFmpeg: {exc}")
+        try:
+            if os.path.isfile(temp_exe):
+                os.remove(temp_exe)
+        except Exception:
+            pass
+    finally:
+        try:
+            if os.path.isfile(temp_zip):
+                os.remove(temp_zip)
+        except Exception:
+            pass
 
 
 # ========== ESTRATÉGIAS DE AUTENTICAÇÃO ==========
@@ -1103,15 +2572,33 @@ def pick_final_file(path):
     return best or path
 
 
-def execute_cmd_and_check(cmd):
+def _aggregate_transfer_progress(
+    percent, format_index=1, format_count=1, playlist_index=1, playlist_count=1
+):
+    """Agrega el progresso real das transferências de formatos e itens."""
+    local = max(0.0, min(100.0, float(percent)))
+    format_count = max(1, int(format_count))
+    format_index = min(max(1, int(format_index)), format_count)
+    if format_count > 1:
+        local = ((format_index - 1) + local / 100.0) / format_count * 100.0
+    playlist_count = max(1, int(playlist_count))
+    playlist_index = min(max(1, int(playlist_index)), playlist_count)
+    if playlist_count > 1:
+        local = ((playlist_index - 1) + local / 100.0) / playlist_count * 100.0
+    return max(0.0, min(100.0, local))
+
+
+def execute_cmd_and_check(cmd, progress_context=None):
     global current_process, download_paused
+    progress_base, progress_span = progress_context or (0.0, 1.0)
+    progress_base = max(0.0, min(1.0, float(progress_base)))
+    progress_span = max(0.0, min(1.0 - progress_base, float(progress_span)))
     broadcast("STATUS: A processar...")
     broadcast("LOG_CLEAR: true")
-    # Cada tentativa/estratégia recomeça a barra do zero. O reset NO FIM deste
-    # processo (que existia no finally) apagava o progresso logo a seguir a
-    # terminar e, em downloads com várias estratégias de fallback, repunha a
-    # barra a 0% entre tentativas — parecia que a barra "não avançava".
-    broadcast("PROGRESS: 0")
+    # Cada tentativa/estratégia recomeça no início do seu segmento (que pode
+    # ser posterior a zero num trabalho com vários URLs). Não repor no finally
+    # evita apagar o progresso logo após cada transferência.
+    broadcast(f"PROGRESS: {progress_base * 100:.1f}")
     broadcast("PHASE: info")
 
     my_env = os.environ.copy()
@@ -1148,12 +2635,17 @@ def execute_cmd_and_check(cmd):
         regex_audio = re.compile(r"\[ExtractAudio\] Destination: (.*)")
         regex_dest = re.compile(r"\[download\] Destination: (.*)")
         regex_exists = re.compile(r"\[download\] (.*) has already been downloaded")
+        regex_playlist_item = re.compile(
+            r"Downloading item\s+(\d+)\s+of\s+(\d+)", re.IGNORECASE
+        )
         # O yt-dlp junta video e audio na mesma linha de formatos ("...: 137+140").
         # Dividimos a barra pelo numero de transferencias para nao a encher logo
         # na primeira (video) e recomecar na segunda (audio).
         regex_formats = re.compile(r"Downloading \d+ format\(s\): (.+)")
         n_formats = 1
         format_index = 0
+        playlist_index = 1
+        playlist_total = 1
         progress_floor = 0.0
         error_detected = False
         downloaded_file_path = None
@@ -1235,7 +2727,17 @@ def execute_cmd_and_check(cmd):
             if fmts:
                 n_formats = max(1, fmts.group(1).count("+") + 1)
                 format_index = 0
-                progress_floor = 0.0
+
+            item_match = regex_playlist_item.search(line)
+            if item_match:
+                playlist_index = max(1, int(item_match.group(1)))
+                playlist_total = max(1, int(item_match.group(2)))
+                progress_floor = (
+                    (min(playlist_index, playlist_total) - 1) / playlist_total
+                ) * 100
+                broadcast(
+                    f"PROGRESS: {progress_base * 100 + progress_span * progress_floor:.1f}"
+                )
 
             fd = regex_dest.search(line) or regex_exists.search(line)
             if fd:
@@ -1266,12 +2768,18 @@ def execute_cmd_and_check(cmd):
                 # fatia da barra e nunca recua. A faixa 95-100% fica reservada
                 # para o fim real do trabalho, para a barra nao mostrar
                 # "concluido" enquanto o download ainda decorre.
-                value = float(p.group(1))
-                if n_formats > 1:
-                    idx = min(max(format_index, 1), n_formats)
-                    value = ((idx - 1) + value / 100.0) / n_formats * 100.0
+                value = _aggregate_transfer_progress(
+                    float(p.group(1)),
+                    format_index,
+                    n_formats,
+                    playlist_index,
+                    playlist_total,
+                )
                 progress_floor = max(progress_floor, value)
-                broadcast(f"PROGRESS: {min(progress_floor, 95):.1f}")
+                broadcast(
+                    f"PROGRESS: "
+                    f"{min(99.5, progress_base * 100 + progress_span * min(progress_floor, 95)):.1f}"
+                )
             else:
                 clean = line.strip()
                 if clean:
@@ -1286,12 +2794,10 @@ def execute_cmd_and_check(cmd):
         if error_detected or process.returncode != 0:
             return False, None
         final_path = pick_final_file(downloaded_file_path)
-        # Garante que a barra fica cheia quando o download termina com sucesso
-        # (mesmo em casos em que o yt-dlp não emite a última linha de progresso,
-        # como ficheiros já descarregados, junções ou extração de áudio).
-        broadcast("PROGRESS: 100")
-        broadcast("STATUS: Download concluído")
-        broadcast("UPDATE_LIBRARY: true")
+        # Ficheiros já existentes e conversões podem não emitir progresso; o
+        # segmento chega perto do fim, mas só a fila confirma 100% após registar
+        # o histórico e concluir o trabalho inteiro.
+        broadcast(f"PROGRESS: {min(99.5, (progress_base + progress_span) * 100):.1f}")
         return True, final_path
 
     except Exception as e:
@@ -1328,8 +2834,60 @@ def _title_field_len(base_dir, fields=2):
     return max(MIN_FIELD_LEN, free // max(1, fields))
 
 
+def _read_meta_file(meta_file, file_path=None):
+    """Le a ultima linha JSON valida escrita por --print-to-file."""
+    if not meta_file or not os.path.exists(meta_file):
+        return {}
+    try:
+        with open(meta_file, "r", encoding="utf-8-sig") as fh:
+            lines = [line.strip() for line in fh if line.strip()]
+    except Exception:
+        return {}
+    entries = []
+    for line in lines:
+        try:
+            data = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(data, dict):
+            entries.append(data)
+    if not entries:
+        return {}
+    if file_path:
+        wanted = os.path.basename(_resolve_download_path(file_path) or file_path)
+        for entry in reversed(entries):
+            if os.path.basename(str(entry.get("filepath") or "")) == wanted:
+                return entry
+    return entries[-1]
+
+
+def _discard_meta_file(meta_file):
+    if not meta_file:
+        return
+    try:
+        os.remove(meta_file)
+    except Exception:
+        pass
+
+
+def _cleanup_activity_temp(max_age=24 * 3600):
+    """Remove ficheiros .meta_* de execucoes interrompidas."""
+    directory = os.path.join(APP_DIR, "data")
+    try:
+        now = time.time()
+        for name in os.listdir(directory):
+            if not name.endswith(".jsonl") or not name.startswith(".meta_"):
+                continue
+            path = os.path.join(directory, name)
+            if now - os.path.getmtime(path) > max_age:
+                os.remove(path)
+    except Exception:
+        pass
+
+
 def run_download_with_fallback(
-    url, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto, options=None
+    url, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto,
+    options=None, progress_context=None
 ):
     options = options or {}
     broadcast_log(f"[INFO] Iniciando download: {url}")
@@ -1402,6 +2960,9 @@ def run_download_with_fallback(
         base_cmd.append("--embed-metadata")
     if options.get("embed_thumbnail"):
         base_cmd.append("--embed-thumbnail")
+        # Guarda tambem a capa ao lado do ficheiro (sidecar). E esta imagem que
+        # a mediateca e a Atividade usam como miniatura do item.
+        base_cmd.append("--write-thumbnail")
         # O contentor decide o formato de imagem aceite: webm quer webp; mp4/mkv
         # e o áudio aceitam jpg/png. Sem esta conversão, capas em webp não
         # conseguiam ser incorporadas (ex.: em mp4) e a opção falhava em silêncio.
@@ -1434,23 +2995,52 @@ def run_download_with_fallback(
 
     base_cmd.append(url)
 
+    # Metadados estruturados de cada item (uma linha JSON por video). E escrito
+    # num ficheiro temporario e lido no fim; nao depende de o utilizador ter
+    # ativado --write-info-json nem de o yt-dlp ter mudado o formato de saida.
+    meta_file = None
+    try:
+        meta_dir = os.path.join(APP_DIR, "data")
+        os.makedirs(meta_dir, exist_ok=True)
+        meta_file = os.path.join(meta_dir, f".meta_{uuid.uuid4().hex}.jsonl")
+        base_cmd.extend(
+            [
+                "--print-to-file",
+                "after_move:%(.{id,title,channel,channel_id,channel_url,uploader,uploader_id,"
+                "uploader_url,creator,artist,webpage_url,original_url,duration,view_count,"
+                "upload_date,release_date,extractor,extractor_key,filepath,ext,description,"
+                "tags,thumbnail,width,height})j",
+                meta_file,
+            ]
+        )
+    except Exception as exc:
+        broadcast_log(f"[AVISO] Metadados indisponiveis: {exc}")
+        meta_file = None
+
     strategies = build_command_with_fallback(
         url, base_cmd, mode, quality, vformat, subtitles, sub_mode, sub_langs, sub_auto
     )
     
     for name, cmd in strategies:
         if download_cancel_requested:
-            return False, None
+            _discard_meta_file(meta_file)
+            return False, None, {}
         broadcast_log(f"[INFO] A tentar: {name}")
-        success, file_path = execute_cmd_and_check(cmd)
+        if progress_context is None:
+            success, file_path = execute_cmd_and_check(cmd)
+        else:
+            success, file_path = execute_cmd_and_check(cmd, progress_context)
         if success:
             broadcast_log(f"[OK] Sucesso com {name}")
-            return True, file_path
+            meta = _read_meta_file(meta_file, file_path)
+            _discard_meta_file(meta_file)
+            return True, file_path, meta
         else:
             broadcast_log(f"[ERRO] Falha na estratégia: {name}")
 
+    _discard_meta_file(meta_file)
     broadcast_log("[ERRO] Todas as estratégias falharam.")
-    return False, None
+    return False, None, {}
 
 
 _QUEUE_TERMINAL_STATES = {"completed", "failed", "cancelled"}
@@ -1923,7 +3513,7 @@ def _process_queue_job(job):
                 with _queue_lock:
                     job["attempt"] = attempt + 1
                     _persist_queue_locked()
-                success, file_path = run_download_with_fallback(
+                success, file_path, file_meta = run_download_with_fallback(
                     url,
                     job.get("mode", "video"),
                     job.get("quality", "best"),
@@ -1933,6 +3523,11 @@ def _process_queue_job(job):
                     job.get("sub_langs", "all"),
                     job.get("sub_auto", True),
                     item_options,
+                    (
+                        (index / max(1, len(urls)))
+                        + item_index / (max(1, len(urls)) * max(1, len(items))),
+                        1 / (max(1, len(urls)) * max(1, len(items))),
+                    ),
                 )
                 if success or download_cancel_requested:
                     break
@@ -1966,6 +3561,7 @@ def _process_queue_job(job):
                 title=clean_media_title(file_path),
                 platform=detect_platform(url),
                 media_type=job.get("mode", "video"),
+                metadata=file_meta if success else None,
             )
             if not success:
                 failed = True
@@ -1991,6 +3587,7 @@ def _process_queue_job(job):
 
 def _queue_worker():
     global _queue_worker_running, _active_download_id, download_cancel_requested
+    _dependencies_ready.wait()
     while True:
         job = None
         wait_seconds = None
@@ -2057,9 +3654,68 @@ def _queue_worker():
                 except OSError as e:
                     broadcast_log(f"[AVISO] Não foi possível limpar o controlo {os.path.basename(control_file)}: {e}")
             _persist_queue_locked()
-        broadcast("STATUS: " + ("Download concluído" if status == "completed" else ("Cancelado" if status == "cancelled" else "Download falhou")))
-        broadcast("DOWNLOAD_FINISHED: true")
-        _broadcast_queue()
+        with _queue_lock:
+            if status == "completed":
+                try:
+                    if job in _queue_jobs:
+                        _queue_jobs.remove(job)
+                    _persist_queue_locked()
+                except ValueError:
+                    pass
+                _active_download_id = None
+                download_cancel_requested = False
+                for control_file in (PAUSE_FILE, CANCEL_FILE):
+                    try:
+                        os.remove(control_file)
+                    except FileNotFoundError:
+                        pass
+                    except OSError as e:
+                        broadcast_log(f"[AVISO] Não foi possível limpar o controlo {os.path.basename(control_file)}: {e}")
+                broadcast("STATUS: Download concluído")
+                broadcast("PROGRESS: 100")
+                broadcast(
+                    "DOWNLOAD_FINISHED: "
+                    + json.dumps(
+                        {
+                            "id": job["id"],
+                            "status": status,
+                            "origin": job.get("source", "input"),
+                            "urls": job.get("urls", []) if job.get("source", "input") == "input" else [],
+                        },
+                        ensure_ascii=False,
+                    )
+                )
+                broadcast("QUEUE_UPDATED: true")
+                _queue_wakeup.set()
+                continue
+            job["status"] = status
+            job["error"] = error
+            job["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+            _active_download_id = None
+            download_cancel_requested = False
+            for control_file in (PAUSE_FILE, CANCEL_FILE):
+                try:
+                    os.remove(control_file)
+                except FileNotFoundError:
+                    pass
+                except OSError as e:
+                    broadcast_log(f"[AVISO] Não foi possível limpar o controlo {os.path.basename(control_file)}: {e}")
+            _persist_queue_locked()
+        broadcast("STATUS: " + ("Cancelado" if status == "cancelled" else "Download falhou"))
+        broadcast(
+            "DOWNLOAD_FINISHED: "
+            + json.dumps(
+                {
+                    "id": job["id"],
+                    "status": status,
+                    "origin": job.get("source", "input"),
+                    "urls": job.get("urls", []) if job.get("source", "input") == "input" else [],
+                },
+                ensure_ascii=False,
+            )
+        )
+        broadcast("QUEUE_UPDATED: true")
+        _queue_wakeup.set()
 
 
 def _start_queue_worker():
@@ -2077,6 +3733,7 @@ def _enqueue_download(req):
         job = {
             **validated,
             "id": uuid.uuid4().hex,
+            "source": req.get("source") if req.get("source") == "rss" else "input",
             "status": "queued",
             "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
             "attempt": 0,
@@ -2163,6 +3820,24 @@ class Handler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+    def _origin_allowed(self):
+        """Bloqueia pedidos de escrita vindos de paginas externas.
+
+        O servidor so deve responder a interface local. Sem esta verificacao,
+        qualquer site aberto no browser podia enviar POSTs para
+        http://127.0.0.1:<porta> (CSRF) e alterar definicoes ou apagar ficheiros.
+        """
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True
+        if origin.lower() == "null":
+            return False
+        try:
+            host = (urlparse(origin).hostname or "").lower()
+        except Exception:
+            return False
+        return host in ("127.0.0.1", "localhost", "::1")
+
     def send_error(self, code, message=None, explain=None):
         try:
             if message:
@@ -2212,27 +3887,25 @@ class Handler(SimpleHTTPRequestHandler):
         path = unquote(urlparse(self.path).path)
 
         if path.startswith("/downloads/"):
-            rel = path[11:]
-            if ".." in rel:
-                self.send_response(404)
-                self.end_headers()
-                return
-            fp = os.path.join(get_downloads_dir(), rel.replace("/", os.sep))
-            if os.path.exists(fp) and os.path.isfile(fp):
+            # resolve_download_file valida o caminho e garante que o ficheiro
+            # fica dentro da pasta de downloads (um caminho absoluto como
+            # /downloads/C:/Windows/... nao pode escapar).
+            fp = resolve_download_file(path)
+            if fp and os.path.isfile(fp):
                 self.send_response(200)
                 mime, _ = mimetypes.guess_type(fp)
                 if not mime:
                     mime = "application/octet-stream"
                 self.send_header("Content-type", mime)
                 self.send_header("Content-Length", str(os.path.getsize(fp)))
+                self.send_header("X-Content-Type-Options", "nosniff")
                 self.end_headers()
                 with open(fp, "rb") as f:
-                    self.wfile.write(f.read())
+                    shutil.copyfileobj(f, self.wfile, 1024 * 1024)
                 return
-            else:
-                self.send_response(404)
-                self.end_headers()
-                return
+            self.send_response(404)
+            self.end_headers()
+            return
 
         if path == "/":
             idx = os.path.join(APP_DIR, "index.html")
@@ -2297,6 +3970,7 @@ class Handler(SimpleHTTPRequestHandler):
             cfg = config.copy()
             cfg["app_version"] = APP_VERSION
             cfg.setdefault("language", "pt")
+            cfg.setdefault("preview_position", "bottom-center")
             self.wfile.write(json.dumps(cfg).encode("utf-8"))
             return
 
@@ -2313,6 +3987,59 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(load_json(HISTORY_FILE, [])).encode("utf-8"))
+            return
+
+        if path == "/automation/status":
+            payload = _automation_status()
+            payload["suggested"] = suggest_rss_from_history()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+            return
+
+        if path == "/rss/channels":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "channels": load_rss_channels(),
+                        "status": _automation_status(),
+                        "suggested": suggest_rss_from_history(),
+                    },
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
+            return
+
+        if path == "/rss/proposals":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {"proposals": load_rss_proposals(), "status": _automation_status()},
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
+            return
+
+        if path == "/rss/suggest":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {"suggested": suggest_rss_from_history(), "focus": analyze_user_focus()},
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
             return
 
         if path == "/get_queue":
@@ -2407,6 +4134,78 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(get_integrity_status()).encode("utf-8"))
             return
 
+        if path == "/check_updates":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            force = "force=1" in (urlparse(self.path).query or "")
+            try:
+                payload = check_updates(force=force)
+            except Exception as exc:
+                payload = {"offline": True, "error": str(exc), "app": {"current": APP_VERSION}}
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+            return
+
+        if path == "/check_libraries":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            force = "force=1" in (urlparse(self.path).query or "")
+            background = "background=1" in (urlparse(self.path).query or "")
+            try:
+                payload = check_libraries(force=force, background=background)
+            except Exception as exc:
+                payload = {"libraries": [], "offline": True, "error": str(exc)}
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+            return
+
+        if path == "/update_ffmpeg":
+            threading.Thread(target=update_ffmpeg_worker, daemon=True).start()
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"started": True}).encode("utf-8"))
+            return
+
+        if path == "/splash_verify":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            try:
+                media = verify_media_history()
+            except Exception as exc:
+                media = {"error": str(exc)}
+            payload = {
+                "version": {
+                    "current": APP_VERSION,
+                    "date": load_json(VERSION_FILE, {}).get("date"),
+                    "build": load_json(VERSION_FILE, {}).get("build"),
+                },
+                "media": media,
+                "integrity": get_integrity_status(),
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+            return
+
+        if path == "/version_status":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            engine = load_json(VERSION_FILE, {}) or {}
+            payload = {
+                "current": APP_VERSION,
+                "date": engine.get("date"),
+                "build": engine.get("build"),
+                "pending": isinstance(engine.get("unreleased"), dict),
+                "integrity": get_integrity_status(),
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+            return
+
         self.send_response(404)
         self.end_headers()
 
@@ -2414,6 +4213,10 @@ class Handler(SimpleHTTPRequestHandler):
         global download_cancel_requested
         length = int(self.headers.get("Content-Length", 0))
         data = self.rfile.read(length).decode("utf-8") if length else "{}"
+        path = unquote(urlparse(self.path).path)
+        if not self._origin_allowed():
+            self.send_error(403, "Origem não autorizada")
+            return
 
         if self.path == "/browse_folder":
             try:
@@ -2492,7 +4295,7 @@ class Handler(SimpleHTTPRequestHandler):
                         "color": color or default_category_color(clean),
                     })
                 config["categories"] = cats
-                save_json(CONFIG_FILE, config)
+                save_config(config)
                 created = []
                 for c in cats:
                     try:
@@ -2570,6 +4373,262 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(400, str(e))
             return
 
+        if path == "/rss/channels":
+            try:
+                req = json.loads(data or "{}")
+                if not isinstance(req, dict):
+                    raise ValueError("Dados inválidos.")
+                action = str(req.get("action") or "add").lower()
+                channels = load_rss_channels()
+                if action in ("add", "upsert"):
+                    norm = _normalize_channel(req)
+                    if len(channels) >= 100:
+                        raise ValueError("Limite de 100 canais atingido.")
+                    wanted = norm["url"].lower()
+                    if wanted and any(
+                        str(c.get("url") or "").strip().lower() == wanted for c in channels
+                    ):
+                        raise ValueError("Este canal já está na lista.")
+                    channel = {
+                        "id": str(uuid.uuid4()),
+                        **norm,
+                        "added_at": int(time.time()),
+                        "last_checked": None,
+                        "last_error": None,
+                    }
+                    channels.append(channel)
+                elif action in ("remove", "delete"):
+                    cid = str(req.get("id") or "").strip()
+                    if not cid:
+                        raise ValueError("Canal não indicado.")
+                    channels = [c for c in channels if c.get("id") != cid]
+                elif action in ("toggle", "enable", "disable"):
+                    cid = str(req.get("id") or "").strip()
+                    if not cid:
+                        raise ValueError("Canal não indicado.")
+                    enabled = bool(req.get("enabled", action != "disable"))
+                    target = next((c for c in channels if c.get("id") == cid), None)
+                    if target is None:
+                        raise ValueError("Canal não encontrado.")
+                    target["enabled"] = enabled
+                else:
+                    raise ValueError("Ação inválida.")
+                if not save_rss_channels(channels):
+                    raise ValueError("Não foi possível guardar a lista de canais.")
+                svc = activity_module()
+                if svc and config.get("automation_enabled"):
+                    try:
+                        svc.request_check(APP_DIR)
+                    except Exception:
+                        pass
+                _json_reply(
+                    self,
+                    200,
+                    {"ok": True, "channels": channels, "status": _automation_status()},
+                )
+            except ValueError as exc:
+                _json_reply(self, 400, {"ok": False, "error": str(exc)})
+            except Exception as exc:
+                _json_reply(self, 500, {"ok": False, "error": str(exc)})
+            return
+
+        if path == "/check_app_update":
+            try:
+                threading.Thread(target=_check_app_update, daemon=True).start()
+                _json_reply(self, 200, {"ok": True})
+            except Exception as exc:
+                _json_reply(self, 500, {"ok": False, "error": str(exc)})
+            return
+
+        if path == "/rss/check":
+            try:
+                req = json.loads(data or "{}")
+            except Exception:
+                req = {}
+            wait = bool(isinstance(req, dict) and req.get("wait"))
+            svc = activity_module()
+            started = False
+            via_service = bool(
+                svc and config.get("automation_enabled") and svc.is_running(APP_DIR)
+            )
+            try:
+                if via_service:
+                    started = bool(svc.request_check(APP_DIR))
+                elif wait and svc:
+                    svc.check_feeds(APP_DIR, force=True)
+                    started = True
+                elif svc:
+                    _rss_check_background()
+                    started = True
+                _json_reply(
+                    self,
+                    200,
+                    {
+                        "ok": started,
+                        "started": started,
+                        "service": via_service,
+                        "status": _automation_status(),
+                        "proposals": load_rss_proposals(),
+                    },
+                )
+            except Exception as exc:
+                _json_reply(self, 500, {"ok": False, "error": str(exc)})
+            return
+
+        if path == "/rss/suggest":
+            _json_reply(
+                self,
+                200,
+                {
+                    "suggested": suggest_rss_from_history(),
+                    "channels": _activity_suggestions(),
+                    "focus": analyze_user_focus(),
+                },
+            )
+            return
+
+        if path == "/rss/proposals":
+            try:
+                req = json.loads(data or "{}")
+                if not isinstance(req, dict):
+                    raise ValueError("Dados inválidos.")
+                action = str(req.get("action") or "").lower()
+                pid = str(req.get("id") or "")
+                proposals = load_rss_proposals()
+                proposed = proposals.get("proposed") or []
+                seen = proposals.get("seen") or []
+                target = next((p for p in proposed if p.get("id") == pid), None)
+                queued = False
+                if action in ("accept", "approve", "download"):
+                    if target is None:
+                        raise ValueError("Proposta não encontrada.")
+                    url = str(target.get("url") or "").strip()
+                    if not url:
+                        raise ValueError("Esta proposta não tem um URL de download.")
+                    if action == "approve" and config.get("automation_mode", "manual") != "auto":
+                        # Em modo manual, aprovar apenas retira da lista; quem
+                        # descarrega é a ação explícita "accept".
+                        status = "approved"
+                    else:
+                        _enqueue_download({
+                            "urls": [url],
+                            "mode": "video",
+                            "quality": "best",
+                            "vformat": "mp4",
+                            "source": "rss",
+                        })
+                        status = "accepted"
+                        queued = True
+                    seen.insert(0, {**target, "status": status, "acted_at": int(time.time())})
+                    proposals["proposed"] = [p for p in proposed if p.get("id") != pid]
+                    svc = activity_module()
+                    if svc:
+                        try:
+                            svc.record_action(target, status, APP_DIR)
+                        except Exception:
+                            pass
+                elif action == "reject":
+                    if target is None:
+                        raise ValueError("Proposta não encontrada.")
+                    seen.insert(0, {**target, "status": "rejected", "acted_at": int(time.time())})
+                    proposals["proposed"] = [p for p in proposed if p.get("id") != pid]
+                    svc = activity_module()
+                    if svc:
+                        try:
+                            svc.record_action(target, "rejected", APP_DIR)
+                        except Exception:
+                            pass
+                elif action in ("clear_done", "clear_seen"):
+                    proposals["seen"] = []
+                elif action in ("clear", "clear_all"):
+                    proposals["proposed"] = []
+                else:
+                    raise ValueError("Ação inválida.")
+                proposals["seen"] = (proposals.get("seen") or seen)[:500]
+                save_rss_proposals(proposals)
+                _json_reply(
+                    self,
+                    200,
+                    {"ok": True, "queued": queued, "proposals": proposals, "status": _automation_status()},
+                )
+            except ValueError as exc:
+                _json_reply(self, 400, {"ok": False, "error": str(exc)})
+            except Exception as exc:
+                _json_reply(self, 500, {"ok": False, "error": str(exc)})
+            return
+
+        if path == "/automation/config":
+            try:
+                req = json.loads(data or "{}")
+                if not isinstance(req, dict):
+                    raise ValueError("Dados inválidos.")
+                updates = {}
+                if "enabled" in req:
+                    updates["automation_enabled"] = bool(req["enabled"])
+                if "mode" in req:
+                    mode = str(req["mode"]).lower()
+                    if mode not in ("manual", "auto"):
+                        raise ValueError("Modo inválido.")
+                    updates["automation_mode"] = mode
+                if "interval" in req:
+                    interval = int(req["interval"])
+                    if interval < 5 or interval > 1440:
+                        raise ValueError("O intervalo tem de estar entre 5 e 1440 minutos.")
+                    updates["automation_interval"] = interval
+                if "autostart" in req:
+                    updates["automation_autostart"] = bool(req["autostart"])
+                if "platforms" in req:
+                    platforms = req["platforms"]
+                    if not isinstance(platforms, list):
+                        raise ValueError("As plataformas têm de ser uma lista.")
+                    clean = []
+                    for item in platforms[:20]:
+                        value = re.sub(r"[^a-z0-9_.\-]+", "", str(item or "").strip().lower())[:40]
+                        if value:
+                            clean.append(value)
+                    updates["automation_platforms"] = clean
+                if "max_age_days" in req:
+                    days = int(req["max_age_days"])
+                    if days < 1 or days > 365:
+                        raise ValueError("A validade das propostas tem de estar entre 1 e 365 dias.")
+                    updates["automation_max_age_days"] = days
+                if "proposals_max" in req:
+                    total = int(req["proposals_max"])
+                    if total < 1 or total > 50:
+                        raise ValueError("O número de propostas tem de estar entre 1 e 50.")
+                    updates["rss_proposals_max"] = total
+                if not updates:
+                    raise ValueError("Nada para atualizar.")
+                config.update(updates)
+                save_config(config)
+                svc = activity_module()
+                if svc:
+                    try:
+                        if config.get("automation_autostart"):
+                            svc.install_autostart(APP_DIR)
+                        else:
+                            svc.remove_autostart()
+                    except Exception as exc:
+                        print(f"[AVISO] Arranque automatico: {exc}")
+                    if config.get("automation_enabled"):
+                        threading.Thread(
+                            target=lambda: svc.start_service(APP_DIR),
+                            name="activity-start",
+                            daemon=True,
+                        ).start()
+                    else:
+                        threading.Thread(
+                            target=lambda: svc.stop_service(APP_DIR),
+                            name="activity-stop",
+                            daemon=True,
+                        ).start()
+                _json_reply(self, 200, {"ok": True, "status": _automation_status()})
+            except ValueError as exc:
+                _json_reply(self, 400, {"ok": False, "error": str(exc)})
+            except Exception as exc:
+                _json_reply(self, 500, {"ok": False, "error": str(exc)})
+            return
+
         if self.path == "/save_config":
             # Nota: config e mutado no lugar (nunca reatribuido), por isso nao
             # precisa da declaracao global - que alias colidiria com o uso de
@@ -2578,12 +4637,122 @@ class Handler(SimpleHTTPRequestHandler):
                 new = json.loads(data)
                 if not isinstance(new, dict):
                     raise ValueError("As definições têm de ser um objeto JSON.")
+                unknown = sorted(set(new) - CONFIG_WRITABLE_KEYS)
+                if unknown:
+                    raise ValueError(
+                        "Definições não reconhecidas: " + ", ".join(unknown[:5])
+                    )
+                if "server_port" in new:
+                    try:
+                        _port = int(new["server_port"])
+                    except (TypeError, ValueError):
+                        raise ValueError("A porta do servidor é inválida.")
+                    if not 1024 <= _port <= 65535:
+                        raise ValueError("A porta do servidor tem de estar entre 1024 e 65535.")
+                    new["server_port"] = _port
+                if "downloads_mode" in new and new["downloads_mode"] not in ("internal", "system", "custom"):
+                    raise ValueError("O destino dos downloads é inválido.")
+                for _str_key, _max_len in (
+                    ("po_token", 4096),
+                    ("visitor_data", 4096),
+                    ("custom_ffmpeg_path", 1024),
+                    ("downloads_custom_dir", 1024),
+                    ("language", 16),
+                    ("theme", 32),
+                    ("theme_palette", 32),
+                    ("cookies_browser", 32),
+                    ("cookies_method", 32),
+                    ("sub_mode", 16),
+                    ("sub_langs", 200),
+                    ("library_filter", 32),
+                    ("app_release_repo", 200),
+                ):
+                    if _str_key not in new:
+                        continue
+                    if new[_str_key] is None:
+                        new.pop(_str_key)
+                        continue
+                    if not isinstance(new[_str_key], str):
+                        raise ValueError(f"O valor de {_str_key} é inválido.")
+                    new[_str_key] = new[_str_key].strip()[:_max_len]
+                for _int_key, _low, _high in (
+                    ("download_delay", 0, 60),
+                    ("download_retries", 0, 20),
+                    ("categories_per_row", 1, 8),
+                ):
+                    if _int_key not in new:
+                        continue
+                    try:
+                        _value = int(new[_int_key])
+                    except (TypeError, ValueError):
+                        raise ValueError(f"O valor de {_int_key} é inválido.")
+                    if not _low <= _value <= _high:
+                        raise ValueError(f"O valor de {_int_key} tem de estar entre {_low} e {_high}.")
+                    new[_int_key] = _value
+                if "categories" in new and not isinstance(new["categories"], list):
+                    raise ValueError("As gavetas têm de ser uma lista.")
                 if "auto_quality_recommendation" in new and not isinstance(
                     new["auto_quality_recommendation"], bool
                 ):
                     raise ValueError("A recomendação automática tem de ser booleana.")
+                if "preview_position" in new and new["preview_position"] not in PREVIEW_POSITIONS:
+                    raise ValueError("A posição da pré-visualização é inválida.")
+                for _bool_key in ("automation_enabled", "automation_autostart"):
+                    if _bool_key in new and not isinstance(new[_bool_key], bool):
+                        raise ValueError("As opções de automatismo têm de ser booleanas.")
+                if "automation_mode" in new and new["automation_mode"] not in ("manual", "auto"):
+                    raise ValueError("O modo de automatismo é inválido.")
+                if "automation_interval" in new:
+                    try:
+                        _automation_interval = int(new["automation_interval"])
+                    except (TypeError, ValueError):
+                        raise ValueError("O intervalo do automatismo é inválido.")
+                    if not 5 <= _automation_interval <= 1440:
+                        raise ValueError("O intervalo do automatismo tem de estar entre 5 e 1440 minutos.")
+                    new["automation_interval"] = _automation_interval
+                if "automation_max_age_days" in new:
+                    try:
+                        _automation_age = int(new["automation_max_age_days"])
+                    except (TypeError, ValueError):
+                        raise ValueError("A validade das propostas é inválida.")
+                    if not 1 <= _automation_age <= 365:
+                        raise ValueError("A validade das propostas tem de estar entre 1 e 365 dias.")
+                    new["automation_max_age_days"] = _automation_age
+                if "rss_proposals_max" in new:
+                    try:
+                        _proposals_max = int(new["rss_proposals_max"])
+                    except (TypeError, ValueError):
+                        raise ValueError("O limite de propostas é inválido.")
+                    if not 1 <= _proposals_max <= 50:
+                        raise ValueError("O limite de propostas tem de estar entre 1 e 50.")
+                    new["rss_proposals_max"] = _proposals_max
+                if "automation_platforms" in new:
+                    if not isinstance(new["automation_platforms"], list):
+                        raise ValueError("As plataformas do automatismo têm de ser uma lista.")
+                    new["automation_platforms"] = [
+                        re.sub(r"[^a-z0-9_.\-]+", "", str(item or "").strip().lower())[:40]
+                        for item in new["automation_platforms"][:20]
+                        if str(item or "").strip()
+                    ]
+                    new["automation_platforms"] = [p for p in new["automation_platforms"] if p]
+                was_enabled = bool(config.get("automation_enabled"))
+                was_autostart = bool(config.get("automation_autostart"))
                 config.update(new)
-                save_json(CONFIG_FILE, config)
+                save_config(config)
+                if was_enabled != bool(config.get("automation_enabled")) or was_autostart != bool(config.get("automation_autostart")):
+                    svc = activity_module()
+                    if svc:
+                        try:
+                            if config.get("automation_autostart"):
+                                svc.install_autostart(APP_DIR)
+                            else:
+                                svc.remove_autostart()
+                        except Exception:
+                            pass
+                        if config.get("automation_enabled"):
+                            threading.Thread(target=lambda: svc.start_service(APP_DIR), daemon=True).start()
+                        else:
+                            threading.Thread(target=lambda: svc.stop_service(APP_DIR), daemon=True).start()
                 self.send_response(200)
                 self.end_headers()
             except Exception as e:
@@ -2600,7 +4769,7 @@ class Handler(SimpleHTTPRequestHandler):
                         "visitor_data": auth.get("visitor_data", ""),
                     }
                 )
-                save_json(CONFIG_FILE, config)
+                save_config(config)
                 self.send_response(200)
                 self.end_headers()
             except:
@@ -2685,40 +4854,70 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(500, str(e))
             return
 
-        if self.path == "/delete_files":
+        if path == "/delete_files":
             try:
-                req = json.loads(data)
+                req = json.loads(data or "{}")
+                if not isinstance(req, dict):
+                    raise ValueError("Dados inválidos.")
                 paths = req.get("paths", [])
-                remove_file = req.get("remove_file", True)
-                remove_history = req.get("remove_history", True)
-                
+                if not isinstance(paths, list):
+                    raise ValueError("paths tem de ser uma lista.")
+                remove_file = bool(req.get("remove_file", True))
+                remove_history = bool(req.get("remove_history", True))
+
                 history_removed = 0
-                
-                for path in paths:
-                    if remove_file:
-                        rel2 = path.lstrip("/")
-                        if rel2.startswith("downloads/"):
-                            rel2 = rel2[len("downloads/"):]
-                        if not rel2 or ".." in rel2:
-                            continue
-                        full_path = os.path.join(get_downloads_dir(), rel2.replace("/", os.sep))
-                        if os.path.exists(full_path):
-                            os.remove(full_path)
-                            parent_dir = os.path.dirname(full_path)
-                            if os.path.exists(parent_dir) and not os.listdir(parent_dir):
+                removed_files = []
+                targets = set()
+                for item in paths[:500]:
+                    if not isinstance(item, str) or not item.strip():
+                        continue
+                    targets.add(item)
+                    full_path = resolve_download_file(item)
+                    if not full_path:
+                        # Caminho fora da pasta de downloads: nunca apagar.
+                        continue
+                    targets.add(full_path)
+                    if remove_file and os.path.isfile(full_path):
+                        os.remove(full_path)
+                        removed_files.append(full_path)
+                        parent_dir = os.path.dirname(full_path)
+                        base_dir = os.path.normpath(get_downloads_dir())
+                        if (
+                            os.path.normcase(parent_dir) != os.path.normcase(base_dir)
+                            and os.path.isdir(parent_dir)
+                            and not os.listdir(parent_dir)
+                        ):
+                            try:
                                 os.rmdir(parent_dir)
-                    
-                    if remove_history:
-                        history = load_json(HISTORY_FILE, [])
-                        history = [h for h in history if path not in str(h)]
-                        save_json(HISTORY_FILE, history)
-                        history_removed += 1
-                
+                            except OSError:
+                                pass
+
+                if remove_history and targets:
+                    norm_targets = {os.path.normcase(t) for t in targets}
+                    history = load_json(HISTORY_FILE, [])
+                    kept = []
+                    for entry in history:
+                        raw = ""
+                        if isinstance(entry, dict):
+                            raw = str(entry.get("file_path") or "")
+                        full = resolve_download_file(raw) if raw else None
+                        matched = (
+                            raw in targets
+                            or (full is not None and os.path.normcase(full) in norm_targets)
+                        )
+                        if matched:
+                            history_removed += 1
+                        else:
+                            kept.append(entry)
+                    if history_removed:
+                        save_json(HISTORY_FILE, kept)
+
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     "success": True,
+                    "removed": len(removed_files),
                     "history_removed": history_removed
                 }).encode("utf-8"))
             except Exception as e:
@@ -2809,6 +5008,94 @@ def run_command(cmd, success_msg):
         broadcast_log(f"[ERRO] Erro: {e}")
 
 
+def _pid_alive(pid):
+    """True se o processo indicado ainda existe."""
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        SYNCHRONIZE = 0x00100000
+        WAIT_TIMEOUT = 0x00000102
+        ERROR_ACCESS_DENIED = 5
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.OpenProcess(SYNCHRONIZE, False, pid)
+        if not handle:
+            # Sem permissao para abrir: assume vivo, para nunca encerrar o
+            # servidor por engano.
+            return kernel32.GetLastError() == ERROR_ACCESS_DENIED
+        try:
+            return kernel32.WaitForSingleObject(handle, 0) == WAIT_TIMEOUT
+        finally:
+            kernel32.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _terminate_active_download():
+    """Termina o yt-dlp/ffmpeg em curso (best effort)."""
+    proc = current_process
+    if proc is None:
+        return
+    try:
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=3)
+            except Exception:
+                proc.kill()
+    except Exception:
+        pass
+
+
+def _start_parent_watchdog():
+    """Encerra o servidor quando o launcher (processo pai) desaparece.
+
+    Complementa o Job Object do launcher (KILL_ON_JOB_CLOSE): mesmo que a
+    associacao ao job falhe, ou que o launcher morra de forma abrupta, o
+    servidor nao fica orfao a segurar a porta, o yt-dlp e o ffmpeg.
+    So e ativado quando o servidor foi arrancado pela aplicacao.
+    """
+    parent = os.getppid()
+    if parent <= 0:
+        return
+
+    def _watch():
+        while True:
+            time.sleep(2.0)
+            if not _pid_alive(parent):
+                print("[INFO] O launcher terminou. A encerrar o servidor...")
+                _terminate_active_download()
+                os._exit(0)
+
+    threading.Thread(target=_watch, name="launcher-watchdog", daemon=True).start()
+
+
+def _check_app_update():
+    try:
+        repo = APP_RELEASE_REPO or config.get("app_release_repo") or ""
+        if not repo:
+            return
+        url = f"https://api.github.com/repos/{repo}/releases/latest"
+        req = urllib.request.Request(url, headers={"User-Agent": "MediaDesk", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        tag = (data.get("tag_name") or "").strip().lstrip("v")
+        current = (APP_VERSION or "").strip().lstrip("v")
+        if tag and current and tag != current:
+            msg = f"Atualização disponível: {tag} (atual: {APP_VERSION})"
+            broadcast(f"TOAST:info:{msg}")
+            broadcast_log(f"[UPDATE] {msg}")
+    except Exception as e:
+        broadcast_log(f"[UPDATE] verificação falhou: {e}")
+
+
 def run_server():
     global server_instance
     os.chdir(APP_DIR)
@@ -2823,7 +5110,9 @@ def run_server():
     actual_port = None
     for port in range(base_port, base_port + 20):
         try:
-            server = QuietServer(("0.0.0.0", port), Handler)
+            # Escuta apenas em loopback: a aplicacao e local e nao deve ficar
+            # exposta na rede (nem permitir pedidos de outros dispositivos).
+            server = QuietServer(("127.0.0.1", port), Handler)
             actual_port = port
             break
         except OSError as e:
@@ -2834,13 +5123,20 @@ def run_server():
         if os.environ.get("MEDIADESK_RESPONSE_FILE"):
             try:
                 with open(os.environ["MEDIADESK_RESPONSE_FILE"], "w", encoding="utf-8") as fh:
-                    json.dump({"error": "Sem portas livres"}, fh)
+                    json.dump({"error": "Sem portas livres", "pid": os.getpid()}, fh)
             except Exception:
                 pass
         return
 
     server_instance = server
+    _start_dependency_check()
     _start_queue_worker()
+    _cleanup_activity_temp()
+    _start_automation_service()
+    # So quando arrancado pela aplicacao (o launcher define este ficheiro).
+    if os.environ.get("MEDIADESK_RESPONSE_FILE"):
+        _start_parent_watchdog()
+    threading.Thread(target=lambda: (time.sleep(2), _check_app_update()), daemon=True).start()
     print(f"\n[INFO] Servidor ativo em http://localhost:{actual_port}")
     print("[INFO] Pressione Ctrl+C para parar\n")
 
@@ -2848,11 +5144,11 @@ def run_server():
     if os.environ.get("MEDIADESK_RESPONSE_FILE"):
         try:
             with open(os.environ["MEDIADESK_RESPONSE_FILE"], "w", encoding="utf-8") as fh:
-                json.dump({"port": actual_port}, fh)
+                json.dump({"port": actual_port, "pid": os.getpid()}, fh)
         except Exception:
             pass
 
-    if not os.environ.get("MEDIADESK_NO_BROWSER"):
+    if os.environ.get("MEDIADESK_OPEN_BROWSER") and not os.environ.get("MEDIADESK_NO_BROWSER"):
         webbrowser.open(f"http://localhost:{actual_port}")
 
     threading.Thread(target=lambda: (time.sleep(1), broadcast("SYSTEM_READY: true"))).start()
@@ -2869,6 +5165,18 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print(f" YT-DLP MEDIA DESK SERVER v{APP_VERSION} - Auto Fallback + Filtros + Link-Ficheiro + PWA + Portatil")
     print("=" * 50)
-    check_dependencies()
+    # Compara os ficheiros com os hashes guardados e aplica o nivel de
+    # atualizacao definido em version.json ("unreleased") antes de servir.
+    try:
+        _version_result = ensure_version_current()
+        if _version_result.get("bumped"):
+            print(
+                f"[INFO] Versao sincronizada: v{_version_result.get('previous')} -> "
+                f"v{_version_result.get('version')} ({_version_result.get('level')})"
+            )
+        elif _version_result.get("changed"):
+            print("[INFO] Alteracoes locais detetadas (sem bump pendente).")
+    except Exception as _exc:
+        print(f"[AVISO] Motor de versao: {_exc}")
     threading.Thread(target=integrity_worker, daemon=True).start()
     run_server()

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Media Desk — conceitos de logotipo</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; font-family: Inter, "Segoe UI", system-ui, sans-serif;
+         background: #0b0b0f; color: #e8e8ee; }
+  h1 { font-size: 1.35rem; letter-spacing: -.02em; margin: 0 0 6px; }
+  p.sub { margin: 0 0 30px; color: #9b9baa; font-size: .92rem; max-width: 900px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+  .card { background: #14141b; border: 1px solid #262633; border-radius: 18px; padding: 20px; }
+  .card h2 { font-size: 1rem; margin: 0 0 4px; letter-spacing: -.01em; }
+  .card .desc { color: #8b8b9c; font-size: .76rem; line-height: 1.45; min-height: 66px; }
+  .hero { display: flex; justify-content: center; padding: 18px 0 14px; }
+  .hero img { width: 180px; height: 180px; }
+  .strip { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .panel { border-radius: 12px; padding: 10px; }
+  .panel.dark { background: #0e0e14; }
+  .panel.light { background: #f4f4f7; }
+  .label { font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: #7f7f92; margin-bottom: 8px; }
+  .panel.light .label { color: #6b6b7b; }
+  .row { display: flex; align-items: end; gap: 14px; min-height: 48px; }
+  .row img { display: block; image-rendering: auto; }
+  .pw { filter: grayscale(1) contrast(1.08); }
+  .tag { display: inline-block; font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+         padding: 3px 7px; border-radius: 99px; margin-bottom: 8px; }
+  .tag.a { background: #2a2a38; color: #ffd23f; }
+  .tag.b { background: #2a2a38; color: #ff8a3d; }
+  .tag.c { background: #2a2a38; color: #ff4d6d; }
+  .note { margin-top: 22px; color: #8b8b9c; font-size: .78rem; line-height: 1.55; }
+  code { color: #d9d9e6; }
+</style>
+</head>
+<body>
+  <h1>Media Desk — conceitos de logotipo</h1>
+  <p class="sub">Três direções sem gradientes: apenas faixas/facetas de cor sólida, em várias orientações. Cada uma é mostrada a 180/64/32/16&nbsp;px e em preto-e-branco (grayscale).</p>
+
+  <div class="grid">
+    <div class="card">
+      <span class="tag a">A</span>
+      <h2>Monograma M + mesa</h2>
+      <div class="desc">Um M de três fitas planas (amarelo, rosa e violeta) sobre uma barra branca. Lê-se como Media e como uma secretária; funciona a uma cor.</div>
+      <div class="hero"><img src="concepts/a-monogram.svg" alt="Monograma M"></div>
+      <div class="strip">
+        <div class="panel dark">
+          <div class="label">Cor</div>
+          <div class="row">
+            <img src="concepts/a-monogram.svg" width="64" height="64" alt="">
+            <img src="concepts/a-monogram.svg" width="32" height="32" alt="">
+            <img src="concepts/a-monogram.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+        <div class="panel light">
+          <div class="label">P/B</div>
+          <div class="row">
+            <img class="pw" src="concepts/a-monogram.svg" width="64" height="64" alt="">
+            <img class="pw" src="concepts/a-monogram.svg" width="32" height="32" alt="">
+            <img class="pw" src="concepts/a-monogram.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag b">B</span>
+      <h2>Mesa isométrica + seta</h2>
+      <div class="desc">Uma secretária em perspetiva com quatro facetas planas (amarelo, laranja, rosa e violeta) e uma seta branca a pousar. Dialoga com o plano isométrico do splash.</div>
+      <div class="hero"><img src="concepts/b-isometric-desk.svg" alt="Mesa isométrica"></div>
+      <div class="strip">
+        <div class="panel dark">
+          <div class="label">Cor</div>
+          <div class="row">
+            <img src="concepts/b-isometric-desk.svg" width="64" height="64" alt="">
+            <img src="concepts/b-isometric-desk.svg" width="32" height="32" alt="">
+            <img src="concepts/b-isometric-desk.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+        <div class="panel light">
+          <div class="label">P/B</div>
+          <div class="row">
+            <img class="pw" src="concepts/b-isometric-desk.svg" width="64" height="64" alt="">
+            <img class="pw" src="concepts/b-isometric-desk.svg" width="32" height="32" alt="">
+            <img class="pw" src="concepts/b-isometric-desk.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag c">C</span>
+      <h2>Seta em faixas</h2>
+      <div class="desc">A seta de transferência é dividida em três faixas planas com cortes em direções diferentes, sobre uma bandeja branca. É a evolução direta do símbolo atual, sem o gradiente.</div>
+      <div class="hero"><img src="concepts/c-banded-arrow.svg" alt="Seta em faixas"></div>
+      <div class="strip">
+        <div class="panel dark">
+          <div class="label">Cor</div>
+          <div class="row">
+            <img src="concepts/c-banded-arrow.svg" width="64" height="64" alt="">
+            <img src="concepts/c-banded-arrow.svg" width="32" height="32" alt="">
+            <img src="concepts/c-banded-arrow.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+        <div class="panel light">
+          <div class="label">P/B</div>
+          <div class="row">
+            <img class="pw" src="concepts/c-banded-arrow.svg" width="64" height="64" alt="">
+            <img class="pw" src="concepts/c-banded-arrow.svg" width="32" height="32" alt="">
+            <img class="pw" src="concepts/c-banded-arrow.svg" width="16" height="16" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Todos usam apenas cores sólidas: amarelo <code>#FFD23F</code>, laranja <code>#FF8A3D</code>, rosa/vermelho <code>#FF4D6D</code>, violeta <code>#7C5CFF</code> e branco. Sem gradientes, sem triângulo de play. O fundo escuro é opcional: o símbolo também pode ser aplicado sobre branco.</p>
+</body>
+</html>

@@ -24,7 +24,7 @@ A **local** desktop interface for **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**
 - **Activity filters** by success/failure, media type and date range.
 - **Settings backup and restore** using JSON without exporting authentication tokens or proxy credentials.
 
-**Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `MediaDesk-Portable.zip` (recommended), self-extracting `.exe`, or `MediaDesk-Setup.exe`, all with SHA-256 hashes.
+**Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `Media Desk.zip` (recommended), self-extracting `.exe`, or `Media Desk Setup.exe`, all with SHA-256 hashes.
 
 > **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
@@ -36,7 +36,7 @@ Interface de desktop **local** para o **[yt-dlp](https://github.com/yt-dlp/yt-dl
 
 - **Licença:** GNU GPL-3.0 (ver [`LICENSE`](LICENSE))
 - **Autor:** Alexandre da Costa / ALDACO
-- **Versão:** 3.9.0
+- **Versão:** 3.11.4
 
 > Este programa **não transfere qualquer informação** para outros sistemas em rede a menos que tal seja especificamente solicitado pelo utilizador. Ver a **[Code signing policy](CODE_SIGNING_POLICY.md)** (política de assinatura de código e privacidade).
 
@@ -87,9 +87,9 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 
 | Ficheiro | Descrição |
 |---|---|
-| `MediaDesk-Portable.zip` | Versão portátil — descompactar e executar (**recomendado**) |
-| `MediaDesk-Portable.exe` | Auto-extraível (extrai e executa) |
-| `MediaDesk-Setup.exe` | Instalador por utilizador (Inno Setup) |
+| `Media Desk.zip` | Versão portátil — descompactar e executar (**recomendado**) |
+| `Media Desk.exe` | Auto-extraível (extrai e executa) |
+| `Media Desk Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
 
 > **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)*. Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
@@ -98,7 +98,7 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 
 ```powershell
 # Windows
-Get-FileHash .\MediaDesk-Portable.zip -Algorithm SHA256   # comparar com SHA256SUMS.txt
+Get-FileHash .\Media Desk.zip -Algorithm SHA256   # comparar com SHA256SUMS.txt
 ```
 
 ```bash
@@ -134,7 +134,10 @@ licenses/                 licenças de terceiros
 ## Notas técnicas do launcher
 
 - **Encerramento seguro:** o launcher cria um *Windows Job Object* com `KILL_ON_JOB_CLOSE`. O Python iniciado e os seus processos-filho (yt-dlp, FFmpeg, PowerShell) ficam associados ao Job; ao fechar a janela, só essa árvore é terminada. Processos alheios à aplicação não são tocados.
-- **WebView2:** requer o WebView2 Runtime (presente no Windows 11 e em muitos Windows 10). Para portabilidade offline total, distribuir o *Fixed Runtime* e adaptar `EnsureCoreWebView2Async`.
+- **Instância única:** abrir `Media Desk.exe`, o atalho ou `iniciar.bat` com a aplicação já aberta não cria uma segunda janela nem um segundo servidor; a instância existente é restaurada e trazida para a frente (mutex + mensagem de ativação).
+- **Um só splash:** o splash nativo cobre desde o primeiro instante (antes de o Python e o WebView2 existirem) e só desaparece quando a interface web envia `app-ready`, depois de carregar configuração, mediateca, fila e verificação. Dentro do launcher o splash HTML não é mostrado; no browser/PWA continua a ser usado.
+- **Arranque rápido:** as verificações de atualizações (binários, PyPI, npm, GitHub) correm em segundo plano e escrevem o resultado em `data/launcher.log`; a integridade dos ficheiros é verificada pelo `integrity_worker` do `server.py`, com o resultado em **Acerca** e no registo da interface. Nada é saltado, apenas deixa de bloquear.
+- **WebView2:** requer o WebView2 Runtime (presente no Windows 11 e em muitos Windows 10). Para portabilidade offline total, distribuir o *Fixed Runtime* e adaptar `EnsureCoreWebView2Async`. O perfil (cache) fica em `%LOCALAPPDATA%\YTDLP-MediaDesk\WebView2`, fora de discos USB lentos e de pastas só de leitura.
 - **Zero instalação:** distribuir `bin\python` já preparado com as dependências.
 
 

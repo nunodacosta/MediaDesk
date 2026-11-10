@@ -1,14 +1,15 @@
 {
-    "gerado":  "2026-10-19T04:01:46",
+    "gerado":  "2026-11-01T02:50:35",
     "algoritmo":  "SHA-256",
     "ficheiros":  {
-                      "server.py":  "97422d2fd35c9304eed162382a117b142908a98850b3c7b97bb64539f3b0c74a",
-                      "index.html":  "b38a452761edcd9d4341e24e225375e59595dfa8ea9d62245d4796267e06bb44",
-                      "sw.js":  "3166dc964032ae7b404500ce6bad594d6ab3b4a46a804d497c2e66f5629a9144",
-                      "version.json":  "3a452c76f2d9f1be5bab883723e3fafa5c6e64905fe2ef34d9bcc986c9b3abf4",
+                      "server.py":  "8378ab9e1c1e20135e9385099ff5177e71509f275558aaa0307fc9c4da295d89",
+                      "activity_service.py":  "136703f9b8798fc2bf7109df93030a461891534722801006554f9c07751a13b1",
+                      "index.html":  "3a36a0ca8dae46cb8933afd8bfc4907214cb27f7252047b469ed78156fc160dc",
+                      "sw.js":  "9f4b7c730ac32aedd50443bd570c6e9e4081a0946efcd27f12a03139864c3bcb",
+                      "version.json":  "ad46122827c8a462668b80fb263af02c0f390dbbea4107d397ae5b1625db97b5",
                       "licenses.json":  "0214c99905ff20b27c405d8e0e9e2942512f09ac0b5104558696c05eeb4e6f4e",
                       "manifest.webmanifest":  "c347b65bb917d8b8f559daa9c81acb8b79d6a55f53b9ae4d884d73721e848584",
-                      "favicon.svg":  "46f95481fe7248c09f2d61b6d1add294d47d4a557deb4117017989a846f4029c",
-                      "bin/yt-dlp.exe":  "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a"
+                      "favicon.svg":  "fe8ea3e9fbc127f4871893e37c39a2834f24dfa9eb54b185dd873ff762d3ec6a",
+                      "bin/yt-dlp.exe":  "33121d192d706e62f684a06f80918e3f3a8ba52ac3a65213b6951c39c7d9f555"
                   }
 }

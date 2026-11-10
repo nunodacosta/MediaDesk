@@ -15,9 +15,9 @@ build simplesmente emite um aviso e segue. O que é sempre produzido:
 
 | Artefacto | Finalidade |
 |---|---|
-| `dist\MediaDesk-Portable.zip` | **Descarga recomendada** (geralmente menos avisos do que auto-extraíveis novos) |
-| `dist\MediaDesk-Portable.exe` | Auto-extraível (tudo incluído) |
-| `dist\MediaDesk-Setup.exe` | Instalador por utilizador |
+| `dist\Media Desk.zip` | **Descarga recomendada** (geralmente menos avisos do que auto-extraíveis novos) |
+| `dist\Media Desk.exe` | Auto-extraível (tudo incluído) |
+| `dist\Media Desk Setup.exe` | Instalador por utilizador |
 | `dist\SHA256SUMS.txt` | Hashes SHA-256 de todos os artefactos de release |
 | `verificar-integridade.ps1` | Utilitário para o utilizador confirmar a integridade |
 

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Media Desk — novo logotipo</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; font-family: Inter, "Segoe UI", system-ui, sans-serif;
+         background: #0b0b0f; color: #e8e8ee; }
+  h1 { font-size: 1.35rem; letter-spacing: -.02em; margin: 0 0 6px; }
+  p.sub { margin: 0 0 32px; color: #9b9baa; font-size: .92rem; }
+  .grid { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 24px; align-items: start; }
+  .card { background: #14141b; border: 1px solid #262633; border-radius: 18px; padding: 24px; }
+  .hero { display: flex; align-items: center; justify-content: center; min-height: 420px;
+          background: radial-gradient(120% 90% at 50% 0%, rgba(214,41,118,.18), #101016 68%); }
+  .hero img { width: 300px; height: 300px; filter: drop-shadow(0 26px 48px rgba(214,41,118,.22)); }
+  h2 { font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+       color: #8b8b9c; margin: 0 0 18px; }
+  .sizes { display: flex; align-items: end; gap: 24px; flex-wrap: wrap; }
+  .size { text-align: center; color: #8b8b9c; font-size: .68rem; }
+  .size img { display: block; margin: 0 auto 8px; image-rendering: auto; }
+  .light { background: #f4f4f7; color: #17171f; border-color: #e2e2ea; }
+  .light h2 { color: #6b6b7b; }
+  .brandmock { display: flex; align-items: center; gap: 10px; }
+  .brandmock img { width: 34px; height: 34px; }
+  .brandmock .name { font-size: 1.05rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.05; }
+  .brandmock .tag { font-size: .6rem; letter-spacing: .14em; color: #6b6b7b; margin-top: 3px; }
+  .circle { width: 168px; height: 168px; border-radius: 50%; overflow: hidden; background: #000;
+            display: flex; align-items: center; justify-content: center; }
+  .circle img { width: 100%; height: 100%; }
+  .row { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .note { color: #8b8b9c; font-size: .76rem; line-height: 1.5; margin-top: 14px; }
+  code { color: #d9d9e6; }
+  .palette { display: flex; gap: 6px; margin-top: 10px; }
+  .palette span { width: 30px; height: 10px; border-radius: 6px; }
+</style>
+</head>
+<body>
+  <h1>Media Desk — novo logotipo</h1>
+  <p class="sub">Squircle com a paleta do Instagram e glifo de transferência (seta para bandeja). Sem triângulo de play, para não evocar o YouTube.</p>
+
+  <div class="grid">
+    <div class="card hero"><img src="logo.svg" alt="Media Desk"></div>
+
+    <div style="display:grid; gap:24px">
+      <div class="card">
+        <h2>Tamanhos reais</h2>
+        <div class="sizes">
+          <div class="size"><img src="../icons/icon-192.png" width="96" height="96" alt="">192</div>
+          <div class="size"><img src="../icons/icon-192.png" width="64" height="64" alt="">64</div>
+          <div class="size"><img src="../icons/icon-32.png" width="32" height="32" alt="">32</div>
+          <div class="size"><img src="../icons/icon-32.png" width="16" height="16" alt="">16</div>
+        </div>
+        <div class="palette">
+          <span style="background:#FEDA75"></span><span style="background:#F58529"></span>
+          <span style="background:#DD2A7B"></span><span style="background:#8134AF"></span>
+          <span style="background:#515BD4"></span>
+        </div>
+        <div class="note">#FEDA75 → #F58529 → #DD2A7B → #8134AF → #515BD4</div>
+      </div>
+
+      <div class="card light">
+        <h2>Barra da aplicação</h2>
+        <div class="brandmock">
+          <img src="logo.svg" alt="">
+          <div>
+            <div class="name">Media Desk</div>
+            <div class="tag">YT-DLP INTERFACE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Ícone adaptativo (recorte circular)</h2>
+        <div class="row">
+          <div class="circle"><img src="../icons/icon-maskable-512.png" alt=""></div>
+          <div class="note">A versão maskable usa fundo sangrado e mantém o glifo<br>dentro da zona segura de 80%.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

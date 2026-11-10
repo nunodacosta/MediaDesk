@@ -28,9 +28,9 @@ código OV.
 
 Executáveis assinados em cada release:
 
-- `MediaDesk-Portable.exe` — pacote auto-extraível
-- `MediaDesk-Setup.exe` — instalador (Inno Setup)
-- `MediaDesk-Portable\YT-DLP-Media-Desk.exe` — launcher da versão portátil
+- `Media Desk.exe` - pacote auto-extraível
+- `Media Desk Setup.exe` — instalador (Inno Setup)
+- `Media Desk Portable\Media Desk.exe` - launcher da versão portátil
 
 O processo de build é reproduzível a partir do código público
 (`build_portable.ps1`) e o conteúdo da aplicação é verificado por hashes
@@ -69,7 +69,7 @@ explicitamente, em vez de se fingir uma separação que não existe.
 
    ```powershell
    # Windows
-   Get-FileHash .\MediaDesk-Portable.zip -Algorithm SHA256
+   Get-FileHash .\Media Desk.zip -Algorithm SHA256
    # Linux / macOS
    sha256sum -c SHA256SUMS.txt
    ```
@@ -77,7 +77,7 @@ explicitamente, em vez de se fingir uma separação que não existe.
 3. Se a release estiver assinada, confirme a assinatura:
 
    ```powershell
-   Get-AuthenticodeSignature .\MediaDesk-Setup.exe | Format-List Status, SignerCertificate
+   Get-AuthenticodeSignature .\Media Desk Setup.exe | Format-List Status, SignerCertificate
    # SignerCertificate.Subject deve corresponder à SignPath Foundation
    ```
 

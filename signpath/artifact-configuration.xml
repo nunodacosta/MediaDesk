@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   signpath/artifact-configuration.xml
   ===========================================================================
@@ -11,9 +11,9 @@
     raiz e <zip-file> e os .exe ficam a UM nivel:
 
       signpath-unsigned.zip            (ZIP de transporte criado pelo GitHub)
-      |  MediaDesk-Portable.exe
-      |  MediaDesk-Setup.exe
-      +  MediaDesk-Portable/YT-DLP-Media-Desk.exe
+      |  Media Desk.exe
+      |  Media Desk Setup.exe
+      +  Media Desk Portable/Media Desk.exe
 
     NAO carregar o nosso proprio ZIP (build/signpath/signpath-*.zip): isso
     criaria um ZIP dentro do ZIP de transporte e os <pe-file> internos nunca
@@ -30,14 +30,14 @@
 
     NOTA: nao se restringe file-version porque o Inno Setup escreve "3.6.0"
     enquanto os executaveis .NET escrevem "3.6.0.0". E nao se restringe
-    original-filename porque o valor herdado do .NET e "YT-DLP-Media-Desk.dll".
+    original-filename porque o valor herdado do .NET e "Media Desk.dll".
 
   IMPORTANTE (padding do Inno Setup):
     O instalador sai do Inno com os campos preenchidos com espacos (largura
     fixa do stub). A SignPath compara de forma exata, por isso o padding e
     removido antes da submissao por tools/normalize_versioninfo.ps1 (chamado
     dentro de tools/prep_signpath.ps1). Sem esse passo, o pedido de assinatura
-    falharia na restricao product-name/product-version do MediaDesk-Setup.exe.
+    falharia na restricao product-name/product-version do Media Desk Setup.exe.
 
   Parametro obrigatorio do pedido de assinatura:  version  (ex.: "3.7.0")
   ===========================================================================
@@ -47,7 +47,7 @@
   <zip-file>
 
     <!-- Launcher da pasta portatil (aplicacao .NET / WPF). -->
-    <pe-file path="MediaDesk-Portable/YT-DLP-Media-Desk.exe"
+    <pe-file path="Media Desk Portable/Media Desk.exe"
              product-name="YT-DLP Media Desk"
              product-version="${version}"
              company-name="ALDACO">
@@ -55,7 +55,7 @@
     </pe-file>
 
     <!-- Auto-extraivel (SFX com o payload completo). -->
-    <pe-file path="MediaDesk-Portable.exe"
+    <pe-file path="Media Desk.exe"
              product-name="YT-DLP Media Desk"
              product-version="${version}"
              company-name="ALDACO">
@@ -63,7 +63,7 @@
     </pe-file>
 
     <!-- Instalador (Inno Setup; metadados normalizados antes da submissao). -->
-    <pe-file path="MediaDesk-Setup.exe"
+    <pe-file path="Media Desk Setup.exe"
              product-name="YT-DLP Media Desk"
              product-version="${version}"
              company-name="ALDACO">

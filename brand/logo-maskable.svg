@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Media Desk">
+  <!-- Gerado por tools/gen_logo_flat.ps1. Versao maskable: fundo sangrado e
+       glifo dentro da zona segura. -->
+    <path d="M0 -2.1L12.4 0L0 14.3Z" fill="#D62976"/>
+    <path d="M12.4 0L10.3 10.6L0 14.3Z" fill="#B92C87"/>
+    <path d="M12.4 0L24.7 0L22.2 13.3Z" fill="#8134AF"/>
+    <path d="M12.4 0L22.2 13.3L10.3 10.6Z" fill="#B92C87"/>
+    <path d="M24.7 0L34.9 0L35 13Z" fill="#8134AF"/>
+    <path d="M24.7 0L35 13L22.2 13.3Z" fill="#515BD4"/>
+    <path d="M34.9 0L39.6 0L43.7 8.1Z" fill="#515BD4"/>
+    <path d="M34.9 0L43.7 8.1L35 13Z" fill="#515BD4"/>
+    <path d="M39.6 0L56.4 0L54.6 9.2Z" fill="#515BD4"/>
+    <path d="M39.6 0L54.6 9.2L43.7 8.1Z" fill="#515BD4"/>
+    <path d="M56.4 0L64 -3.7L64 8.1Z" fill="#515BD4"/>
+    <path d="M56.4 0L64 8.1L54.6 9.2Z" fill="#515BD4"/>
+    <path d="M0 14.3L10.3 10.6L8.9 20.2Z" fill="#B92C87"/>
+    <path d="M0 14.3L8.9 20.2L0 21.1Z" fill="#D62976"/>
+    <path d="M10.3 10.6L22.2 13.3L18.2 20.3Z" fill="#D62976"/>
+    <path d="M10.3 10.6L18.2 20.3L8.9 20.2Z" fill="#B92C87"/>
+    <path d="M22.2 13.3L35 13L18.2 20.3Z" fill="#8134AF"/>
+    <path d="M35 13L30.7 20.9L18.2 20.3Z" fill="#B92C87"/>
+    <path d="M35 13L43.7 8.1L42 20.9Z" fill="#B92C87"/>
+    <path d="M35 13L42 20.9L30.7 20.9Z" fill="#B92C87"/>
+    <path d="M43.7 8.1L54.6 9.2L42 20.9Z" fill="#515BD4"/>
+    <path d="M54.6 9.2L52.7 24.6L42 20.9Z" fill="#8134AF"/>
+    <path d="M54.6 9.2L64 8.1L64 17.9Z" fill="#515BD4"/>
+    <path d="M54.6 9.2L64 17.9L52.7 24.6Z" fill="#515BD4"/>
+    <path d="M0 21.1L8.9 20.2L0 32Z" fill="#D62976"/>
+    <path d="M8.9 20.2L9.8 31.1L0 32Z" fill="#E6003D"/>
+    <path d="M8.9 20.2L18.2 20.3L23.3 31.1Z" fill="#D62976"/>
+    <path d="M8.9 20.2L23.3 31.1L9.8 31.1Z" fill="#D62976"/>
+    <path d="M18.2 20.3L30.7 20.9L23.3 31.1Z" fill="#D62976"/>
+    <path d="M30.7 20.9L31.1 29.2L23.3 31.1Z" fill="#E6003D"/>
+    <path d="M30.7 20.9L42 20.9L31.1 29.2Z" fill="#B92C87"/>
+    <path d="M42 20.9L45.4 32.2L31.1 29.2Z" fill="#B92C87"/>
+    <path d="M42 20.9L52.7 24.6L45.4 32.2Z" fill="#8134AF"/>
+    <path d="M52.7 24.6L56.3 30.3L45.4 32.2Z" fill="#8134AF"/>
+    <path d="M52.7 24.6L64 17.9L56.3 30.3Z" fill="#8134AF"/>
+    <path d="M64 17.9L64 30.1L56.3 30.3Z" fill="#515BD4"/>
+    <path d="M0 32L9.8 31.1L13.6 41.2Z" fill="#F47B14"/>
+    <path d="M0 32L13.6 41.2L0 42.4Z" fill="#FAB03E"/>
+    <path d="M9.8 31.1L23.3 31.1L23.1 40Z" fill="#E6003D"/>
+    <path d="M9.8 31.1L23.1 40L13.6 41.2Z" fill="#EF2A1F"/>
+    <path d="M23.3 31.1L31.1 29.2L23.1 40Z" fill="#D62976"/>
+    <path d="M31.1 29.2L29.2 39.6L23.1 40Z" fill="#E6003D"/>
+    <path d="M31.1 29.2L45.4 32.2L42.5 44.3Z" fill="#B92C87"/>
+    <path d="M31.1 29.2L42.5 44.3L29.2 39.6Z" fill="#B92C87"/>
+    <path d="M45.4 32.2L56.3 30.3L52.3 44.5Z" fill="#D62976"/>
+    <path d="M45.4 32.2L52.3 44.5L42.5 44.3Z" fill="#8134AF"/>
+    <path d="M56.3 30.3L64 30.1L64 40.5Z" fill="#8134AF"/>
+    <path d="M56.3 30.3L64 40.5L52.3 44.5Z" fill="#B92C87"/>
+    <path d="M0 42.4L13.6 41.2L0 53.1Z" fill="#FAB03E"/>
+    <path d="M13.6 41.2L13.7 52.7L0 53.1Z" fill="#EF2A1F"/>
+    <path d="M13.6 41.2L23.1 40L24.2 50.3Z" fill="#EF2A1F"/>
+    <path d="M13.6 41.2L24.2 50.3L13.7 52.7Z" fill="#F47B14"/>
+    <path d="M23.1 40L29.2 39.6L31.6 55.9Z" fill="#EF2A1F"/>
+    <path d="M23.1 40L31.6 55.9L24.2 50.3Z" fill="#E6003D"/>
+    <path d="M29.2 39.6L42.5 44.3L31.6 55.9Z" fill="#E6003D"/>
+    <path d="M42.5 44.3L42.1 54.9L31.6 55.9Z" fill="#FF0000"/>
+    <path d="M42.5 44.3L52.3 44.5L42.1 54.9Z" fill="#FF0000"/>
+    <path d="M52.3 44.5L53.4 54.3L42.1 54.9Z" fill="#D62976"/>
+    <path d="M52.3 44.5L64 40.5L64 53.9Z" fill="#B92C87"/>
+    <path d="M52.3 44.5L64 53.9L53.4 54.3Z" fill="#D62976"/>
+    <path d="M0 53.1L13.7 52.7L0 61.1Z" fill="#F47B14"/>
+    <path d="M13.7 52.7L9 64L0 61.1Z" fill="#FEDA75"/>
+    <path d="M13.7 52.7L24.2 50.3L9 64Z" fill="#FEDA75"/>
+    <path d="M24.2 50.3L23.8 64L9 64Z" fill="#FAB03E"/>
+    <path d="M24.2 50.3L31.6 55.9L28.6 64Z" fill="#FF0000"/>
+    <path d="M24.2 50.3L28.6 64L23.8 64Z" fill="#F47B14"/>
+    <path d="M31.6 55.9L42.1 54.9L28.6 64Z" fill="#EF2A1F"/>
+    <path d="M42.1 54.9L45.7 64L28.6 64Z" fill="#FF0000"/>
+    <path d="M42.1 54.9L53.4 54.3L45.7 64Z" fill="#D62976"/>
+    <path d="M53.4 54.3L56.7 64L45.7 64Z" fill="#B92C87"/>
+    <path d="M53.4 54.3L64 53.9L56.7 64Z" fill="#FF0000"/>
+    <path d="M64 53.9L64 63.6L56.7 64Z" fill="#B92C87"/>
+  <g transform="translate(32 32) scale(.86) translate(-32 -32)" fill="#fff" stroke="#fff" stroke-linejoin="round">
+    <rect x="28.25" y="9" width="7.5" height="17" rx="3.75" stroke="none"/>
+    <path d="M20.8 23.2h22.4L32 37.4Z" stroke-width="1.8"/>
+    <path d="M17 43v1.5a7 7 0 0 0 7 7h16a7 7 0 0 0 7-7V43" fill="none" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+</svg>

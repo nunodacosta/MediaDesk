@@ -4,7 +4,7 @@
  *  - App shell (HTML/CSS/JS/manifest/ícones): network-first (sempre fresco) com cache de reserva.
  *  - Tudo o resto (API, SSE /events, /downloads/*): passa direto SEM cache.
  */
-const VERSION = "v1";
+const VERSION = "v4";
 const SHELL_CACHE = `mediadesk-shell-${VERSION}`;
 const SHELL_ASSETS = [
   "/",
@@ -17,7 +17,7 @@ const SHELL_ASSETS = [
 ];
 
 // Rotas dinâmicas que NUNCA devem ser cacheadas.
-const BYPASS_PREFIXES = ["/events", "/downloads/", "/get_", "/system_status", "/init_log", "/update_ytdlp"];
+const BYPASS_PREFIXES = ["/events", "/downloads/", "/get_", "/check_", "/version_status", "/splash_verify", "/system_status", "/init_log", "/update_", "/save_config", "/clear_history"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

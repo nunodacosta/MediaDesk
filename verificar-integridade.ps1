@@ -6,7 +6,7 @@
     Funciona em dois modos (automático):
       1) Junto dos artefactos de release (pasta dist\): verifica os ficheiros
          listados no SHA256SUMS.txt (ZIP, auto-extraivel, instalador, launcher).
-      2) Dentro da pasta portatil (MediaDesk-Portable\): verifica os ficheiros
+      2) Dentro da pasta portatil (Media Desk Portable\): verifica os ficheiros
          da aplicacao contra o checksums.json.
 
     Uso:

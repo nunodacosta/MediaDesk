@@ -17,6 +17,7 @@ $root = Split-Path -Parent $PSScriptRoot
 
 $lista = @(
     'server.py',
+    'activity_service.py',
     'index.html',
     'sw.js',
     'version.json',

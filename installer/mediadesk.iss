@@ -6,18 +6,18 @@
 ;  %LOCALAPPDATA%\Programs\YT-DLP Media Desk — a pasta fica gravavel, o que
 ;  resolve a restricao de escrita dos "modulos" quando instalado.
 ;
-;  Compilar (depois de gerar dist\MediaDesk-Portable):
+;  Compilar (depois de gerar dist\Media Desk Portable):
 ;     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\mediadesk.iss
 ;
-;  Resultado: dist\MediaDesk-Setup.exe
+;  Resultado: dist\Media Desk Setup.exe
 ; ---------------------------------------------------------------------------
 
 #define AppName "YT-DLP Media Desk"
-#define AppVersion "3.9.0"
+#define AppVersion "3.11.4"
 #define AppPublisher "ALDACO"
 #define AppCopyright "Design e interacao por ALDACO. Motor de downloads por YT-DLP. Software livre: GPL-3.0."
-#define AppExeName "YT-DLP-Media-Desk.exe"
-#define SourceDir "..\dist\MediaDesk-Portable"
+#define AppExeName "Media Desk.exe"
+#define SourceDir "..\dist\Media Desk Portable"
 
 [Setup]
 AppId={{B7F3E2A1-9C4D-4E7B-8A2F-5D1C6E9B0A34}
@@ -38,7 +38,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=MediaDesk-Setup
+OutputBaseFilename=Media Desk Setup
 SetupIconFile=..\app.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile=..\licenses\THIRD-PARTY-NOTICES.txt

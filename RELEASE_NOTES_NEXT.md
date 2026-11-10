@@ -142,7 +142,7 @@ barra de progresso fica sincronizada com o trabalho real.
 - **Free code signing provided by [SignPath.io](https://about.signpath.io),
   certificate by [SignPath Foundation](https://signpath.org).**
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
-  `MediaDesk-Portable\YT-DLP-Media-Desk.exe`) assinados com Authenticode e
+  `Media Desk Portable\Media Desk.exe`) assinados com Authenticode e
   *timestamp* através do fluxo SignPath quando ativo (ver `SIGNPATH.md`).
 - Política completa, política de privacidade e verificação da assinatura:
   [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
@@ -173,7 +173,7 @@ git push origin v3.9.0      # a tag 'v*' dispara build + (se configurado) assina
 Antes de publicar, confirmar:
 - [x] `dist\` reconstruído: `MediaDesk-Portable\`, `MediaDesk-Portable.zip`,
       `MediaDesk-Portable.exe` (SFX) e `MediaDesk-Setup.exe`; launcher
-      `YT-DLP-Media-Desk.exe` na raiz.
+      `Media Desk.exe` na raiz.
 - [x] Instalador com os 5 idiomas (`installer/mediadesk.iss`, ficheiro UTF-8 com
       BOM para os acentos de `Español`/`Français`/`Deutsch`).
 - [x] Avisos de licença **dentro** dos pacotes (`licenses/FFmpeg-NOTICE.txt`
@@ -282,7 +282,7 @@ Antes de publicar, confirmar:
 
 ### Assinatura (quando ativa)
 - Os 3 executáveis (`MediaDesk-Portable.exe`, `MediaDesk-Setup.exe` e
-  `MediaDesk-Portable\YT-DLP-Media-Desk.exe`) assinados com Authenticode e
+  `Media Desk Portable\Media Desk.exe`) assinados com Authenticode e
   *timestamp* através do fluxo SignPath (ver `SIGNPATH.md`).
 
 </details>

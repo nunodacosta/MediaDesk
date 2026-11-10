@@ -15,6 +15,17 @@ download_queue.json
 download_queue.json.tmp
 downloads/
 
+# --- Serviço de atividade (dados cifrados e estado local) --------------------
+data/
+activity.enc
+activity.key
+rss_channels.json
+rss_proposals.json
+activity.log
+activity_service.heartbeat
+activity_service.lock
+data/.meta_*.jsonl
+
 # --- Saídas de build / runtime local ----------------------------------------
 dist/
 build/
@@ -30,6 +41,37 @@ bkp/
 dev/
 Actualizações/
 *.WebView2/
+
+# --- Saídas de ferramentas de desenvolvimento --------------------------------
+.playwright-mcp/
+server_crash.log
+nul
+rss_proposals.json.*.tmp
+
+# --- Artefactos de publicação .NET (gerados, não versionar) ------------------
+publish_out/
+MediaDesk-Portable/
+/cache/
+/runtimes/
+/cs/
+/de/
+/es/
+/fr/
+/it/
+/ja/
+/ko/
+/pl/
+/pt-BR/
+/ru/
+/tr/
+/zh-Hans/
+/zh-Hant/
+Microsoft.*.xml
+Microsoft.Services.Store.winmd
+createdump.exe
+*.dll
+*.pdb
+*.exe
 
 # --- Restos locais -----------------------------------------------------------
 YT-DLP-Media-Desk.exe

@@ -19,7 +19,7 @@
       A copia em pad\mediadesk.xml no repositorio serve apenas para consulta e
       como reserva (o seu tamanho pode diferir do asset publicado).
 
-    O tamanho indicado no PAD e o do instalador (dist\MediaDesk-Setup.exe), lido
+    O tamanho indicado no PAD e o do instalador (dist\Media Desk Setup.exe), lido
     no fim da build. Prioridade: -SizeBytes > dist\... > -FallbackSizeBytes.
 
     Uso:
@@ -50,11 +50,11 @@ $month = ([int]$parts[1]).ToString()
 $day = ([int]$parts[2]).ToString()
 
 # --- tamanho do instalador ---------------------------------------------------
-# Prioridade: -SizeBytes (explicito) > dist\MediaDesk-Setup.exe > -FallbackSizeBytes
+# Prioridade: -SizeBytes (explicito) > dist\Media Desk Setup.exe > -FallbackSizeBytes
 # Nota: em PowerShell os nomes nao distinguem maiusculas, por isso a variavel
 # local NAO pode chamar-se $sizeBytes (colidiria com o parametro $SizeBytes).
 $instSizeBytes = 0
-$setup = Join-Path $root 'dist\MediaDesk-Setup.exe'
+$setup = Join-Path $root 'dist\Media Desk Setup.exe'
 if ($SizeBytes -gt 0) { $instSizeBytes = $SizeBytes }
 elseif (Test-Path $setup) { $instSizeBytes = (Get-Item $setup).Length }
 elseif ($FallbackSizeBytes -gt 0) { $instSizeBytes = $FallbackSizeBytes }
@@ -142,9 +142,9 @@ $template = @'
     <Program_OS_Support>Windows 11, Windows 10</Program_OS_Support>
     <Program_Language>English, Portuguese, Spanish, French, German</Program_Language>
     <File_Info>
-      <Filename_Versioned>MediaDesk-Setup.exe</Filename_Versioned>
-      <Filename_Generic>MediaDesk-Setup.exe</Filename_Generic>
-      <Filename_Long>MediaDesk-Setup.exe</Filename_Long>
+      <Filename_Versioned>Media Desk Setup.exe</Filename_Versioned>
+      <Filename_Generic>Media Desk Setup.exe</Filename_Generic>
+      <Filename_Long>Media Desk Setup.exe</Filename_Long>
       <File_Size_Bytes>__SIZEBYTES__</File_Size_Bytes>
       <File_Size_K>__SIZEK__</File_Size_K>
       <File_Size_MB>__SIZEMB__</File_Size_MB>
@@ -180,8 +180,8 @@ $template = @'
       <Application_XML_File_URL>__BASE__/releases/latest/download/mediadesk.xml</Application_XML_File_URL>
     </Application_URLs>
     <Download_URLs>
-      <Primary_Download_URL>__DL__/MediaDesk-Setup.exe</Primary_Download_URL>
-      <Secondary_Download_URL>__DL__/MediaDesk-Portable.zip</Secondary_Download_URL>
+      <Primary_Download_URL>__DL__/Media%20Desk%20Setup.exe</Primary_Download_URL>
+      <Secondary_Download_URL>__DL__/Media%20Desk.zip</Secondary_Download_URL>
       <Additional_Download_URL_1>__BASE__/releases/latest</Additional_Download_URL_1>
     </Download_URLs>
   </Web_Info>
