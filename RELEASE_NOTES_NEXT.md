@@ -34,6 +34,10 @@ cristal, comandos só com ícone e tooltips contextuais que se adaptam a cada te
   sempre para o centro do comando.
 - **Tooltips por tema:** o fundo, o texto e o contorno das tooltips são
   derivados da paleta ativa, com contraste reforçado no modo claro e escuro.
+- **Novo símbolo da aplicação:** o play do YouTube passa a apontar para baixo e
+  encaixa numa bandeja sólida com «DLP» vazado, mantendo as facetas do cristal
+  visíveis através das letras; favicon, ícones do PWA, splash e executáveis
+  (launcher, auto-extraível e instalador) usam a nova marca.
 
 ### Melhorado
 - **Navegação por teclado:** todos os comandos em ícone mantêm nome acessível e
