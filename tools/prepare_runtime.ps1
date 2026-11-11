@@ -35,8 +35,8 @@ param(
     # (o asset inclui a versao N-.../g-hash, por isso nao se deriva so da tag).
     # Nao usar a tag movel "latest": o build tem de ser reproduzivel a partir do
     # repositorio (requisito de origin verification da SignPath).
-    [string]$FFmpegTag     = 'autobuild-2026-10-12-13-12',
-    [string]$FFmpegAsset   = 'ffmpeg-N-127388-g615b07170e-win64-gpl.zip',
+    [string]$FFmpegTag     = 'autobuild-2026-11-10-12-39',
+    [string]$FFmpegAsset   = 'ffmpeg-N-128728-g49a3b1f259-win64-gpl.zip',
     [switch]$SkipDownloads,
     [string]$Destination = ''
 )
