@@ -3,9 +3,14 @@
     -----------------------------------------------------------------------------
     Cria a versao portatil do YT-DLP Media Desk:
       dist\Media Desk Portable\      -> pasta pronta a executar (sem instalacao)
-      dist\Media Desk.exe            -> executavel auto-extraivel (tudo incluido)
-      dist\Media Desk Setup.exe      -> instalador (Inno Setup)
-      dist\Media Desk.zip            -> ZIP da pasta portatil
+      dist\Media.Desk.exe            -> executavel auto-extraivel (tudo incluido)
+      dist\Media.Desk.Setup.exe      -> instalador (Inno Setup)
+      dist\Media.Desk.zip            -> ZIP da pasta portatil
+
+    Os artefactos de topo usam pontos em vez de espacos porque o GitHub converte
+    os espacos em pontos nos nomes dos anexos das releases. Assim os nomes
+    locais, o PAD (mediadesk.xml) e o SHA256SUMS.txt coincidem exatamente com
+    os ficheiros publicados.
 
     Sem dependencias externas: Python, yt-dlp, FFmpeg e Deno viajam no pacote.
 
@@ -21,7 +26,7 @@
     Sem certificado, o pacote e criado na mesma (nao assinado) e imprime-se um
     aviso. Guia completo em ASSINATURA.md.
 
-    Por omissao cria-se tambem o ZIP da pasta portatil (dist\Media Desk.zip),
+    Por omissao cria-se tambem o ZIP da pasta portatil (dist\Media.Desk.zip),
     que e a descarga recomendada (gera menos avisos do SmartScreen do que um
     auto-extraivel novo). No fim gera-se dist\SHA256SUMS.txt com os hashes de
     release. Usa -NoZip para omitir o ZIP.
@@ -142,13 +147,13 @@ function Try-Sign($path) {
 
 $dist        = Join-Path $root 'dist'
 $outFolder   = Join-Path $dist 'Media Desk Portable'
-$folderZip   = Join-Path $dist 'Media Desk.zip'
+$folderZip   = Join-Path $dist 'Media.Desk.zip'
 $build       = Join-Path $root 'build\portable'
 $payloadDir  = Join-Path $build 'payload'
 $zipPath     = Join-Path $build 'payload.zip'
 $publishDir  = Join-Path $build 'launcher'
-$sfxPath     = Join-Path $dist 'Media Desk.exe'
-$installerExe = Join-Path $dist 'Media Desk Setup.exe'
+$sfxPath     = Join-Path $dist 'Media.Desk.exe'
+$installerExe = Join-Path $dist 'Media.Desk.Setup.exe'
 $launcherExe = 'Media Desk.exe'
 $makeZip = -not $NoZip
 $releaseSums = Join-Path $dist 'SHA256SUMS.txt'
@@ -167,14 +172,19 @@ New-Item -ItemType Directory -Path $dist -Force | Out-Null
 New-Item -ItemType Directory -Path $build -Force | Out-Null
 if (Test-Path $sfxPath) { try { Remove-Item $sfxPath -Force } catch { Die "Nao foi possivel substituir $sfxPath (pode estar em execucao)." } }
 
-# Remove artefactos com os nomes antigos (MediaDesk-*) para que dist\ contenha
-# apenas a release atual e nao duas nomenclaturas misturadas.
+# Remove artefactos de nomenclaturas antigas (MediaDesk-* e nomes com espacos)
+# para que dist\ contenha apenas a release atual. Nota: 'Media Desk Portable' e
+# 'Media Desk.exe' dentro dessa pasta sao nomes atuais - so se remove o que esta
+# na raiz de dist\.
 foreach ($legacy in @(
     (Join-Path $dist 'MediaDesk-Portable'),
     (Join-Path $dist 'MediaDesk-Portable.zip'),
     (Join-Path $dist 'MediaDesk-Portable.exe'),
     (Join-Path $dist 'MediaDesk-Setup.exe'),
-    (Join-Path $dist 'Media Desk Portable.exe')
+    (Join-Path $dist 'Media Desk Portable.exe'),
+    (Join-Path $dist 'Media Desk.zip'),
+    (Join-Path $dist 'Media Desk.exe'),
+    (Join-Path $dist 'Media Desk Setup.exe')
 )) {
     if (Test-Path $legacy) {
         try { Remove-Tree $legacy }

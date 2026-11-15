@@ -21,7 +21,7 @@ YT-DLP Media Desk interface demo
 - **Activity filters** by success/failure, media type and date range.
 - **Settings backup and restore** using JSON without exporting authentication tokens or proxy credentials.
 
-**Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `Media Desk.zip` (recommended), self-extracting `.exe`, or `Media Desk Setup.exe`, all with SHA-256 hashes.
+**Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `Media.Desk.zip` (recommended), self-extracting `Media.Desk.exe`, or `Media.Desk.Setup.exe`, all with SHA-256 hashes.
 
 > **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
@@ -80,9 +80,9 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 
 | Ficheiro | Descrição |
 | --- | --- |
-| `Media Desk.zip` | Versão portátil — descompactar e executar (**recomendado**) |
-| `Media Desk.exe` | Auto-extraível (extrai e executa) |
-| `Media Desk Setup.exe` | Instalador por utilizador (Inno Setup) |
+| `Media.Desk.zip` | Versão portátil - descompactar e executar (**recomendado**) |
+| `Media.Desk.exe` | Auto-extraível (extrai e executa) |
+| `Media.Desk.Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
 
 > **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
@@ -91,7 +91,7 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 
 ```
 # Windows
-Get-FileHash .\Media Desk.zip -Algorithm SHA256   # comparar com SHA256SUMS.txt
+Get-FileHash .\Media.Desk.zip -Algorithm SHA256   # comparar com SHA256SUMS.txt
 # Linux / macOS
 sha256sum -c SHA256SUMS.txt
 ```

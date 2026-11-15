@@ -28,8 +28,8 @@ código OV.
 
 Executáveis assinados em cada release:
 
-- `Media Desk.exe` - pacote auto-extraível
-- `Media Desk Setup.exe` — instalador (Inno Setup)
+- `Media.Desk.exe` - pacote auto-extraível
+- `Media.Desk.Setup.exe` - instalador (Inno Setup)
 - `Media Desk Portable\Media Desk.exe` - launcher da versão portátil
 
 O processo de build é reproduzível a partir do código público
@@ -69,7 +69,7 @@ explicitamente, em vez de se fingir uma separação que não existe.
 
    ```powershell
    # Windows
-   Get-FileHash .\Media Desk.zip -Algorithm SHA256
+   Get-FileHash .\Media.Desk.zip -Algorithm SHA256
    # Linux / macOS
    sha256sum -c SHA256SUMS.txt
    ```
@@ -77,7 +77,7 @@ explicitamente, em vez de se fingir uma separação que não existe.
 3. Se a release estiver assinada, confirme a assinatura:
 
    ```powershell
-   Get-AuthenticodeSignature .\Media Desk Setup.exe | Format-List Status, SignerCertificate
+   Get-AuthenticodeSignature .\Media.Desk.Setup.exe | Format-List Status, SignerCertificate
    # SignerCertificate.Subject deve corresponder à SignPath Foundation
    ```
 

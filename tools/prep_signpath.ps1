@@ -15,8 +15,8 @@
     copia em stage\ - ver tools/normalize_versioninfo.ps1.
 
     Inclui os 3 ficheiros finais que o utilizador executara/instalara:
-      - Media Desk.exe                           (auto-extraivel)
-      - Media Desk Setup.exe                     (instalador)
+      - Media.Desk.exe                           (auto-extraivel)
+      - Media.Desk.Setup.exe                     (instalador)
       - Media Desk Portable\Media Desk.exe       (launcher da pasta)
 
     IMPORTANTE: assinam-se os ficheiros JA MONTADOS. O leitor do rodape "MDPL"
@@ -50,8 +50,8 @@ function Die($m)  { Write-Host "[ERRO]  $m" -ForegroundColor Red; exit 1 }
 
 # Lista de ficheiros (caminhos relativos a dist; a estrutura e preservada)
 $relativos = @(
-    'Media Desk.exe',
-    'Media Desk Setup.exe',
+    'Media.Desk.exe',
+    'Media.Desk.Setup.exe',
     'Media Desk Portable\Media Desk.exe'
 )
 
@@ -89,7 +89,7 @@ foreach ($r in $relativos) {
 # espacos (largura fixa do stub). A SignPath exige product-name/product-version
 # EXATOS nas restricoes de metadados, por isso limpa-se o padding na COPIA que
 # vai ser assinada (nao no dist\, que se mantem como saiu do Inno).
-$stagedSetup = Join-Path $stage 'Media Desk Setup.exe'
+$stagedSetup = Join-Path $stage 'Media.Desk.Setup.exe'
 if (Test-Path $stagedSetup) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'normalize_versioninfo.ps1') -Path $stagedSetup
     if ($LASTEXITCODE -ne 0) { Die 'Falha ao normalizar os metadados do instalador.' }

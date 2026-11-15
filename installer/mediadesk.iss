@@ -9,7 +9,7 @@
 ;  Compilar (depois de gerar dist\Media Desk Portable):
 ;     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\mediadesk.iss
 ;
-;  Resultado: dist\Media Desk Setup.exe
+;  Resultado: dist\Media.Desk.Setup.exe
 ; ---------------------------------------------------------------------------
 
 #define AppName "YT-DLP Media Desk"
@@ -38,7 +38,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=Media Desk Setup
+OutputBaseFilename=Media.Desk.Setup
 SetupIconFile=..\app.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile=..\licenses\THIRD-PARTY-NOTICES.txt

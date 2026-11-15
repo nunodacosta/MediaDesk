@@ -28,8 +28,8 @@ if (-not (Test-Path $Source)) { Die "ZIP/pasta assinado nao encontrado: $Source"
 
 # Caminhos esperados (relativos a dist)
 $relativos = @(
-    'Media Desk.exe',
-    'Media Desk Setup.exe',
+    'Media.Desk.exe',
+    'Media.Desk.Setup.exe',
     'Media Desk Portable\Media Desk.exe'
 )
 
@@ -76,7 +76,7 @@ if ($extraiu) { Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
 
 # Recria o ZIP da pasta portatil (para incluir o launcher assinado)
 $outFolder = Join-Path $dist 'Media Desk Portable'
-$folderZip = Join-Path $dist 'Media Desk.zip'
+$folderZip = Join-Path $dist 'Media.Desk.zip'
 if (Test-Path $outFolder) {
     Info "A recriar o ZIP da pasta portatil (com o launcher assinado)..."
     if (Test-Path $folderZip) { Remove-Item $folderZip -Force }
@@ -97,7 +97,7 @@ Info "A regenerar o ficheiro PAD (pad\mediadesk.xml)..."
 
 Write-Host ""
 Write-Host "Verificar as assinaturas:" -ForegroundColor Cyan
-Write-Host "  Get-AuthenticodeSignature dist\Media Desk.exe | Format-List"
-Write-Host "  Get-AuthenticodeSignature dist\Media Desk Setup.exe | Format-List"
+Write-Host "  Get-AuthenticodeSignature dist\Media.Desk.exe | Format-List"
+Write-Host "  Get-AuthenticodeSignature dist\Media.Desk.Setup.exe | Format-List"
 Write-Host "  Get-AuthenticodeSignature dist\Media Desk Portable\Media Desk.exe | Format-List"
 Write-Host ""

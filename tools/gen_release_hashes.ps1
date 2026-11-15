@@ -2,11 +2,13 @@
     tools/gen_release_hashes.ps1
     -----------------------------------------------------------------------------
     Gera dist\SHA256SUMS.txt com os hashes SHA-256 dos artefactos de release:
-      - Media Desk.zip                       (descarga recomendada)
-      - Media Desk.exe                       (auto-extraivel)
-      - Media Desk Setup.exe                 (instalador)
+      - Media.Desk.zip                       (descarga recomendada)
+      - Media.Desk.exe                       (auto-extraivel)
+      - Media.Desk.Setup.exe                 (instalador)
       - Media Desk Portable\Media Desk.exe   (launcher da pasta)
 
+    Os nomes coincidem com os anexos publicados no GitHub (o GitHub troca
+    espacos por pontos, por isso os artefactos de topo usam pontos).
     Deve ser corrido no FIM do build (a assinatura altera os ficheiros).
     Formato compativel com "sha256sum -c":  <hash>  <nome>
 
@@ -20,9 +22,9 @@ $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist'
 
 $candidatos = @(
-    'Media Desk.zip',
-    'Media Desk.exe',
-    'Media Desk Setup.exe'
+    'Media.Desk.zip',
+    'Media.Desk.exe',
+    'Media.Desk.Setup.exe'
 ) | ForEach-Object { Join-Path $dist $_ }
 
 $pastaLauncher = Join-Path $dist 'Media Desk Portable\Media Desk.exe'

@@ -11,8 +11,8 @@
     raiz e <zip-file> e os .exe ficam a UM nivel:
 
       signpath-unsigned.zip            (ZIP de transporte criado pelo GitHub)
-      |  Media Desk.exe
-      |  Media Desk Setup.exe
+      |  Media.Desk.exe
+      |  Media.Desk.Setup.exe
       +  Media Desk Portable/Media Desk.exe
 
     NAO carregar o nosso proprio ZIP (build/signpath/signpath-*.zip): isso
@@ -37,7 +37,7 @@
     fixa do stub). A SignPath compara de forma exata, por isso o padding e
     removido antes da submissao por tools/normalize_versioninfo.ps1 (chamado
     dentro de tools/prep_signpath.ps1). Sem esse passo, o pedido de assinatura
-    falharia na restricao product-name/product-version do Media Desk Setup.exe.
+    falharia na restricao product-name/product-version do Media.Desk.Setup.exe.
 
   Parametro obrigatorio do pedido de assinatura:  version  (ex.: "3.7.0")
   ===========================================================================
@@ -55,7 +55,7 @@
     </pe-file>
 
     <!-- Auto-extraivel (SFX com o payload completo). -->
-    <pe-file path="Media Desk.exe"
+    <pe-file path="Media.Desk.exe"
              product-name="YT-DLP Media Desk"
              product-version="${version}"
              company-name="ALDACO">
@@ -63,7 +63,7 @@
     </pe-file>
 
     <!-- Instalador (Inno Setup; metadados normalizados antes da submissao). -->
-    <pe-file path="Media Desk Setup.exe"
+    <pe-file path="Media.Desk.Setup.exe"
              product-name="YT-DLP Media Desk"
              product-version="${version}"
              company-name="ALDACO">

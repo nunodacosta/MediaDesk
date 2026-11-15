@@ -38,12 +38,12 @@
     <Program_OS_Support>Windows 11, Windows 10</Program_OS_Support>
     <Program_Language>English, Portuguese, Spanish, French, German</Program_Language>
     <File_Info>
-      <Filename_Versioned>Media Desk Setup.exe</Filename_Versioned>
-      <Filename_Generic>Media Desk Setup.exe</Filename_Generic>
-      <Filename_Long>Media Desk Setup.exe</Filename_Long>
-      <File_Size_Bytes>160018805</File_Size_Bytes>
-      <File_Size_K>156268</File_Size_K>
-      <File_Size_MB>152.61</File_Size_MB>
+      <Filename_Versioned>Media.Desk.Setup.exe</Filename_Versioned>
+      <Filename_Generic>Media.Desk.Setup.exe</Filename_Generic>
+      <Filename_Long>Media.Desk.Setup.exe</Filename_Long>
+      <File_Size_Bytes>154915174</File_Size_Bytes>
+      <File_Size_K>151284</File_Size_K>
+      <File_Size_MB>147.74</File_Size_MB>
     </File_Info>
     <Expire_Info>
       <Has_Expire_Info>N</Has_Expire_Info>
@@ -84,8 +84,8 @@ It is distributed as a portable zip, a self-extracting executable and a standard
       <Application_XML_File_URL>https://github.com/nunodacosta/MediaDesk/releases/latest/download/mediadesk.xml</Application_XML_File_URL>
     </Application_URLs>
     <Download_URLs>
-      <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.12.0/Media%20Desk%20Setup.exe</Primary_Download_URL>
-      <Secondary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.12.0/Media%20Desk.zip</Secondary_Download_URL>
+      <Primary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.12.0/Media.Desk.Setup.exe</Primary_Download_URL>
+      <Secondary_Download_URL>https://github.com/nunodacosta/MediaDesk/releases/download/v3.12.0/Media.Desk.zip</Secondary_Download_URL>
       <Additional_Download_URL_1>https://github.com/nunodacosta/MediaDesk/releases/latest</Additional_Download_URL_1>
     </Download_URLs>
   </Web_Info>

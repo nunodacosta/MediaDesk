@@ -216,9 +216,12 @@ git push origin v3.12.0      # a tag 'v*' dispara build + (se configurado) assin
 ```
 
 Antes de publicar, confirmar:
-- [x] `dist\` reconstruído: `Media Desk Portable\`, `Media Desk.zip`,
-      `Media Desk.exe` (SFX) e `Media Desk Setup.exe`; launcher
-      `Media Desk.exe` na raiz.
+- [x] `dist\` reconstruído: `Media Desk Portable\` (com o launcher
+      `Media Desk.exe` lá dentro), `Media.Desk.zip`, `Media.Desk.exe` (SFX) e
+      `Media.Desk.Setup.exe` (instalador). Os artefactos de topo usam **pontos**
+      em vez de espaços porque o GitHub converte os espaços em pontos nos nomes
+      dos anexos; assim o `SHA256SUMS.txt` e o PAD coincidem com o que é
+      publicado.
 - [x] Instalador com os 5 idiomas (`installer/mediadesk.iss`, ficheiro UTF-8 com
       BOM para os acentos de `Español`/`Français`/`Deutsch`).
 - [x] Avisos de licença **dentro** dos pacotes (`licenses/FFmpeg-NOTICE.txt`
