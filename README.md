@@ -23,6 +23,8 @@ YT-DLP Media Desk interface demo
 
 **Download:** [Releases](https://github.com/nunodacosta/MediaDesk/releases) — portable `Media.Desk.zip` (recommended), self-extracting `Media.Desk.exe`, or `Media.Desk.Setup.exe`, all with SHA-256 hashes.
 
+**Windows Package Manager (winget):** `winget install --id ALDACO.YTDLPMediaDesk -e`. The manifest is under review in [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs/pull/480628); until it is accepted, use the installer above.
+
 > **Code signing policy:** release executables are signed by the **SignPath Foundation** when signing is active — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Not active yet: until then, verify integrity with the published `SHA256SUMS.txt`. Details in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
 ---
@@ -84,6 +86,12 @@ Na página de [Releases](https://github.com/nunodacosta/MediaDesk/releases):
 | `Media.Desk.exe` | Auto-extraível (extrai e executa) |
 | `Media.Desk.Setup.exe` | Instalador por utilizador (Inno Setup) |
 | `SHA256SUMS.txt` | Hashes SHA-256 dos artefactos |
+
+Instalação via **winget** (manifesto em revisão no [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs/pull/480628); até ser aceite, usa o instalador acima):
+
+```
+winget install --id ALDACO.YTDLPMediaDesk -e
+```
 
 > **Code signing policy:** os executáveis de release são assinados pela **SignPath Foundation** quando a assinatura estiver ativa — *free code signing provided by* [*SignPath.io*](https://about.signpath.io)*, certificate by* [*SignPath Foundation*](https://signpath.org). Ainda não está ativa: verifica a integridade com o `SHA256SUMS.txt` publicado. Detalhes em [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
