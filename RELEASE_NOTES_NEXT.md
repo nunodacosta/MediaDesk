@@ -215,6 +215,18 @@ git push origin v3.12.0      # a tag 'v*' dispara build + (se configurado) assin
 # com publish=true para publicar a release.
 ```
 
+Depois da release publicada, atualizar o winget:
+
+```powershell
+# 4) gerar os manifestos (versao/data de version.json + SHA-256 do instalador)
+powershell -ExecutionPolicy Bypass -File tools\gen_winget.ps1
+winget validate --manifest winget\manifests\a\ALDACO\YTDLPMediaDesk\<versao>
+
+# 5) submeter PR a microsoft/winget-pkgs (requer GitHub token com scope 'repo')
+wingetcreate submit --prtitle "New package: ALDACO.YTDLPMediaDesk version <versao>" `
+    winget\manifests\a\ALDACO\YTDLPMediaDesk\<versao>
+```
+
 Antes de publicar, confirmar:
 - [x] `dist\` reconstruído: `Media Desk Portable\` (com o launcher
       `Media Desk.exe` lá dentro), `Media.Desk.zip`, `Media.Desk.exe` (SFX) e
